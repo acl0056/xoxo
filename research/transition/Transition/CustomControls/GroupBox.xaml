@@ -1,0 +1,20 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CustomControls.GroupBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <Grid>
+        <TextBlock x:Name="HeaderTitle" Text="Header" Margin="7 0 0 0" LayoutUpdated="HeaderTitle_LayoutUpdated"></TextBlock>
+        <Border BorderBrush="Black" x:Name="border" BorderThickness="0 2 0 0" Margin="100 10 3 3" CornerRadius="0 5 0 0"></Border>
+        <Border BorderBrush="Black" BorderThickness="2 0 2 2" Margin="3 10 3 3" CornerRadius="5">
+            <ContentControl x:Name="Content" Margin="10 10 10 10">
+            </ContentControl>
+        </Border>
+    </Grid>
+</UserControl>

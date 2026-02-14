@@ -1,0 +1,458 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{589E779D-09D9-4AF5-B7BF-A05EC429098A}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Easycoustics.Transition</RootNamespace>
+    <AssemblyName>Transition</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17763.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
+    <PackageCertificateKeyFile>Transition_TemporaryKey.pfx</PackageCertificateKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\CircuitEditor.xaml.cs">
+      <DependentUpon>CircuitEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\OnScreenComponents\BufferScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\CapacitorScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\FDNRScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\GroundScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\ImpedanceScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\InductorScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\OpAmpScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\PotentiometerScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\ResistorScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\SCNScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\ScreenElementBase.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\SummerScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\SwitchScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\Terminal.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\TransducerScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\TransferFunctionScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\TransformerScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\VoltageOutputDifferentialScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\VoltageOutputNodeScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\VoltageSourceScreen.cs" />
+    <Compile Include="CircuitEditor\OnScreenComponents\WireScreen.cs" />
+    <Compile Include="CircuitEditor\ParametersControls\BufferParametersControl.xaml.cs">
+      <DependentUpon>BufferParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\CapacitorParametersControl.xaml.cs">
+      <DependentUpon>CapacitorParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\FDNRParametersControl.xaml.cs">
+      <DependentUpon>FDNRParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\GroundParameters.xaml.cs">
+      <DependentUpon>GroundParameters.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\ImpedanceParametersControl.xaml.cs">
+      <DependentUpon>ImpedanceParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\InductorParametersControl.xaml.cs">
+      <DependentUpon>InductorParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\OpAmpParametersControl.xaml.cs">
+      <DependentUpon>OpAmpParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\PotentiometerParametersControl.xaml.cs">
+      <DependentUpon>PotentiometerParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\ResistorParametersControl.xaml.cs">
+      <DependentUpon>ResistorParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\SCNParametersControl.xaml.cs">
+      <DependentUpon>SCNParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\SummerParametersControl.xaml.cs">
+      <DependentUpon>SummerParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\SwitchParametersControl.xaml.cs">
+      <DependentUpon>SwitchParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\TransducerParametersControl.xaml.cs">
+      <DependentUpon>TransducerParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\TransferFunctionParametersControl.xaml.cs">
+      <DependentUpon>TransferFunctionParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\TransformerParametersControl.xaml.cs">
+      <DependentUpon>TransformerParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\VoltageOutputDifferentialParameters.xaml.cs">
+      <DependentUpon>VoltageOutputDifferentialParameters.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\VoltageOutputNodeParametersControl.xaml.cs">
+      <DependentUpon>VoltageOutputNodeParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\ParametersControls\VoltageSourceParametersControl.xaml.cs">
+      <DependentUpon>VoltageSourceParametersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CircuitEditor\Interfaces.cs" />
+    <Compile Include="CircuitEditor\Serializable\Buffer.cs" />
+    <Compile Include="CircuitEditor\Serializable\Capacitor.cs" />
+    <Compile Include="CircuitEditor\Serializable\FDNR.cs" />
+    <Compile Include="CircuitEditor\Serializable\Ground.cs" />
+    <Compile Include="CircuitEditor\Serializable\Impedance.cs" />
+    <Compile Include="CircuitEditor\Serializable\Inductor.cs" />
+    <Compile Include="CircuitEditor\Serializable\OpAmp.cs" />
+    <Compile Include="CircuitEditor\Serializable\Potentiometer.cs" />
+    <Compile Include="CircuitEditor\Serializable\SCN.cs" />
+    <Compile Include="CircuitEditor\Serializable\SerializableElement.cs" />
+    <Compile Include="CircuitEditor\Serializable\Resistor.cs" />
+    <Compile Include="CircuitEditor\Serializable\Summer.cs" />
+    <Compile Include="CircuitEditor\Serializable\Switch.cs" />
+    <Compile Include="CircuitEditor\Serializable\Transducer.cs" />
+    <Compile Include="CircuitEditor\Serializable\TransferFunctionComponent.cs" />
+    <Compile Include="CircuitEditor\Serializable\Transformer.cs" />
+    <Compile Include="CircuitEditor\Serializable\VoltageOutputDifferential.cs" />
+    <Compile Include="CircuitEditor\Serializable\VoltageOutputNode.cs" />
+    <Compile Include="CircuitEditor\Serializable\VoltageSource.cs" />
+    <Compile Include="CircuitEditor\Serializable\SerializableWire.cs" />
+    <Compile Include="Commands\CommandAddComponent.cs" />
+    <Compile Include="Commands\CommandAddWire.cs" />
+    <Compile Include="Commands\CommandBindComponent.cs" />
+    <Compile Include="Commands\CommandBindWire.cs" />
+    <Compile Include="Commands\CommandFlipComponent.cs" />
+    <Compile Include="Commands\CommandMoveComponent.cs" />
+    <Compile Include="Commands\CommandMoveFreeWire.cs" />
+    <Compile Include="Commands\CommandMoveGroup.cs" />
+    <Compile Include="Commands\CommandMoveWireTerminal.cs" />
+    <Compile Include="Commands\CommandRemoveComponent.cs" />
+    <Compile Include="Commands\CommandRemoveWire.cs" />
+    <Compile Include="Commands\CommandRotateComponent.cs" />
+    <Compile Include="Commands\CommandSetValue.cs" />
+    <Compile Include="Commands\CommandUnBindWire.cs" />
+    <Compile Include="Common\BindableBase.cs" />
+    <Compile Include="Common\BoolVisibilityConverter.cs" />
+    <Compile Include="Common\ComplexdBConverter.cs" />
+    <Compile Include="Common\ComplexDecimal.cs" />
+    <Compile Include="Common\DecimalEngrConverter.cs" />
+    <Compile Include="Common\DecimalMath.cs" />
+    <Compile Include="Common\Enums.cs" />
+    <Compile Include="Common\EventArgs.cs" />
+    <Compile Include="Common\FontParameters.cs" />
+    <Compile Include="Common\NonClippingCanvas.cs" />
+    <Compile Include="CustomControls\IntegerBox.xaml.cs">
+      <DependentUpon>IntegerBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Design\Analyzer.cs" />
+    <Compile Include="Design\GraphParameters.cs" />
+    <Compile Include="Common\ScaleParameters.cs" />
+    <Compile Include="Common\Matrix.cs" />
+    <Compile Include="Common\ObservableStack.cs" />
+    <Compile Include="Common\Point2D.cs" />
+    <Compile Include="CurveLibrary\LibraryBase.cs" />
+    <Compile Include="CurveLibrary\LibraryFolder.cs" />
+    <Compile Include="CurveLibrary\LibraryItem.cs" />
+    <Compile Include="CustomControls\ComponentValueBoxDecimal.xaml.cs">
+      <DependentUpon>ComponentValueBoxDecimal.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\CurveSelection.xaml.cs">
+      <DependentUpon>CurveSelection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\CurveVisor.cs" />
+    <Compile Include="CustomControls\CustomControl1.cs" />
+    <Compile Include="CustomControls\EngrDecimalBox.xaml.cs">
+      <DependentUpon>EngrDecimalBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\EngrDecimalBoxDialog.xaml.cs">
+      <DependentUpon>EngrDecimalBoxDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\GraphScaleSettings.xaml.cs">
+      <DependentUpon>GraphScaleSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\GroupBox.xaml.cs">
+      <DependentUpon>GroupBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\TaperCurveControl.xaml.cs">
+      <DependentUpon>TaperCurveControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\WindowCurveVisor.xaml.cs">
+      <DependentUpon>WindowCurveVisor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Design\AnalysisParameters.cs" />
+    <Compile Include="Design\SchematicParameters.cs" />
+    <Compile Include="Design\UserDesign.cs" />
+    <Compile Include="Functions\Function.cs" />
+    <Compile Include="Functions\LaplaceFunction.cs" />
+    <Compile Include="Functions\StandardFunction.cs" />
+    <Compile Include="MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DesignPage.xaml.cs">
+      <DependentUpon>DesignPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Library.xaml.cs">
+      <DependentUpon>Library.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings.xaml.cs">
+      <DependentUpon>Settings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Statics.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+    <None Include="Transition_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="CircuitEditor\CircuitEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\BufferParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\CapacitorParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\FDNRParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\GroundParameters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\ImpedanceParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\InductorParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\OpAmpParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\PotentiometerParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\ResistorParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\SCNParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\SummerParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\SwitchParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\TransducerParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\TransferFunctionParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\TransformerParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\VoltageOutputDifferentialParameters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\VoltageOutputNodeParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CircuitEditor\ParametersControls\VoltageSourceParametersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\ComponentValueBoxDecimal.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\CurveSelection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\EngrDecimalBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\EngrDecimalBoxDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\GraphScaleSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\GroupBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\IntegerBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\TaperCurveControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomControls\WindowCurveVisor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\DesignPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Library.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.1.9</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
+      <Version>4.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Syncfusion.SfDockingManager.UWP">
+      <Version>16.4.0.53</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
+    <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

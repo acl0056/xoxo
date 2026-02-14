@@ -1,0 +1,57 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CircuitEditor.ParametersControls.SummerParametersControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CircuitEditor.ParametersControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:customcontrols="using:Easycoustics.Transition.CustomControls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="4" Text="Component Name: "/>
+            <TextBox x:Name="txtElementName" Margin="4" 
+                     TextChanged="ElementNameChanged" GotFocus="ElementNameFocus" />
+        </StackPanel>
+        <controls:Expander Header="Electric" IsExpanded="True" ExpandDirection="Down">
+            <StackPanel Orientation="Vertical">
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxRIn" Margin="4" HorizontalAlignment="Right"
+                       ValueManuallyChanged="RInChanged" Unit="Ohm" UnitShort="Ω"
+                       VariableName="Input Resistance" />
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxROut" Margin="4" HorizontalAlignment="Right"
+                       ValueManuallyChanged="ROutChanged" Unit="Ohm" UnitShort="Ω"
+                       VariableName="Output Resistance" />
+
+            </StackPanel>
+
+        </controls:Expander>
+        <controls:Expander Header="Summer Inputs" IsExpanded="True" ExpandDirection="Down">
+            <StackPanel Orientation="Vertical">
+                <ComboBox x:Name="cmbQuantityOfInputs"
+                          Header="Inputs"
+                          SelectionChanged="cmbQuantityInputsChanged">
+                    <ComboBox.Items>
+                        <ComboBoxItem Content="2"/>
+                        <ComboBoxItem Content="3"/>
+                    </ComboBox.Items>
+                </ComboBox>
+                <CheckBox x:Name="chkInvertA" Content="Input A Inverting" 
+                          Checked="chkInvertAChecked"
+                          Unchecked="chkInvertAUnChecked"/>
+                <CheckBox x:Name="chkInvertB" Content="Input B Inverting" 
+                          Checked="chkInvertBChecked"
+                          Unchecked="chkInvertBUnChecked"/>
+                <CheckBox x:Name="chkInvertC" Content="Input C Inverting" 
+                          Checked="chkInvertCChecked"
+                          Unchecked="chkInvertCUnChecked"/>
+
+            </StackPanel>
+            
+            
+        </controls:Expander>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,120 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CustomControls.ComponentValueBoxDecimal"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:common="using:Easycoustics.Transition.Common"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <UserControl.Resources>
+        <common:DecimalEngrConverter x:Key="engrDecimalConverter" ShortString="False" />
+        <common:DecimalEngrConverter x:Key="engrDecimalConverterShort" ShortString="True"/>
+        <common:BooleanToVisibilityConverter x:Key="boolVisibilityConverter"/>
+        <local:PrecisionIntConverter x:Key="precIntConverter"/>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="180"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Right"
+                   x:Name="Header" Margin="4"/>
+
+        <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"
+              HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <!--
+            <TextBox Style="{StaticResource EngrNumberBoxStyle}" 
+                 x:Name="numberBoxShort"  
+                 Visibility="{x:Bind AnyPrecisionSelected, Mode=OneWay, Converter = {StaticResource boolVisibilityConverter}, ConverterParameter=Reverse}"
+                 IsSpellCheckEnabled="False"
+                 IsTextPredictionEnabled="False" 
+                 Width="100" IsReadOnly="True"
+                 AllowDrop="False"  InputScope="AlphanumericFullWidth"
+                 Text="{x:Bind ComponentValue, Mode=TwoWay, Converter = {StaticResource engrDecimalConverter}}" />
+
+            <TextBox Style="{StaticResource EngrNumberBoxStyle}" 
+                 x:Name="numberBox"  
+                 Visibility="{x:Bind AnyPrecisionSelected, Mode=OneWay, Converter = {StaticResource boolVisibilityConverter}}"
+                 IsSpellCheckEnabled="False"
+                 IsTextPredictionEnabled="False" 
+                 Width="100" IsReadOnly="True"
+                 AllowDrop="False"  InputScope="AlphanumericFullWidth"
+                 Text="{x:Bind ComponentValue, Mode=TwoWay, Converter = {StaticResource engrDecimalConverterShort}}" />
+            -->
+
+            <TextBox Style="{StaticResource EngrNumberBoxStyle}"
+                 x:Name="txtBox" Grid.Column="0"
+                 IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" Width="100"
+                 AllowDrop="False" InputScope="AlphanumericFullWidth"
+                 LostFocus="txtLostFocus" TextChanged="textChanged"/>
+            
+            <StackPanel Orientation="Vertical" Grid.Column="2"
+                        x:Name="stkButtonsIncDec" HorizontalAlignment="Left"
+                        Visibility="{x:Bind AnyPrecisionSelected, Mode=OneWay, Converter = {StaticResource boolVisibilityConverter}, ConverterParameter=Reverse}" >
+                <RepeatButton x:Name="btnIncrease" 
+                              Height="20" 
+                              Click="increaseClick">
+                    <RepeatButton.Content>
+                        <Viewbox>
+                            <SymbolIcon Symbol="Upload"/>
+                        </Viewbox>
+                    </RepeatButton.Content>
+                </RepeatButton>
+                <RepeatButton x:Name="btnDecrease" 
+                              Height="20" 
+                              Click="decreaseClick">
+                    <RepeatButton.Content>
+                        <Viewbox>
+                            <SymbolIcon Symbol="Download"/>
+                        </Viewbox>
+                    </RepeatButton.Content>
+                </RepeatButton>
+            </StackPanel>
+            <!-- <Button Content="..." IsTapEnabled="True" Tapped="TapChangeValue"  Grid.Column="1"/> -->
+            <!-- Visibility="{x:Bind AnyPrecisionSelected, Mode=OneWay, Converter = {StaticResource boolVisibilityConverter}}"/> -->
+        </Grid>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Precision:" 
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center" Margin="5"/>
+        <ComboBox Grid.Row="1" Grid.Column="1"  VerticalAlignment="Center"
+                  HorizontalAlignment="Stretch" SelectionChanged="precisionChanged"
+                  SelectedIndex="{x:Bind ComponentPrecision, Mode=TwoWay, Converter={StaticResource precIntConverter}}"
+                  x:Name="cmbPrecision">
+            <ComboBox.Items>
+                <ComboBoxItem Content="Arbitrary" Tag="0"/>
+                <ComboBoxItem Content="0.5% Tolerance" Tag="1"/>
+                <ComboBoxItem Content="1% Tolerance" Tag="2"/>
+                <ComboBoxItem Content="2% Tolerance" Tag="3"/>
+                <ComboBoxItem Content="5% Tolerance" Tag="4"/>
+                <ComboBoxItem Content="10% Tolerance" Tag="5"/>
+                <ComboBoxItem Content="20% Tolerance" Tag="6"/>
+                <ComboBoxItem Content="50% Tolerance" Tag="7"/>
+            </ComboBox.Items>
+        </ComboBox>
+
+
+
+    </Grid>
+</UserControl>

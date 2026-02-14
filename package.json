@@ -1,0 +1,22 @@
+{
+	"name": "xoxo",
+	"version": "1.0.0",
+	"description": "loudspeaker crossover modeller",
+	"main": "index.js",
+	"scripts": {},
+	"keywords": [],
+	"author": "Adam Lockhart",
+	"license": "MIT",
+	"dependencies": {},
+	"devDependencies": {
+		"eslint": "^7.2.0",
+		"eslint-config-airbnb-base": "14.2.1",
+		"eslint-import-resolver-alias": "^1.1.2",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-vue": "^7.0.0-beta.4",
+		"vue-eslint-parser": "^7.9.0"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

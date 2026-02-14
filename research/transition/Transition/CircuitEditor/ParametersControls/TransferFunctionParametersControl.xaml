@@ -1,0 +1,142 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CircuitEditor.ParametersControls.TransferFunctionParametersControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CircuitEditor.ParametersControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:customcontrols="using:Easycoustics.Transition.CustomControls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="4" Text="Component Name: "/>
+            <TextBox x:Name="txtElementName" Margin="4" 
+                     TextChanged="ElementNameChanged" GotFocus="ElementNameFocus" />
+        </StackPanel>
+        <controls:Expander Header="Electric" IsExpanded="True" ExpandDirection="Down">
+            <StackPanel Orientation="Vertical">
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxRIn" Margin="4" HorizontalAlignment="Right"
+                       ValueManuallyChanged="RInChanged" Unit="Ohm" UnitShort="Ω"
+                       VariableName="Input Resistance" />
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxROut" Margin="4" HorizontalAlignment="Right"
+                       ValueManuallyChanged="ROutChanged" Unit="Ohm" UnitShort="Ω"
+                       VariableName="Output Resistance" />
+
+            </StackPanel>
+            
+        </controls:Expander>
+        <controls:Expander Header="Transfer Function" IsExpanded="True" ExpandDirection="Down">
+            <StackPanel Orientation="Vertical">
+                <ComboBox x:Name="cmbFunctionType" HorizontalAlignment="Center" Margin="4"
+                          SelectionChanged="FunctionTypeChanged" Header="Function Type">
+                    <ComboBox.Items>
+                        <ComboBoxItem Content="Standard Function"/>
+                        <ComboBoxItem Content="Custom Curve"/>
+                        <ComboBoxItem Content="Laplace Expression"/>
+                    </ComboBox.Items>
+                </ComboBox>
+                <StackPanel x:Name="stkStandard" Orientation="Vertical" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>    
+                            <RowDefinition/>
+
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <ComboBox x:Name="cmbStandardFunction" Margin="4" Grid.Row="0"
+                                  SelectionChanged="StandardFunctionChanged" Header="Standard Function">
+                            <ComboBox.Items>
+                                <ComboBoxItem Content="-- 1st Order --" 
+                                              IsHitTestVisible="False"/>
+
+                                <ComboBoxItem Content="LP1" Tag="LP1"/> <!-- 1 -->
+                                <ComboBoxItem Content="HP1" Tag="HP1"/> <!-- 2 -->
+                                <ComboBoxItem Content="AP1" Tag="AP1"/> <!-- 3 -->
+                                <ComboBoxItem Content="BP1" Tag="BP1"/> <!-- 4 -->
+                                <ComboBoxItem Content="BR1" Tag="BR1"/> <!-- 5 -->
+
+                                <ComboBoxItem Content="-- 2nd Order --"
+                                              IsHitTestVisible="False"/>
+                                <ComboBoxItem Content="LP2" Tag="LP2"/> <!-- 7 -->
+                                <ComboBoxItem Content="HP2" Tag="HP2"/> <!-- 8 -->
+                                <ComboBoxItem Content="AP2" Tag="AP2"/> <!-- 9 -->
+
+                                <ComboBoxItem Content="-- Fractional Order --" 
+                                              IsHitTestVisible="False"/>
+
+                                <ComboBoxItem Content="LP½" Tag="LP12"/> <!-- 11 -->
+                                <ComboBoxItem Content="HP½" Tag="HP12"/> <!-- 12 -->
+
+                                <ComboBoxItem Content="-- Equalizers --" 
+                                              IsHitTestVisible="False"/>
+
+                                <ComboBoxItem Content="LEQ" Tag="LEQ"/> <!-- 14 -->
+                                <ComboBoxItem Content="BEQ" Tag="BEQ"/> <!-- 15 -->
+                                <ComboBoxItem Content="HEQ" Tag="HEQ"/> <!-- 16 -->
+
+                                <ComboBoxItem Content="-- Other --" 
+                                              IsHitTestVisible="False"/>
+                                <ComboBoxItem Content="Sinc" Tag="Sinc"/> <!-- 18 -->
+                            </ComboBox.Items>
+                        </ComboBox>
+
+                        <customcontrols:EngrDecimalBoxDialog x:Name="boxAo" Grid.Row="1" VariableName="Ao" 
+                                                            ValueManuallyChanged="AoChanged" 
+                                                            Unit="dB" UnitShort="dB"
+                                                            HorizontalAlignment="Right"
+                                                            AllowNegativeNumber="True"
+                                                            AllowZero="True"/>
+                        <customcontrols:EngrDecimalBoxDialog x:Name="boxFp" Grid.Row="2" VariableName="Fp"
+                                                            ValueManuallyChanged="FpChanged" 
+                                                            Unit="Hertz" UnitShort="Hz"
+                                                            HorizontalAlignment="Right"/>
+                        <customcontrols:EngrDecimalBoxDialog x:Name="boxFz" Grid.Row="3" VariableName="Fz"
+                                                            ValueManuallyChanged="FzChanged" 
+                                                            Unit="Hertz" UnitShort="Hz"
+                                                            HorizontalAlignment="Right"/>
+                        <customcontrols:EngrDecimalBoxDialog x:Name="boxQp" Grid.Row="4" VariableName="Qp"
+                                                            ValueManuallyChanged="QpChanged"
+                                                            HorizontalAlignment="Right"/>
+
+                        <CheckBox x:Name="chkInvert" Grid.Row="6" 
+                                  Content="Invert Function" HorizontalAlignment="Right"
+                                  Checked="checkedInvert" Unchecked="uncheckedInvert"/>
+                        <CheckBox x:Name="chkReverse" Grid.Row="7" 
+                                  Content="Reverse Phase" HorizontalAlignment="Right"
+                                  Checked="checkedReverse" Unchecked="uncheckedReverse"/>
+                    </Grid>
+                </StackPanel>
+                <StackPanel x:Name="stkCustom" Orientation="Vertical" Visibility="Collapsed">
+
+                </StackPanel>
+                <StackPanel x:Name="stkLaplace" Orientation="Vertical" Visibility="Collapsed">
+
+                </StackPanel>
+            </StackPanel>
+                
+           
+        </controls:Expander>
+        <controls:Expander Header="Curve" IsExpanded="True" ExpandDirection="Down"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Stretch"
+                           VerticalAlignment="Stretch"
+                           VerticalContentAlignment="Stretch">
+           <!-- <customcontrols:FrequencyCurveControl x:Name="crvCurveControl"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"
+                                                  VerticalContentAlignment="Stretch"
+                                                  MinHeight="300"/> -->
+        </controls:Expander>
+    </StackPanel>
+</UserControl>

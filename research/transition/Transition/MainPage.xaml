@@ -1,0 +1,77 @@
+﻿<Page
+    x:Class="Easycoustics.Transition.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local1="using:Easycoustics.Transition.CircuitEditor"
+    xmlns:local2="using:Easycoustics.Transition.CustomControls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:layout="using:Syncfusion.UI.Xaml.Controls.Layout"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+       
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <controls:Menu HorizontalAlignment="Left"
+                           Orientation="Horizontal" Grid.Row="0">
+
+            <controls:MenuItem Name="FileMenu" controls:Menu.InputGestureText="Alt+F" Header="^File">
+                <MenuFlyoutSubItem Text="New" Margin="0,8,0,0">
+                    <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+Shift+N" Text="Project" />
+                    <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+N" Text="File" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+O" Text="Open" />
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+S" Icon="Save" Text="Save"/>
+
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+Shift+S" Icon="SaveLocal" Text="Save as" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Page Setup"/>
+
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+P" Text="Print"/>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+Shift+E" Text="Exit" Margin="0,0,0,8" />
+            </controls:MenuItem>
+
+            <controls:MenuItem controls:Menu.InputGestureText="Alt+E" Header="^Edit">
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+X" CommandParameter="Cut" Text="Cut" Icon="Cut" />
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+C" Text="Copy" Icon="Copy" />
+                <MenuFlyoutItem controls:Menu.InputGestureText="Ctrl+V" Text="Paste" Icon="Paste" />
+            </controls:MenuItem>
+        </controls:Menu>
+
+        <layout:SfDockingManager x:Name="dockingManager"  Grid.Row="1">
+
+            <ContentControl x:Name="voltageGraph" 
+                            layout:SfDockingManager.Header="Voltage Graph SF"
+                            layout:SfDockingManager.DockState="Document"
+                        
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch">
+
+                <local2:WindowCurveVisor VerticalQuantity="Voltage"/>
+            </ContentControl>
+
+            <ContentControl x:Name="circuit" 
+                            layout:SfDockingManager.Header="Circuit"
+                            layout:SfDockingManager.DockState="Document">
+                <ContentControl.Content>
+                    <local1:CircuitEditor x:Name="circuitEditor"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"/>
+                </ContentControl.Content>
+
+            </ContentControl>
+            
+        </layout:SfDockingManager>
+
+    </Grid>
+</Page>

@@ -1,0 +1,102 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CircuitEditor.Components.CapacitorParametersControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CircuitEditor.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:customcontrols="using:Easycoustics.Transition.CustomControls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="4" Text="Component Name: "/>
+            <TextBox Margin="4" x:Name="txtElementName"
+                     TextChanged="elementNameChanged"
+                     GotFocus="elementNameFocus"/>
+        </StackPanel>
+
+        <controls:Expander Header="Capacitor Value" ExpandDirection="Down"
+                           IsExpanded="True">
+            <customcontrols:ComponentValueBoxDecimal Unit="Farad" Margin="4" HorizontalAlignment="Left"
+                             UnitShort="F" x:Name="componentValueBox"
+                             ValueChanged="CapacitorValueChanged"
+                             PrecisionChanged="CapacitorPrecisionChanged"/>
+           
+        </controls:Expander>
+
+        <controls:Expander Header="Data" IsExpanded="True" ExpandDirection="Down">
+            <StackPanel Orientation="Vertical">
+                <CheckBox Content="Output Voltage across curve" x:Name="chkVoltageAcross"
+                          Checked="checkedVoltageAcross"
+                          Unchecked="uncheckedVoltageAcross" />
+                <CheckBox Content="Output Current through curve" x:Name="chkCurrentThrough"
+                          Checked="checkedCurrentThrough"
+                          Unchecked="uncheckedCurrentThrough" />
+                
+            </StackPanel>
+        </controls:Expander>
+        
+        <controls:Expander Header="Capacitor Model" ExpandDirection="Down"
+                           IsExpanded="True">
+            <Grid HorizontalAlignment="Stretch" Margin="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Stretch">
+                    <TextBlock Text="Model" Margin="4" VerticalAlignment="Center"/>
+                    <ComboBox VerticalAlignment="Center" x:Name="cmbCapacitorModel"
+                              HorizontalAlignment="Center"
+                              Margin="4" Width="150" 
+                              SelectionChanged="modelCapacitorChanged">
+                        <ComboBox.Items>
+                            <ComboBoxItem Content="Ideal" Tag="0"/>
+                            <ComboBoxItem Content="Parasitic" Tag="1"/>
+                            <ComboBoxItem Content="Exponent" Tag="2"/>
+                        </ComboBox.Items>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" x:Name="pnlExponential"
+                                Grid.Row="1" HorizontalAlignment="Stretch">
+                    <customcontrols:EngrDecimalBoxDialog VariableName="Eω" Margin="4" x:Name="BoxEw"
+                                                        AllowNegativeNumber="True"
+                                                        AllowZero="True"
+                                                        ValueManuallyChanged="ChangeEw"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Capacitance function: C(ω) = C · ω"/>
+                        <TextBlock Text="Eω" FontSize="10" VerticalAlignment="Top"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Grid.Row="1"
+                                x:Name="pnlParasitic" HorizontalAlignment="Stretch">
+                    <TextBlock Text="Equivalent Capacitor Model" Margin="4"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <Viewbox MaxHeight="80" MaxWidth="160" HorizontalAlignment="Center">
+                        <ContentControl ContentTemplate="{StaticResource capacitorParasiticModelCircuit}"/>
+                    </Viewbox>
+                    <customcontrols:EngrDecimalBoxDialog HorizontalAlignment="Right"
+                                x:Name="BoxLs" ValueManuallyChanged="ChangeLs"
+                                VariableName="Ls (Henry)"/>
+                    <customcontrols:EngrDecimalBoxDialog HorizontalAlignment="Right"
+                                x:Name="BoxRp" ValueManuallyChanged="ChangeRp"
+                                VariableName="Rp (Ohm)" />
+                    <customcontrols:EngrDecimalBoxDialog HorizontalAlignment="Right"
+                                x:Name="BoxRs" ValueManuallyChanged="ChangeRs"
+                                VariableName="Rs (Ohm)" />
+                    <customcontrols:EngrDecimalBoxDialog HorizontalAlignment="Right"
+                                x:Name="BoxFo" ValueManuallyChanged="ChangeFo"
+                                VariableName="Fo (Hz)" />
+                    <customcontrols:EngrDecimalBoxDialog HorizontalAlignment="Right"
+                                x:Name="BoxQ" ValueManuallyChanged="ChangeQ"
+                                VariableName="Q"/>
+                </StackPanel>
+            </Grid>
+        </controls:Expander>
+    </StackPanel>
+</UserControl>

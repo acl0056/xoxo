@@ -1,0 +1,83 @@
+﻿<UserControl
+    x:Class="Easycoustics.Transition.CircuitEditor.ParametersControls.SwitchParametersControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Easycoustics.Transition.CircuitEditor.ParametersControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:customcontrols="using:Easycoustics.Transition.CustomControls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="4" Text="Component Name: " />
+            <TextBox x:Name="txtElementName" Margin="4"
+                     TextChanged="ElementNameChanged" GotFocus="ElementNameFocus" />
+        </StackPanel>
+
+        <controls:Expander Header="Switch"  IsExpanded="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Margin="4" Text="Positions" Grid.Row="0" Grid.Column="0"/>
+                <ComboBox x:Name="cmbPositions" Margin="4" Grid.Row="0" Grid.Column="1"
+                  SelectionChanged="PositionsChanged">
+                    <ComboBox.Items>
+                        <ComboBoxItem Content="1"/>
+                        <ComboBoxItem Content="2"/>
+                        <ComboBoxItem Content="3"/>
+                        <ComboBoxItem Content="4"/>
+                        <ComboBoxItem Content="5"/>
+                        <ComboBoxItem Content="6"/>
+                        <ComboBoxItem Content="7"/>
+                        <ComboBoxItem Content="8"/>
+                        <ComboBoxItem Content="9"/>
+                        <ComboBoxItem Content="10"/>
+                        <ComboBoxItem Content="11"/>
+                        <ComboBoxItem Content="12"/>
+                        <ComboBoxItem Content="13"/>
+                        <ComboBoxItem Content="14"/>
+                        <ComboBoxItem Content="15"/>
+                        <ComboBoxItem Content="16"/>
+                        <ComboBoxItem Content="17"/>
+                        <ComboBoxItem Content="18"/>
+                        <ComboBoxItem Content="19"/>
+                        <ComboBoxItem Content="20"/>
+                        <ComboBoxItem Content="21"/>
+                        <ComboBoxItem Content="22"/>
+                        <ComboBoxItem Content="23"/>
+                        <ComboBoxItem Content="24"/>
+                        <ComboBoxItem Content="25"/>
+                        <ComboBoxItem Content="26"/>
+                    </ComboBox.Items>
+                </ComboBox>
+                <TextBlock Margin="4" Text="State" Grid.Row="1" Grid.Column="0"/>
+                <ComboBox x:Name="cmbState" Margin="4" Grid.Row="1" Grid.Column="1"
+                  SelectionChanged="StateChanged"/>
+            </Grid>
+        </controls:Expander>
+        <controls:Expander Header="Electric" IsExpanded="True">
+            <StackPanel Orientation="Vertical">
+
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxRClosed" Margin="4" 
+                    VariableName="Closed Resistance" Unit="Ohm" UnitShort="Ω"   
+                    ValueManuallyChanged="RClosedChanged"/>
+
+                <customcontrols:EngrDecimalBoxDialog x:Name="boxCOpen" Margin="4"
+                    VariableName="Open Capacitance" Unit="Farad" UnitShort="F"  
+                    ValueManuallyChanged="COpenChanged"/>
+
+            </StackPanel>
+        </controls:Expander>
+    </StackPanel>
+
+</UserControl>

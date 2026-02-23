@@ -7,6 +7,7 @@ module.exports = {
 	},
 	moduleNameMapper: {
 		'^@/(.*)$': '<rootDir>/src/$1',
+		'\\.(svg|png|jpg|jpeg|gif)$': '<rootDir>/tests/__mocks__/fileMock.js',
 	},
 	testMatch: [
 		'**/tests/unit/**/*.spec.js',

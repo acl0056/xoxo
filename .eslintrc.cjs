@@ -38,6 +38,8 @@ module.exports = {
 		'no-underscore-dangle': 'off',
 		'no-use-before-define': 'off',
 		'no-trailing-spaces': 2,
+		'no-continue': 'off',
+		'class-methods-use-this': 'off',
 		'global-require': 'off',
 		'vue/html-indent': ['error', 'tab'],
 		'vue/custom-event-name-casing': 'off',

@@ -1,13 +1,20 @@
 <template>
 	<div class="app-container">
-		<h1>Crossover Network Simulator</h1>
-		<p>Application initialized successfully</p>
+		<ComponentPalette />
+		<CircuitEditor />
 	</div>
 </template>
 
 <script>
+import ComponentPalette from './components/ComponentPalette.vue';
+import CircuitEditor from './components/CircuitEditor.vue';
+
 export default {
 	name: 'App',
+	components: {
+		ComponentPalette,
+		CircuitEditor,
+	},
 	mounted() {
 		console.log('Crossover Network Simulator initialized');
 	},
@@ -17,19 +24,9 @@ export default {
 <style scoped>
 .app-container {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+	width: 100vw;
 	height: 100vh;
+	overflow: hidden;
 	background-color: #f5f5f5;
-}
-
-h1 {
-	color: #333;
-	margin-bottom: 1rem;
-}
-
-p {
-	color: #666;
 }
 </style>

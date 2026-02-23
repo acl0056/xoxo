@@ -45,407 +45,407 @@
 - [x] 4.5 Write property test: Serialization round-trip preserves all data (Property 11)
 - [x] 4.6 Write property test: Circuit modification preserves validity (Property 1)
 
-### 5. Utility Functions
-- [ ] 5.1 Implement generateUniqueId() function for component IDs
-- [ ] 5.2 Implement parseEngineering() for engineering notation parsing (4.7k, 10u, 100n)
-- [ ] 5.3 Implement formatEngineering() for engineering notation formatting
-- [ ] 5.4 Implement E12/E24 standard value stepping functions
-- [ ] 5.5 Write unit tests for engineering notation parsing edge cases
-- [ ] 5.6 Write property test: Engineering notation parsing round-trip (Property 9)
-- [ ] 5.7 Write property test: Parameter validation rejects invalid values (Property 10)
+- [x] 5. Utility Functions
+	- [x] 5.1 Implement generateUniqueId() function for component IDs
+	- [x] 5.2 Implement parseEngineering() for engineering notation parsing (4.7k, 10u, 100n)
+	- [x] 5.3 Implement formatEngineering() for engineering notation formatting
+	- [x] 5.4 Implement E12/E24 standard value stepping functions
+	- [x] 5.5 Write unit tests for engineering notation parsing edge cases
+	- [x] 5.6 Write property test: Engineering notation parsing round-trip (Property 9)
+	- [x] 5.7 Write property test: Parameter validation rejects invalid values (Property 10)
 
 ## Phase 3: File I/O and Data Import
 
-### 6. File Operations
-- [ ] 6.1 Implement file save functionality with schema validation
-- [ ] 6.2 Implement file load functionality with schema validation and error handling
-- [ ] 6.3 Implement unsaved changes tracking (dirty flag)
-- [ ] 6.4 Implement recent files list management
-- [ ] 6.5 Write unit tests for file save/load with valid and invalid files
-- [ ] 6.6 Write property test: Invalid file rejection (Property 19)
-- [ ] 6.7 Write property test: Unsaved changes tracking (Property 20)
+- [x] 6. File Operations
+	- [x] 6.1 Implement file save functionality with schema validation
+	- [x] 6.2 Implement file load functionality with schema validation and error handling
+	- [x] 6.3 Implement unsaved changes tracking (dirty flag)
+	- [x] 6.4 Implement recent files list management
+	- [x] 6.5 Write unit tests for file save/load with valid and invalid files
+	- [x] 6.6 Write property test: Invalid file rejection (Property 19)
+	- [x] 6.7 Write property test: Unsaved changes tracking (Property 20)
 
-### 7. FRD/ZMA File Parsing
-- [ ] 7.1 Implement FrdParser class for parsing frequency response files
-- [ ] 7.2 Implement ZmaParser class for parsing impedance files
-- [ ] 7.3 Implement monotonic frequency validation
-- [ ] 7.4 Implement FRD/ZMA export functionality
-- [ ] 7.5 Write unit tests for FRD/ZMA parsing with valid and invalid files
-- [ ] 7.6 Write property test: FRD/ZMA parsing produces monotonic frequencies (Property 21)
-- [ ] 7.7 Write property test: Invalid data error reporting (Property 22)
+- [ ] 7. FRD/ZMA File Parsing
+	- [x] 7.1 Implement FrdParser class for parsing frequency response files
+	- [x] 7.2 Implement ZmaParser class for parsing impedance files
+	- [x] 7.3 Implement monotonic frequency validation
+	- [x] 7.4 Implement FRD/ZMA export functionality
+	- [x] 7.5 Write unit tests for FRD/ZMA parsing with valid and invalid files
+	- [x] 7.6 Write property test: FRD/ZMA parsing produces monotonic frequencies (Property 21)
+	- [x] 7.7 Write property test: Invalid data error reporting (Property 22)
 
-### 8. DXO File Import
-- [ ] 8.1 Research XSim .dxo file format structure
-- [ ] 8.2 Implement DxoImporter class for parsing .dxo files
-- [ ] 8.3 Implement component mapping from DXO to internal format
-- [ ] 8.4 Implement connection mapping from DXO to internal Wire format
-- [ ] 8.5 Write unit tests for DXO import with reference files
-- [ ] 8.6 Handle unsupported DXO features with warnings
+- [x] 8. DXO File Import
+	- [x] 8.1 Research XSim .dxo file format structure
+	- [x] 8.2 Implement DxoImporter class for parsing .dxo files
+	- [x] 8.3 Implement component mapping from DXO to internal format
+	- [x] 8.4 Implement connection mapping from DXO to internal Wire format
+	- [x] 8.5 Write unit tests for DXO import with reference files
+	- [x] 8.6 Handle unsupported DXO features with warnings
 
 ## Phase 4: Circuit Editor UI
 
-### 9. Canvas Rendering
-- [ ] 9.1 Create CircuitEditor.vue component with HTML5 Canvas
-- [ ] 9.2 Implement grid dot rendering with configurable spacing
-- [ ] 9.3 Implement component rendering for all component types
-- [ ] 9.4 Implement wire rendering with multi-segment support
-- [ ] 9.5 Implement annotation text rendering
-- [ ] 9.6 Implement selection highlighting
-- [ ] 9.7 Write unit tests for coordinate transformations
-- [ ] 9.8 Write property test: Grid snapping invariant (Property 5)
+- [x] 9. Canvas Rendering
+	- [x] 9.1 Create CircuitEditor.vue component with HTML5 Canvas
+	- [x] 9.2 Implement grid dot rendering with configurable spacing
+	- [x] 9.3 Implement component rendering for all component types
+	- [x] 9.4 Implement wire rendering with multi-segment support
+	- [x] 9.5 Implement annotation text rendering
+	- [x] 9.6 Implement selection highlighting
+	- [x] 9.7 Write unit tests for coordinate transformations
+	- [x] 9.8 Write property test: Grid snapping invariant (Property 5)
 
-### 10. Mouse Interaction
-- [ ] 10.1 Implement mouse event handlers (mousedown, mousemove, mouseup)
-- [ ] 10.2 Implement component selection on click
-- [ ] 10.3 Implement component drag-and-drop from palette
-- [ ] 10.4 Implement component move mode with grid snapping
-- [ ] 10.5 Implement wire creation by dragging between terminals
-- [ ] 10.6 Implement multi-segment wire routing
-- [ ] 10.7 Implement scroll/pan functionality
-- [ ] 10.8 Write unit tests for hit detection and selection
-- [ ] 10.9 Write property test: Wire connectivity invariant (Property 3)
-- [ ] 10.10 Write property test: Multi-segment wire validity (Property 6)
+- [x] 10. Mouse Interaction
+	- [x] 10.1 Implement mouse event handlers (mousedown, mousemove, mouseup)
+	- [x] 10.2 Implement component selection on click
+	- [x] 10.3 Implement component drag-and-drop from palette
+	- [x] 10.4 Implement component move mode with grid snapping
+	- [x] 10.5 Implement wire creation by dragging between terminals
+	- [x] 10.6 Implement multi-segment wire routing
+	- [x] 10.7 Implement scroll/pan functionality
+	- [x] 10.8 Write unit tests for hit detection and selection
+	- [x] 10.9 Write property test: Wire connectivity invariant (Property 3)
+	- [x] 10.10 Write property test: Multi-segment wire validity (Property 6)
 
-### 11. Zoom and View Controls
-- [ ] 11.1 Implement zoom in/out buttons
-- [ ] 11.2 Implement zoom percentage input field
-- [ ] 11.3 Implement zoom transformation for canvas rendering
-- [ ] 11.4 Implement scroll area expansion logic
-- [ ] 11.5 Write unit tests for zoom calculations
-- [ ] 11.6 Verify grid snapping works at all zoom levels
+- [x] 11. Zoom and View Controls
+	- [x] 11.1 Implement zoom in/out buttons
+	- [x] 11.2 Implement zoom percentage input field
+	- [x] 11.3 Implement zoom transformation for canvas rendering
+	- [x] 11.4 Implement scroll area expansion logic
+	- [x] 11.5 Write unit tests for zoom calculations
+	- [x] 11.6 Verify grid snapping works at all zoom levels
 
-### 12. Component Palette
-- [ ] 12.1 Create ComponentPalette.vue component
-- [ ] 12.2 Implement component icons (SVG or image assets)
-- [ ] 12.3 Implement drag-and-drop from palette to canvas
-- [ ] 12.4 Implement component creation on drop
-- [ ] 12.5 Write unit tests for palette interactions
+- [x] 12. Component Palette
+	- [x] 12.1 Create ComponentPalette.vue component
+	- [x] 12.2 Implement component icons (SVG or image assets)
+	- [x] 12.3 Implement drag-and-drop from palette to canvas
+	- [x] 12.4 Implement component creation on drop
+	- [x] 12.5 Write unit tests for palette interactions
 
-### 13. Context Menu and Keyboard Shortcuts
-- [ ] 13.1 Implement right-click context menu for components
-- [ ] 13.2 Implement context menu items: Tune, Delete, Rotate, Invert, Mute
-- [ ] 13.3 Implement keyboard shortcuts: Delete, T (tune), Spacebar (rotate), Escape
-- [ ] 13.4 Implement context menu for wires (Delete)
-- [ ] 13.5 Write unit tests for keyboard event handling
-- [ ] 13.6 Write property test: Component rotation preserves connections (Property 24)
+- [x] 13. Context Menu and Keyboard Shortcuts
+	- [x] 13.1 Implement right-click context menu for components
+	- [x] 13.2 Implement context menu items: Tune, Delete, Rotate, Invert, Mute
+	- [x] 13.3 Implement keyboard shortcuts: Delete, T (tune), Spacebar (rotate), Escape
+	- [x] 13.4 Implement context menu for wires (Delete)
+	- [x] 13.5 Write unit tests for keyboard event handling
+	- [x] 13.6 Write property test: Component rotation preserves connections (Property 24)
 
-### 14. Undo/Redo System
-- [ ] 14.1 Implement undo stack in Vuex store
-- [ ] 14.2 Implement redo stack in Vuex store
-- [ ] 14.3 Implement action recording for all editing operations
-- [ ] 14.4 Implement undo/redo keyboard shortcuts (Ctrl+Z, Ctrl+Y)
-- [ ] 14.5 Write unit tests for undo/redo operations
-- [ ] 14.6 Write property test: Undo/redo inverse operations (Property 2)
+- [x] 14. Undo/Redo System
+	- [x] 14.1 Implement undo stack in Vuex store
+	- [x] 14.2 Implement redo stack in Vuex store
+	- [x] 14.3 Implement action recording for all editing operations
+	- [x] 14.4 Implement undo/redo keyboard shortcuts (Ctrl+Z, Ctrl+Y)
+	- [x] 14.5 Write unit tests for undo/redo operations
+	- [x] 14.6 Write property test: Undo/redo inverse operations (Property 2)
 
 ## Phase 5: Component Parameter Dialogs
 
-### 15. Tune Dialog Component
-- [ ] 15.1 Create TuneDialog.vue component with modal overlay
-- [ ] 15.2 Implement passive component parameter inputs (value, tolerance, ESR, state)
-- [ ] 15.3 Implement speaker parameter inputs (name, sensitivity, delay, invert, mute)
-- [ ] 15.4 Implement voltage source parameter inputs (power, impedance, delay, invert)
-- [ ] 15.5 Implement file selection buttons for FRD/ZMA files
-- [ ] 15.6 Implement phase source radio buttons (measured/derived)
-- [ ] 15.7 Implement off-axis file management UI
-- [ ] 15.8 Implement up/down increment buttons with E12/E24 stepping
-- [ ] 15.9 Implement engineering notation input parsing
-- [ ] 15.10 Write unit tests for parameter validation
-- [ ] 15.11 Write property test: Default parameter assignment (Property 8)
+- [x] 15. Tune Dialog Component
+	- [x] 15.1 Create TuneDialog.vue component with modal overlay
+	- [x] 15.2 Implement passive component parameter inputs (value, tolerance, ESR, state)
+	- [x] 15.3 Implement speaker parameter inputs (name, sensitivity, delay, invert, mute)
+	- [x] 15.4 Implement voltage source parameter inputs (power, impedance, delay, invert)
+	- [x] 15.5 Implement file selection buttons for FRD/ZMA files
+	- [x] 15.6 Implement phase source radio buttons (measured/derived)
+	- [x] 15.7 Implement off-axis file management UI
+	- [x] 15.8 Implement up/down increment buttons with E12/E24 stepping
+	- [x] 15.9 Implement engineering notation input parsing
+	- [x] 15.10 Write unit tests for parameter validation
+	- [x] 15.11 Write property test: Default parameter assignment (Property 8)
 
-### 16. Component State Management
-- [ ] 16.1 Implement normal/open/short state toggle in context menu
-- [ ] 16.2 Implement state selection in Tune dialog
-- [ ] 16.3 Implement visual indication of component state on canvas
-- [ ] 16.4 Write unit tests for state transitions
-- [ ] 16.5 Write property test: Component state simulation behavior (Property 13)
+- [ ] 16. Component State Management
+	- [ ] 16.1 Implement normal/open/short state toggle in context menu
+	- [ ] 16.2 Implement state selection in Tune dialog
+	- [ ] 16.3 Implement visual indication of component state on canvas
+	- [ ] 16.4 Write unit tests for state transitions
+	- [ ] 16.5 Write property test: Component state simulation behavior (Property 13)
 
 ## Phase 6: Simulation Engine
 
-### 17. Circuit Solver (MNA)
-- [ ] 17.1 Implement CircuitSolver class with Modified Nodal Analysis
-- [ ] 17.2 Implement node mapping and indexing
-- [ ] 17.3 Implement MNA matrix construction for passive components
-- [ ] 17.4 Implement voltage source handling in MNA
-- [ ] 17.5 Implement complex number math library integration
-- [ ] 17.6 Implement matrix solver (LU decomposition or similar)
-- [ ] 17.7 Implement frequency point generation (logarithmic spacing)
-- [ ] 17.8 Write unit tests for simple RC, RL, RLC circuits
-- [ ] 17.9 Write property test: Simulation frequency range (Property 14)
-- [ ] 17.10 Write property test: Simulation completeness (Property 15)
+- [ ] 17. Circuit Solver (MNA)
+	- [ ] 17.1 Implement CircuitSolver class with Modified Nodal Analysis
+	- [ ] 17.2 Implement node mapping and indexing
+	- [ ] 17.3 Implement MNA matrix construction for passive components
+	- [ ] 17.4 Implement voltage source handling in MNA
+	- [ ] 17.5 Implement complex number math library integration
+	- [ ] 17.6 Implement matrix solver (LU decomposition or similar)
+	- [ ] 17.7 Implement frequency point generation (logarithmic spacing)
+	- [ ] 17.8 Write unit tests for simple RC, RL, RLC circuits
+	- [ ] 17.9 Write property test: Simulation frequency range (Property 14)
+	- [ ] 17.10 Write property test: Simulation completeness (Property 15)
 
-### 18. Component State Handling in Simulation
-- [ ] 18.1 Implement open state handling (infinite impedance)
-- [ ] 18.2 Implement short state handling (zero resistance)
-- [ ] 18.3 Implement ESR inclusion in capacitor/inductor models
-- [ ] 18.4 Write unit tests for component state effects
-- [ ] 18.5 Write property test: ESR simulation impact (Property 12)
+- [ ] 18. Component State Handling in Simulation
+	- [ ] 18.1 Implement open state handling (infinite impedance)
+	- [ ] 18.2 Implement short state handling (zero resistance)
+	- [ ] 18.3 Implement ESR inclusion in capacitor/inductor models
+	- [ ] 18.4 Write unit tests for component state effects
+	- [ ] 18.5 Write property test: ESR simulation impact (Property 12)
 
-### 19. Frequency Response Analysis
-- [ ] 19.1 Implement FrequencyAnalyzer class
-- [ ] 19.2 Implement SPL calculation for individual speakers
-- [ ] 19.3 Implement combined system response calculation
-- [ ] 19.4 Implement sensitivity adjustment application
-- [ ] 19.5 Implement delay/phase shift application
-- [ ] 19.6 Implement polarity inversion handling
-- [ ] 19.7 Write unit tests for frequency response calculations
-- [ ] 19.8 Write property test: Polarity inversion (Property 26)
+- [ ] 19. Frequency Response Analysis
+	- [ ] 19.1 Implement FrequencyAnalyzer class
+	- [ ] 19.2 Implement SPL calculation for individual speakers
+	- [ ] 19.3 Implement combined system response calculation
+	- [ ] 19.4 Implement sensitivity adjustment application
+	- [ ] 19.5 Implement delay/phase shift application
+	- [ ] 19.6 Implement polarity inversion handling
+	- [ ] 19.7 Write unit tests for frequency response calculations
+	- [ ] 19.8 Write property test: Polarity inversion (Property 26)
 
-### 20. Impedance Calculation
-- [ ] 20.1 Implement input impedance calculation at each frequency
-- [ ] 20.2 Implement impedance magnitude and phase extraction
-- [ ] 20.3 Write unit tests for impedance calculations
+- [ ] 20. Impedance Calculation
+	- [ ] 20.1 Implement input impedance calculation at each frequency
+	- [ ] 20.2 Implement impedance magnitude and phase extraction
+	- [ ] 20.3 Write unit tests for impedance calculations
 
-### 21. Hilbert Transform
-- [ ] 21.1 Research and implement Hilbert Transform algorithm
-- [ ] 21.2 Implement minimum phase derivation from magnitude data
-- [ ] 21.3 Write unit tests comparing measured vs derived phase
-- [ ] 21.4 Write property test: Minimum phase derivation (Property 17)
+- [ ] 21. Hilbert Transform
+	- [ ] 21.1 Research and implement Hilbert Transform algorithm
+	- [ ] 21.2 Implement minimum phase derivation from magnitude data
+	- [ ] 21.3 Write unit tests comparing measured vs derived phase
+	- [ ] 21.4 Write property test: Minimum phase derivation (Property 17)
 
-### 22. Circuit Validation
-- [ ] 22.1 Implement floating node detection
-- [ ] 22.2 Implement short circuit detection
-- [ ] 22.3 Implement missing ground detection
-- [ ] 22.4 Implement disconnected component detection
-- [ ] 22.5 Write unit tests for each validation error type
-- [ ] 22.6 Write property test: Invalid circuit error reporting (Property 16)
-- [ ] 22.7 Write property test: Disconnected component exclusion (Property 18)
+- [ ] 22. Circuit Validation
+	- [ ] 22.1 Implement floating node detection
+	- [ ] 22.2 Implement short circuit detection
+	- [ ] 22.3 Implement missing ground detection
+	- [ ] 22.4 Implement disconnected component detection
+	- [ ] 22.5 Write unit tests for each validation error type
+	- [ ] 22.6 Write property test: Invalid circuit error reporting (Property 16)
+	- [ ] 22.7 Write property test: Disconnected component exclusion (Property 18)
 
-### 23. Voltage Source Calculations
-- [ ] 23.1 Implement voltage calculation from power and impedance (V = sqrt(P * Z))
-- [ ] 23.2 Implement default initialization (1W at 8Ω = 2.828 Vrms)
-- [ ] 23.3 Write unit tests for voltage source calculations
-- [ ] 23.4 Write property test: Voltage source calculation (Property 25)
+- [ ] 23. Voltage Source Calculations
+	- [ ] 23.1 Implement voltage calculation from power and impedance (V = sqrt(P * Z))
+	- [ ] 23.2 Implement default initialization (1W at 8Ω = 2.828 Vrms)
+	- [ ] 23.3 Write unit tests for voltage source calculations
+	- [ ] 23.4 Write property test: Voltage source calculation (Property 25)
 
 ## Phase 7: Graph Visualization
 
-### 24. Frequency Response Graph
-- [ ] 24.1 Create FrequencyResponseGraph.vue component
-- [ ] 24.2 Implement logarithmic frequency axis rendering
-- [ ] 24.3 Implement linear dB magnitude axis rendering
-- [ ] 24.4 Implement grid line rendering
-- [ ] 24.5 Implement curve rendering for multiple traces
-- [ ] 24.6 Implement curve color management
-- [ ] 24.7 Implement hover tooltips with frequency/magnitude values
-- [ ] 24.8 Write unit tests for axis calculations
+- [ ] 24. Frequency Response Graph
+	- [ ] 24.1 Create FrequencyResponseGraph.vue component
+	- [ ] 24.2 Implement logarithmic frequency axis rendering
+	- [ ] 24.3 Implement linear dB magnitude axis rendering
+	- [ ] 24.4 Implement grid line rendering
+	- [ ] 24.5 Implement curve rendering for multiple traces
+	- [ ] 24.6 Implement curve color management
+	- [ ] 24.7 Implement hover tooltips with frequency/magnitude values
+	- [ ] 24.8 Write unit tests for axis calculations
 
-### 25. Impedance Graph
-- [ ] 25.1 Create ImpedanceGraph.vue component
-- [ ] 25.2 Implement impedance curve rendering
-- [ ] 25.3 Implement phase curve rendering
-- [ ] 25.4 Reuse axis and grid rendering from frequency response graph
-- [ ] 25.5 Write unit tests for impedance graph rendering
+- [ ] 25. Impedance Graph
+	- [ ] 25.1 Create ImpedanceGraph.vue component
+	- [ ] 25.2 Implement impedance curve rendering
+	- [ ] 25.3 Implement phase curve rendering
+	- [ ] 25.4 Reuse axis and grid rendering from frequency response graph
+	- [ ] 25.5 Write unit tests for impedance graph rendering
 
-### 26. Graph Controls and Menus
-- [ ] 26.1 Implement Curves menu for frequency response graph
-- [ ] 26.2 Implement curve visibility toggles
-- [ ] 26.3 Implement curve color selection
-- [ ] 26.4 Implement phase curve toggle
-- [ ] 26.5 Implement smoothing options (1/24, 1/12, 1/6, 1/3, 1/2, 1, ERB)
-- [ ] 26.6 Implement smoothing algorithm for fractional octave smoothing
-- [ ] 26.7 Implement Curves menu for impedance graph
-- [ ] 26.8 Write unit tests for smoothing calculations
+- [ ] 26. Graph Controls and Menus
+	- [ ] 26.1 Implement Curves menu for frequency response graph
+	- [ ] 26.2 Implement curve visibility toggles
+	- [ ] 26.3 Implement curve color selection
+	- [ ] 26.4 Implement phase curve toggle
+	- [ ] 26.5 Implement smoothing options (1/24, 1/12, 1/6, 1/3, 1/2, 1, ERB)
+	- [ ] 26.6 Implement smoothing algorithm for fractional octave smoothing
+	- [ ] 26.7 Implement Curves menu for impedance graph
+	- [ ] 26.8 Write unit tests for smoothing calculations
 
-### 27. Graph Scale Controls
-- [ ] 27.1 Implement Scale menu for frequency response graph
-- [ ] 27.2 Implement min/max frequency inputs
-- [ ] 27.3 Implement vertical center value input
-- [ ] 27.4 Implement vertical step size input
-- [ ] 27.5 Implement Scale menu for impedance graph
-- [ ] 27.6 Write unit tests for scale transformations
+- [ ] 27. Graph Scale Controls
+	- [ ] 27.1 Implement Scale menu for frequency response graph
+	- [ ] 27.2 Implement min/max frequency inputs
+	- [ ] 27.3 Implement vertical center value input
+	- [ ] 27.4 Implement vertical step size input
+	- [ ] 27.5 Implement Scale menu for impedance graph
+	- [ ] 27.6 Write unit tests for scale transformations
 
-### 28. Hold Feature
-- [ ] 28.1 Implement Hold button for frequency response graph
-- [ ] 28.2 Implement graph state capture on Hold activation
-- [ ] 28.3 Implement gray overlay rendering of held curves
-- [ ] 28.4 Implement Hold button for impedance graph
-- [ ] 28.5 Write unit tests for hold state management
+- [ ] 28. Hold Feature
+	- [ ] 28.1 Implement Hold button for frequency response graph
+	- [ ] 28.2 Implement graph state capture on Hold activation
+	- [ ] 28.3 Implement gray overlay rendering of held curves
+	- [ ] 28.4 Implement Hold button for impedance graph
+	- [ ] 28.5 Write unit tests for hold state management
 
-### 29. Graph Export
-- [ ] 29.1 Implement FRD file export from frequency response graph
-- [ ] 29.2 Implement ZMA file export from impedance graph
-- [ ] 29.3 Implement graph snapshot to PNG file
-- [ ] 29.4 Implement graph snapshot to clipboard
-- [ ] 29.5 Write unit tests for export functionality
+- [ ] 29. Graph Export
+	- [ ] 29.1 Implement FRD file export from frequency response graph
+	- [ ] 29.2 Implement ZMA file export from impedance graph
+	- [ ] 29.3 Implement graph snapshot to PNG file
+	- [ ] 29.4 Implement graph snapshot to clipboard
+	- [ ] 29.5 Write unit tests for export functionality
 
-### 30. External File Comparison
-- [ ] 30.1 Implement "Get File" menu item for loading external FRD files
-- [ ] 30.2 Implement external FRD curve rendering in frequency response graph
-- [ ] 30.3 Implement "Get File" menu item for loading external ZMA files
-- [ ] 30.4 Implement external ZMA curve rendering in impedance graph
-- [ ] 30.5 Write unit tests for external file loading
+- [ ] 30. External File Comparison
+	- [ ] 30.1 Implement "Get File" menu item for loading external FRD files
+	- [ ] 30.2 Implement external FRD curve rendering in frequency response graph
+	- [ ] 30.3 Implement "Get File" menu item for loading external ZMA files
+	- [ ] 30.4 Implement external ZMA curve rendering in impedance graph
+	- [ ] 30.5 Write unit tests for external file loading
 
 ## Phase 8: Off-Axis Response
 
-### 31. Off-Axis Data Management
-- [ ] 31.1 Implement off-axis file storage in Speaker component
-- [ ] 31.2 Implement off-axis file loading and parsing
-- [ ] 31.3 Implement angle validation (0-180 degrees)
-- [ ] 31.4 Implement off-axis file UI in Tune dialog
-- [ ] 31.5 Write unit tests for off-axis data management
+- [ ] 31. Off-Axis Data Management
+	- [ ] 31.1 Implement off-axis file storage in Speaker component
+	- [ ] 31.2 Implement off-axis file loading and parsing
+	- [ ] 31.3 Implement angle validation (0-180 degrees)
+	- [ ] 31.4 Implement off-axis file UI in Tune dialog
+	- [ ] 31.5 Write unit tests for off-axis data management
 
-### 32. Angle Switching
-- [ ] 32.1 Implement global angle control in UI
-- [ ] 32.2 Implement angle switching logic for all speakers
-- [ ] 32.3 Implement fallback to closest available angle
-- [ ] 32.4 Implement angle indicator in graph viewer
-- [ ] 32.5 Write unit tests for angle switching
-- [ ] 32.6 Write property test: Off-axis angle switching (Property 23)
+- [ ] 32. Angle Switching
+	- [ ] 32.1 Implement global angle control in UI
+	- [ ] 32.2 Implement angle switching logic for all speakers
+	- [ ] 32.3 Implement fallback to closest available angle
+	- [ ] 32.4 Implement angle indicator in graph viewer
+	- [ ] 32.5 Write unit tests for angle switching
+	- [ ] 32.6 Write property test: Off-axis angle switching (Property 23)
 
 ## Phase 9: Vuex State Management
 
-### 33. Circuit State Module
-- [ ] 33.1 Implement circuit state module (circuit.js)
-- [ ] 33.2 Implement mutations for component add/remove/update
-- [ ] 33.3 Implement mutations for wire add/remove
-- [ ] 33.4 Implement mutations for annotation add/remove/update
-- [ ] 33.5 Implement actions for file operations
-- [ ] 33.6 Implement undo/redo state management
-- [ ] 33.7 Write unit tests for state mutations
+- [ ] 33. Circuit State Module
+	- [ ] 33.1 Implement circuit state module (circuit.js)
+	- [ ] 33.2 Implement mutations for component add/remove/update
+	- [ ] 33.3 Implement mutations for wire add/remove
+	- [ ] 33.4 Implement mutations for annotation add/remove/update
+	- [ ] 33.5 Implement actions for file operations
+	- [ ] 33.6 Implement undo/redo state management
+	- [ ] 33.7 Write unit tests for state mutations
 
-### 34. Simulation State Module
-- [ ] 34.1 Implement simulation state module (simulation.js)
-- [ ] 34.2 Implement auto-simulate toggle
-- [ ] 34.3 Implement current angle state
-- [ ] 34.4 Implement frequency response state
-- [ ] 34.5 Implement impedance response state
-- [ ] 34.6 Implement simulation action with async solver
-- [ ] 34.7 Write unit tests for simulation state management
+- [ ] 34. Simulation State Module
+	- [ ] 34.1 Implement simulation state module (simulation.js)
+	- [ ] 34.2 Implement auto-simulate toggle
+	- [ ] 34.3 Implement current angle state
+	- [ ] 34.4 Implement frequency response state
+	- [ ] 34.5 Implement impedance response state
+	- [ ] 34.6 Implement simulation action with async solver
+	- [ ] 34.7 Write unit tests for simulation state management
 
-### 35. UI State Module
-- [ ] 35.1 Implement UI state module (ui.js)
-- [ ] 35.2 Implement panel size/position state
-- [ ] 35.3 Implement zoom level state
-- [ ] 35.4 Implement selected component state
-- [ ] 35.5 Implement graph scale settings state
-- [ ] 35.6 Write unit tests for UI state management
+- [ ] 35. UI State Module
+	- [ ] 35.1 Implement UI state module (ui.js)
+	- [ ] 35.2 Implement panel size/position state
+	- [ ] 35.3 Implement zoom level state
+	- [ ] 35.4 Implement selected component state
+	- [ ] 35.5 Implement graph scale settings state
+	- [ ] 35.6 Write unit tests for UI state management
 
 ## Phase 10: Application Integration
 
-### 36. Electron Main Process
-- [ ] 36.1 Implement application menu (File, Edit, View, Help)
-- [ ] 36.2 Implement file dialog handlers (open, save, import)
-- [ ] 36.3 Implement window management
-- [ ] 36.4 Implement IPC communication between main and renderer
-- [ ] 36.5 Implement recent files persistence
-- [ ] 36.6 Write unit tests for IPC handlers
+- [ ] 36. Electron Main Process
+	- [ ] 36.1 Implement application menu (File, Edit, View, Help)
+	- [ ] 36.2 Implement file dialog handlers (open, save, import)
+	- [ ] 36.3 Implement window management
+	- [ ] 36.4 Implement IPC communication between main and renderer
+	- [ ] 36.5 Implement recent files persistence
+	- [ ] 36.6 Write unit tests for IPC handlers
 
-### 37. Application Lifecycle
-- [ ] 37.1 Implement new project initialization with default voltage source
-- [ ] 37.2 Implement unsaved changes prompt on close
-- [ ] 37.3 Implement last opened file restoration
-- [ ] 37.4 Implement error logging to file
-- [ ] 37.5 Implement crash recovery data saving
-- [ ] 37.6 Implement about dialog
-- [ ] 37.7 Write unit tests for lifecycle events
+- [ ] 37. Application Lifecycle
+	- [ ] 37.1 Implement new project initialization with default voltage source
+	- [ ] 37.2 Implement unsaved changes prompt on close
+	- [ ] 37.3 Implement last opened file restoration
+	- [ ] 37.4 Implement error logging to file
+	- [ ] 37.5 Implement crash recovery data saving
+	- [ ] 37.6 Implement about dialog
+	- [ ] 37.7 Write unit tests for lifecycle events
 
-### 38. Auto-Simulation
-- [ ] 38.1 Implement auto-simulate toggle in UI
-- [ ] 38.2 Implement parameter change detection
-- [ ] 38.3 Implement debounced simulation trigger
-- [ ] 38.4 Implement simulation progress indicator
-- [ ] 38.5 Write unit tests for auto-simulation logic
+- [ ] 38. Auto-Simulation
+	- [ ] 38.1 Implement auto-simulate toggle in UI
+	- [ ] 38.2 Implement parameter change detection
+	- [ ] 38.3 Implement debounced simulation trigger
+	- [ ] 38.4 Implement simulation progress indicator
+	- [ ] 38.5 Write unit tests for auto-simulation logic
 
 ## Phase 11: Annotation System
 
-### 39. Text Annotations
-- [ ] 39.1 Implement text annotation creation on canvas
-- [ ] 39.2 Implement text editing dialog
-- [ ] 39.3 Implement font size control
-- [ ] 39.4 Implement annotation positioning and dragging
-- [ ] 39.5 Implement annotation deletion
-- [ ] 39.6 Write unit tests for annotation management
-- [ ] 39.7 Write property test: Annotation simulation independence (Property 4)
+- [ ] 39. Text Annotations
+	- [ ] 39.1 Implement text annotation creation on canvas
+	- [ ] 39.2 Implement text editing dialog
+	- [ ] 39.3 Implement font size control
+	- [ ] 39.4 Implement annotation positioning and dragging
+	- [ ] 39.5 Implement annotation deletion
+	- [ ] 39.6 Write unit tests for annotation management
+	- [ ] 39.7 Write property test: Annotation simulation independence (Property 4)
 
 ## Phase 12: Testing and Validation
 
-### 40. Unit Test Suite
-- [ ] 40.1 Achieve 80%+ code coverage for model classes
-- [ ] 40.2 Achieve 80%+ code coverage for simulation engine
-- [ ] 40.3 Achieve 70%+ code coverage for UI components
-- [ ] 40.4 Write integration tests for end-to-end workflows
-- [ ] 40.5 Write tests for error handling and edge cases
+- [ ] 40. Unit Test Suite
+	- [ ] 40.1 Achieve 80%+ code coverage for model classes
+	- [ ] 40.2 Achieve 80%+ code coverage for simulation engine
+	- [ ] 40.3 Achieve 70%+ code coverage for UI components
+	- [ ] 40.4 Write integration tests for end-to-end workflows
+	- [ ] 40.5 Write tests for error handling and edge cases
 
-### 41. Property-Based Test Suite
-- [ ] 41.1 Implement circuit generator for PBT
-- [ ] 41.2 Implement component generator for PBT
-- [ ] 41.3 Implement engineering notation generator for PBT
-- [ ] 41.4 Implement FRD data generator for PBT
-- [ ] 41.5 Implement ZMA data generator for PBT
-- [ ] 41.6 Configure fast-check with minimum 100 iterations per test
-- [ ] 41.7 Tag all property tests with feature name and property number
+- [ ] 41. Property-Based Test Suite
+	- [ ] 41.1 Implement circuit generator for PBT
+	- [ ] 41.2 Implement component generator for PBT
+	- [ ] 41.3 Implement engineering notation generator for PBT
+	- [ ] 41.4 Implement FRD data generator for PBT
+	- [ ] 41.5 Implement ZMA data generator for PBT
+	- [ ] 41.6 Configure fast-check with minimum 100 iterations per test
+	- [ ] 41.7 Tag all property tests with feature name and property number
 
-### 42. XSim Validation Testing
-- [ ] 42.1 Obtain or create reference 2-way crossover project
-- [ ] 42.2 Obtain or create reference 3-way crossover project
-- [ ] 42.3 Obtain or create reference edge case project
-- [ ] 42.4 Implement validation test suite
-- [ ] 42.5 Implement curve comparison with tolerance checking (±0.5 dB, ±5°)
-- [ ] 42.6 Store reference files in test fixtures directory
-- [ ] 42.7 Document validation test results
+- [ ] 42. XSim Validation Testing
+	- [ ] 42.1 Obtain or create reference 2-way crossover project
+	- [ ] 42.2 Obtain or create reference 3-way crossover project
+	- [ ] 42.3 Obtain or create reference edge case project
+	- [ ] 42.4 Implement validation test suite
+	- [ ] 42.5 Implement curve comparison with tolerance checking (±0.5 dB, ±5°)
+	- [ ] 42.6 Store reference files in test fixtures directory
+	- [ ] 42.7 Document validation test results
 
 ## Phase 13: Polish and Documentation
 
-### 43. UI Polish
-- [ ] 43.1 Implement consistent styling across all components
-- [ ] 43.2 Implement loading indicators for long operations
-- [ ] 43.3 Implement error message dialogs with clear messaging
-- [ ] 43.4 Implement tooltips for all UI controls
-- [ ] 43.5 Implement keyboard shortcut reference dialog
-- [ ] 43.6 Optimize canvas rendering performance
+- [ ] 43. UI Polish
+	- [ ] 43.1 Implement consistent styling across all components
+	- [ ] 43.2 Implement loading indicators for long operations
+	- [ ] 43.3 Implement error message dialogs with clear messaging
+	- [ ] 43.4 Implement tooltips for all UI controls
+	- [ ] 43.5 Implement keyboard shortcut reference dialog
+	- [ ] 43.6 Optimize canvas rendering performance
 
-### 44. Cross-Platform Testing
-- [ ] 44.1 Test on Windows 10/11
-- [ ] 44.2 Test on macOS 10.14+
-- [ ] 44.3 Test on Linux (Ubuntu, Fedora)
-- [ ] 44.4 Verify native file dialogs work on all platforms
-- [ ] 44.5 Verify preferences storage works on all platforms
+- [ ] 44. Cross-Platform Testing
+	- [ ] 44.1 Test on Windows 10/11
+	- [ ] 44.2 Test on macOS 10.14+
+	- [ ] 44.3 Test on Linux (Ubuntu, Fedora)
+	- [ ] 44.4 Verify native file dialogs work on all platforms
+	- [ ] 44.5 Verify preferences storage works on all platforms
 
-### 45. Documentation
-- [ ] 45.1 Write user guide with screenshots
-- [ ] 45.2 Write developer documentation for architecture
-- [ ] 45.3 Document JSON file format specification
-- [ ] 45.4 Document FRD/ZMA file format support
-- [ ] 45.5 Create example circuit library
-- [ ] 45.6 Write troubleshooting guide
+- [ ] 45. Documentation
+	- [ ] 45.1 Write user guide with screenshots
+	- [ ] 45.2 Write developer documentation for architecture
+	- [ ] 45.3 Document JSON file format specification
+	- [ ] 45.4 Document FRD/ZMA file format support
+	- [ ] 45.5 Create example circuit library
+	- [ ] 45.6 Write troubleshooting guide
 
-### 46. Build and Packaging
-- [ ] 46.1 Configure Electron Builder for Windows
-- [ ] 46.2 Configure Electron Builder for macOS
-- [ ] 46.3 Configure Electron Builder for Linux
-- [ ] 46.4 Create application icons for all platforms
-- [ ] 46.5 Test installers on all platforms
-- [ ] 46.6 Set up code signing for macOS and Windows
+- [ ] 46. Build and Packaging
+	- [ ] 46.1 Configure Electron Builder for Windows
+	- [ ] 46.2 Configure Electron Builder for macOS
+	- [ ] 46.3 Configure Electron Builder for Linux
+	- [ ] 46.4 Create application icons for all platforms
+	- [ ] 46.5 Test installers on all platforms
+	- [ ] 46.6 Set up code signing for macOS and Windows
 
 ## Phase 14: Future Enhancements (Non-MVP)
 
-### 47. Circuit Templates (Future)
-- [ ]* 47.1 Implement template library system
-- [ ]* 47.2 Create Butterworth filter templates
-- [ ]* 47.3 Create Linkwitz-Riley filter templates
-- [ ]* 47.4 Implement template parameter tuning
-- [ ]* 47.5 Implement user template saving
+- [ ] 47. Circuit Templates (Future)
+	- [ ]* 47.1 Implement template library system
+	- [ ]* 47.2 Create Butterworth filter templates
+	- [ ]* 47.3 Create Linkwitz-Riley filter templates
+	- [ ]* 47.4 Implement template parameter tuning
+	- [ ]* 47.5 Implement user template saving
 
-### 48. Active Components (Future)
-- [ ]* 48.1 Implement OpAmp component class
-- [ ]* 48.2 Implement Buffer component class
-- [ ]* 48.3 Implement Summer component class
-- [ ]* 48.4 Extend MNA solver for active components
-- [ ]* 48.5 Create active component library
+- [ ] 48. Active Components (Future)
+	- [ ]* 48.1 Implement OpAmp component class
+	- [ ]* 48.2 Implement Buffer component class
+	- [ ]* 48.3 Implement Summer component class
+	- [ ]* 48.4 Extend MNA solver for active components
+	- [ ]* 48.5 Create active component library
 
-### 49. Specialized Components (Future)
-- [ ]* 49.1 Implement Transformer component class
-- [ ]* 49.2 Implement Potentiometer component class
-- [ ]* 49.3 Implement Switch component class
-- [ ]* 49.4 Implement FDNR component class
-- [ ]* 49.5 Implement custom impedance component class
+- [ ] 49. Specialized Components (Future)
+	- [ ]* 49.1 Implement Transformer component class
+	- [ ]* 49.2 Implement Potentiometer component class
+	- [ ]* 49.3 Implement Switch component class
+	- [ ]* 49.4 Implement FDNR component class
+	- [ ]* 49.5 Implement custom impedance component class
 
-### 50. Advanced Features (Future)
-- [ ]* 50.1 Implement FRD/ZMA file editor within application
-- [ ]* 50.2 Implement acoustic effect file support
-- [ ]* 50.3 Implement group delay visualization
-- [ ]* 50.4 Implement impulse response visualization
-- [ ]* 50.5 Implement step response visualization
-- [ ]* 50.6 Implement square wave response visualization
+- [ ] 50. Advanced Features (Future)
+	- [ ]* 50.1 Implement FRD/ZMA file editor within application
+	- [ ]* 50.2 Implement acoustic effect file support
+	- [ ]* 50.3 Implement group delay visualization
+	- [ ]* 50.4 Implement impulse response visualization
+	- [ ]* 50.5 Implement step response visualization
+	- [ ]* 50.6 Implement square wave response visualization
 
 ## Notes
 

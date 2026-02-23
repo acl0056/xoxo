@@ -367,20 +367,20 @@ export class Circuit {
 		// Deserialize components using their specific class fromJSON methods
 		circuit.components = (json.components || []).map((componentData) => {
 			switch (componentData.type) {
-			case 'resistor':
-				return Resistor.fromJSON(componentData);
-			case 'capacitor':
-				return Capacitor.fromJSON(componentData);
-			case 'inductor':
-				return Inductor.fromJSON(componentData);
-			case 'speaker':
-				return Speaker.fromJSON(componentData);
-			case 'source':
-				return VoltageSource.fromJSON(componentData);
-			case 'ground':
-				return Ground.fromJSON(componentData);
-			default:
-				throw new Error(`Unknown component type: ${componentData.type}`);
+				case 'resistor':
+					return Resistor.fromJSON(componentData);
+				case 'capacitor':
+					return Capacitor.fromJSON(componentData);
+				case 'inductor':
+					return Inductor.fromJSON(componentData);
+				case 'speaker':
+					return Speaker.fromJSON(componentData);
+				case 'source':
+					return VoltageSource.fromJSON(componentData);
+				case 'ground':
+					return Ground.fromJSON(componentData);
+				default:
+					throw new Error(`Unknown component type: ${componentData.type}`);
 			}
 		});
 

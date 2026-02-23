@@ -60,6 +60,9 @@ module.exports = {
 			},
 		],
 		'import/no-cycle': 'off',
+		'import/no-extraneous-dependencies': ['error', {
+			devDependencies: true,
+		}],
 	},
 	overrides: [
 		{

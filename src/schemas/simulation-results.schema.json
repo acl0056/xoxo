@@ -1,0 +1,117 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "simulation-results.schema.json",
+	"title": "Simulation Results Schema",
+	"description": "Schema for simulation output data containing frequency response and impedance analysis results",
+	"type": "object",
+	"required": ["frequencyResponse", "impedanceResponse", "timestamp"],
+	"properties": {
+		"frequencyResponse": {
+			"type": "object",
+			"required": ["frequencies", "spl", "phase"],
+			"properties": {
+				"frequencies": {
+					"type": "array",
+					"items": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"minItems": 1,
+					"description": "Frequency points in Hz (logarithmically spaced from 1 Hz to 100 kHz)"
+				},
+				"spl": {
+					"type": "array",
+					"items": {
+						"type": "number"
+					},
+					"minItems": 1,
+					"description": "Combined system SPL response in dB"
+				},
+				"phase": {
+					"type": "array",
+					"items": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"minItems": 1,
+					"description": "Combined system phase response in degrees"
+				},
+				"speakerResponses": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "object",
+						"required": ["spl", "phase"],
+						"properties": {
+							"spl": {
+								"type": "array",
+								"items": {
+									"type": "number"
+								},
+								"description": "Individual speaker SPL response in dB"
+							},
+							"phase": {
+								"type": "array",
+								"items": {
+									"type": "number",
+									"minimum": -180,
+									"maximum": 180
+								},
+								"description": "Individual speaker phase response in degrees"
+							}
+						}
+					},
+					"description": "Individual speaker responses keyed by component ID"
+				}
+			},
+			"description": "Frequency response analysis results"
+		},
+		"impedanceResponse": {
+			"type": "object",
+			"required": ["frequencies", "impedances", "phases"],
+			"properties": {
+				"frequencies": {
+					"type": "array",
+					"items": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"minItems": 1,
+					"description": "Frequency points in Hz (same as frequency response)"
+				},
+				"impedances": {
+					"type": "array",
+					"items": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"minItems": 1,
+					"description": "Input impedance magnitude values in ohms"
+				},
+				"phases": {
+					"type": "array",
+					"items": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"minItems": 1,
+					"description": "Input impedance phase values in degrees"
+				}
+			},
+			"description": "Impedance analysis results"
+		},
+		"timestamp": {
+			"type": "string",
+			"format": "date-time",
+			"description": "Simulation execution timestamp (ISO 8601 format)"
+		},
+		"angle": {
+			"type": "number",
+			"minimum": 0,
+			"maximum": 180,
+			"description": "Off-axis angle used for simulation in degrees (0 = on-axis)"
+		}
+	},
+	"additionalProperties": false
+}

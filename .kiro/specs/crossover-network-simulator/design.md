@@ -1818,12 +1818,64 @@ Reference projects should include:
 - **Electron**: Cross-platform desktop framework
 - **Vue 3**: Reactive UI framework with Composition API
 - **Vuex**: State management
-- **HTML5 Canvas**: Circuit editor rendering
-- **Chart.js or D3.js**: Graph visualization
+- **HTML5 Canvas**: Circuit editor rendering and graph visualization
+- **complex.js**: Complex number arithmetic for AC circuit analysis
+- **mathjs**: Matrix operations (LU decomposition, linear system solving)
 - **fast-check**: Property-based testing library
 - **Jest**: Unit testing framework
 - **ESLint**: Code quality (Airbnb style guide with custom rules)
 - **Ajv**: JSON Schema validator for runtime validation
+
+### Package Decisions
+
+**Circuit Computation:**
+
+We have two options for implementing the circuit simulation engine:
+
+**Option 1: Custom Implementation (Recommended)**
+- **complex.js** (`npm install complex.js`): Lightweight library for complex number operations needed for AC circuit analysis
+- **mathjs** (`npm install mathjs`): Comprehensive math library with matrix operations, LU decomposition, and linear system solvers for MNA
+- **Reference implementation**: The C# code in `research/transition/` provides a complete working reference for:
+  - Modified Nodal Analysis (MNA) implementation
+  - Complex number operations for AC analysis
+  - Matrix solver using LU decomposition (Doolittle factorization)
+  - Circuit building and node analysis
+  - Component admittance calculations
+
+**Why custom implementation:**
+- Full control over the simulation algorithm
+- Can optimize specifically for passive crossover networks
+- Reference C# code provides proven algorithms to port
+- Smaller bundle size (only include what we need)
+- Better understanding and maintainability
+- Can add crossover-specific optimizations
+
+**Option 2: Existing Libraries (Not Recommended)**
+- **CircuitJS1**: Browser-based circuit simulator (originally by Paul Falstad)
+  - Written in Java, compiled to JavaScript via GWT
+  - Large bundle size, not designed as a library
+  - Includes UI components we don't need
+  - Difficult to integrate into our architecture
+- **ngspice.js**: SPICE compiled to WebAssembly
+  - Very large bundle size (several MB)
+  - Overkill for passive crossover networks
+  - Complex API not suited for our use case
+  - Includes transistor models and features we don't need
+
+**Recommendation**: Implement custom MNA solver using the C# reference code as a guide. The algorithms are well-documented and the reference implementation is proven to work correctly.
+
+**Graph Visualization:**
+- **HTML5 Canvas (native)**: Direct canvas rendering for both circuit editor and graphs
+  - Provides maximum control over rendering
+  - Better performance for real-time updates
+  - Simpler integration with circuit editor (same rendering approach)
+  - No additional dependencies for graph rendering
+  - Custom implementation allows precise control over logarithmic axes and curve rendering
+
+**Why not Chart.js or D3.js:**
+- Chart.js: Limited control over logarithmic frequency axes and custom curve rendering
+- D3.js: Adds significant bundle size and complexity for features we can implement directly
+- Canvas approach: Consistent with circuit editor, better performance, full control
 
 ### Schema Files Organization
 

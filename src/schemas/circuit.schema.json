@@ -1,0 +1,403 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "circuit.schema.json",
+	"type": "object",
+	"required": ["version", "metadata", "components", "wires"],
+	"properties": {
+		"version": {
+			"type": "string",
+			"pattern": "^\\d+\\.\\d+$",
+			"description": "Schema version"
+		},
+		"metadata": {
+			"type": "object",
+			"required": ["name", "created", "modified"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Circuit name"
+				},
+				"created": {
+					"type": "string",
+					"format": "date-time",
+					"description": "Creation timestamp"
+				},
+				"modified": {
+					"type": "string",
+					"format": "date-time",
+					"description": "Last modification timestamp"
+				}
+			}
+		},
+		"components": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/component"
+			}
+		},
+		"wires": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/wire"
+			}
+		},
+		"annotations": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/annotation"
+			},
+			"default": []
+		}
+	},
+	"definitions": {
+		"component": {
+			"type": "object",
+			"required": ["id", "type", "x", "y", "rotation", "parameters"],
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique component identifier"
+				},
+				"type": {
+					"type": "string",
+					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source"],
+					"description": "Component type"
+				},
+				"label": {
+					"type": "string",
+					"description": "Component label (e.g., R1, C2, L3)"
+				},
+				"x": {
+					"type": "integer",
+					"description": "Grid position X coordinate"
+				},
+				"y": {
+					"type": "integer",
+					"description": "Grid position Y coordinate"
+				},
+				"rotation": {
+					"type": "integer",
+					"enum": [0, 90, 180, 270],
+					"description": "Rotation in degrees"
+				},
+				"parameters": {
+					"type": "object",
+					"description": "Component-specific parameters"
+				}
+			},
+			"allOf": [
+				{
+					"if": {
+						"properties": { "type": { "const": "resistor" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/resistorParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "capacitor" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/capacitorParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "inductor" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/inductorParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "speaker" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/speakerParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "ground" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/groundParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "source" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/sourceParameters" }
+						}
+					}
+				}
+			]
+		},
+		"resistorParameters": {
+			"type": "object",
+			"required": ["resistance", "tolerance", "state"],
+			"properties": {
+				"resistance": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Resistance in ohms"
+				},
+				"tolerance": {
+					"type": "number",
+					"minimum": 0,
+					"maximum": 100,
+					"description": "Tolerance percentage"
+				},
+				"state": {
+					"type": "string",
+					"enum": ["normal", "open", "short"],
+					"description": "Component state"
+				}
+			}
+		},
+		"capacitorParameters": {
+			"type": "object",
+			"required": ["capacitance", "tolerance", "esr", "state"],
+			"properties": {
+				"capacitance": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Capacitance in farads"
+				},
+				"tolerance": {
+					"type": "number",
+					"minimum": 0,
+					"maximum": 100,
+					"description": "Tolerance percentage"
+				},
+				"esr": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Equivalent Series Resistance in ohms"
+				},
+				"state": {
+					"type": "string",
+					"enum": ["normal", "open", "short"],
+					"description": "Component state"
+				}
+			}
+		},
+		"inductorParameters": {
+			"type": "object",
+			"required": ["inductance", "tolerance", "esr", "state"],
+			"properties": {
+				"inductance": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Inductance in henries"
+				},
+				"tolerance": {
+					"type": "number",
+					"minimum": 0,
+					"maximum": 100,
+					"description": "Tolerance percentage"
+				},
+				"esr": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Equivalent Series Resistance in ohms"
+				},
+				"state": {
+					"type": "string",
+					"enum": ["normal", "open", "short"],
+					"description": "Component state"
+				}
+			}
+		},
+		"speakerParameters": {
+			"type": "object",
+			"required": ["name", "sensitivity", "delay", "inverted", "muted", "phaseSource"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Speaker name"
+				},
+				"sensitivity": {
+					"type": "number",
+					"description": "Sensitivity adjustment in dB"
+				},
+				"delay": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Delay in milliseconds"
+				},
+				"inverted": {
+					"type": "boolean",
+					"description": "Polarity inversion flag"
+				},
+				"muted": {
+					"type": "boolean",
+					"description": "Mute flag"
+				},
+				"frdFile": {
+					"type": ["string", "null"],
+					"description": "Path to FRD file"
+				},
+				"zmaFile": {
+					"type": ["string", "null"],
+					"description": "Path to ZMA file"
+				},
+				"phaseSource": {
+					"type": "string",
+					"enum": ["measured", "derived"],
+					"description": "Phase data source"
+				},
+				"offAxisFiles": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/offAxisFile"
+					},
+					"default": []
+				}
+			}
+		},
+		"offAxisFile": {
+			"type": "object",
+			"required": ["angle", "frdPath"],
+			"properties": {
+				"angle": {
+					"type": "number",
+					"minimum": 0,
+					"maximum": 180,
+					"description": "Off-axis angle in degrees"
+				},
+				"frdPath": {
+					"type": "string",
+					"description": "Path to off-axis FRD file"
+				}
+			}
+		},
+		"groundParameters": {
+			"type": "object",
+			"description": "Ground has no parameters"
+		},
+		"sourceParameters": {
+			"type": "object",
+			"required": ["power", "impedance", "delay", "inverted"],
+			"properties": {
+				"power": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Power in watts"
+				},
+				"impedance": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Reference impedance in ohms"
+				},
+				"delay": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Delay in milliseconds"
+				},
+				"inverted": {
+					"type": "boolean",
+					"description": "Polarity inversion flag"
+				}
+			}
+		},
+		"wire": {
+			"type": "object",
+			"required": ["id", "startNode", "endNode"],
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique wire identifier"
+				},
+				"startNode": {
+					"$ref": "#/definitions/nodeReference",
+					"description": "Start node reference"
+				},
+				"endNode": {
+					"$ref": "#/definitions/nodeReference",
+					"description": "End node reference"
+				},
+				"segments": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/point"
+					},
+					"default": []
+				}
+			}
+		},
+		"nodeReference": {
+			"type": "object",
+			"required": ["componentId", "terminal"],
+			"properties": {
+				"componentId": {
+					"type": "string",
+					"description": "Component ID"
+				},
+				"terminal": {
+					"type": "integer",
+					"minimum": 0,
+					"description": "Terminal index"
+				}
+			}
+		},
+		"point": {
+			"type": "object",
+			"required": ["x", "y"],
+			"properties": {
+				"x": {
+					"type": "integer",
+					"description": "X coordinate"
+				},
+				"y": {
+					"type": "integer",
+					"description": "Y coordinate"
+				}
+			}
+		},
+		"annotation": {
+			"type": "object",
+			"required": ["id", "x", "y", "text"],
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique annotation identifier"
+				},
+				"x": {
+					"type": "integer",
+					"description": "X coordinate"
+				},
+				"y": {
+					"type": "integer",
+					"description": "Y coordinate"
+				},
+				"text": {
+					"type": "string",
+					"description": "Annotation text"
+				},
+				"fontSize": {
+					"type": "integer",
+					"minimum": 8,
+					"maximum": 72,
+					"default": 12,
+					"description": "Font size in points"
+				}
+			}
+		}
+	}
+}

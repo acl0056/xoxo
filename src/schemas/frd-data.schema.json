@@ -1,0 +1,38 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "frd-data.schema.json",
+	"title": "Frequency Response Data Schema",
+	"description": "Schema for frequency response data (FRD) files containing magnitude and phase measurements",
+	"type": "object",
+	"required": ["frequencies", "magnitudes", "phases"],
+	"properties": {
+		"frequencies": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"exclusiveMinimum": 0
+			},
+			"minItems": 1,
+			"description": "Frequency points in Hz (must be monotonically increasing)"
+		},
+		"magnitudes": {
+			"type": "array",
+			"items": {
+				"type": "number"
+			},
+			"minItems": 1,
+			"description": "Magnitude values in dB"
+		},
+		"phases": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"minimum": -180,
+				"maximum": 180
+			},
+			"minItems": 1,
+			"description": "Phase values in degrees"
+		}
+	},
+	"additionalProperties": false
+}

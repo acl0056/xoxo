@@ -1,0 +1,39 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "zma-data.schema.json",
+	"title": "Impedance Data Schema",
+	"description": "Schema for impedance data (ZMA) files containing impedance magnitude and phase measurements",
+	"type": "object",
+	"required": ["frequencies", "impedances", "phases"],
+	"properties": {
+		"frequencies": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"exclusiveMinimum": 0
+			},
+			"minItems": 1,
+			"description": "Frequency points in Hz (must be monotonically increasing)"
+		},
+		"impedances": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"exclusiveMinimum": 0
+			},
+			"minItems": 1,
+			"description": "Impedance magnitude values in ohms"
+		},
+		"phases": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"minimum": -180,
+				"maximum": 180
+			},
+			"minItems": 1,
+			"description": "Phase values in degrees"
+		}
+	},
+	"additionalProperties": false
+}

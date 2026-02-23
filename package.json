@@ -20,6 +20,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"ajv": "^8.17.1",
+		"complex.js": "^2.4.3",
+		"mathjs": "^15.1.1",
 		"vue": "^3.3.4",
 		"vuex": "^4.1.0"
 	},

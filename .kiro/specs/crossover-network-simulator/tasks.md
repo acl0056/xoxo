@@ -152,33 +152,33 @@
 	- [x] 15.10 Write unit tests for parameter validation
 	- [x] 15.11 Write property test: Default parameter assignment (Property 8)
 
-- [ ] 16. Component State Management
-	- [ ] 16.1 Implement normal/open/short state toggle in context menu
-	- [ ] 16.2 Implement state selection in Tune dialog
-	- [ ] 16.3 Implement visual indication of component state on canvas
-	- [ ] 16.4 Write unit tests for state transitions
-	- [ ] 16.5 Write property test: Component state simulation behavior (Property 13)
+- [x] 16. Component State Management
+	- [x] 16.1 Implement normal/open/short state toggle in context menu
+	- [x] 16.2 Implement state selection in Tune dialog
+	- [x] 16.3 Implement visual indication of component state on canvas
+	- [x] 16.4 Write unit tests for state transitions
+	- [x] 16.5 Write property test: Component state simulation behavior (Property 13)
 
 ## Phase 6: Simulation Engine
 
-- [ ] 17. Circuit Solver (MNA)
-	- [ ] 17.1 Implement CircuitSolver class with Modified Nodal Analysis
-	- [ ] 17.2 Implement node mapping and indexing
-	- [ ] 17.3 Implement MNA matrix construction for passive components
-	- [ ] 17.4 Implement voltage source handling in MNA
-	- [ ] 17.5 Implement complex number math library integration
-	- [ ] 17.6 Implement matrix solver (LU decomposition or similar)
-	- [ ] 17.7 Implement frequency point generation (logarithmic spacing)
-	- [ ] 17.8 Write unit tests for simple RC, RL, RLC circuits
-	- [ ] 17.9 Write property test: Simulation frequency range (Property 14)
-	- [ ] 17.10 Write property test: Simulation completeness (Property 15)
+- [x] 17. Circuit Solver (MNA)
+	- [x] 17.1 Implement CircuitSolver class with Modified Nodal Analysis
+	- [x] 17.2 Implement node mapping and indexing
+	- [x] 17.3 Implement MNA matrix construction for passive components
+	- [x] 17.4 Implement voltage source handling in MNA
+	- [x] 17.5 Implement complex number math library integration
+	- [x] 17.6 Implement matrix solver (LU decomposition or similar)
+	- [x] 17.7 Implement frequency point generation (logarithmic spacing)
+	- [x] 17.8 Write unit tests for simple RC, RL, RLC circuits
+	- [x] 17.9 Write property test: Simulation frequency range (Property 14)
+	- [x] 17.10 Write property test: Simulation completeness (Property 15)
 
-- [ ] 18. Component State Handling in Simulation
-	- [ ] 18.1 Implement open state handling (infinite impedance)
-	- [ ] 18.2 Implement short state handling (zero resistance)
-	- [ ] 18.3 Implement ESR inclusion in capacitor/inductor models
-	- [ ] 18.4 Write unit tests for component state effects
-	- [ ] 18.5 Write property test: ESR simulation impact (Property 12)
+- [x] 18. Component State Handling in Simulation
+	- [x] 18.1 Implement open state handling (infinite impedance)
+	- [x] 18.2 Implement short state handling (zero resistance)
+	- [x] 18.3 Implement ESR inclusion in capacitor/inductor models
+	- [x] 18.4 Write unit tests for component state effects
+	- [x] 18.5 Write property test: ESR simulation impact (Property 12)
 
 - [ ] 19. Frequency Response Analysis
 	- [ ] 19.1 Implement FrequencyAnalyzer class

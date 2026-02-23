@@ -43,17 +43,25 @@
 			@item-click="handleContextMenuAction"
 			@close="closeContextMenu"
 		/>
+		<TuneDialog
+			:visible="tuneDialogVisible"
+			:component="tuneDialogComponent"
+			@close="closeTuneDialog"
+			@update="handleTuneUpdate"
+		/>
 	</div>
 </template>
 
 <script>
 import { mapState, mapMutations, mapActions } from 'vuex';
 import ContextMenu from './ContextMenu.vue';
+import TuneDialog from './TuneDialog.vue';
 
 export default {
 	name: 'CircuitEditor',
 	components: {
 		ContextMenu,
+		TuneDialog,
 	},
 	data() {
 		return {
@@ -77,6 +85,8 @@ export default {
 			contextMenuItems: [],
 			contextMenuTarget: null,
 			contextMenuTargetType: null,
+			tuneDialogVisible: false,
+			tuneDialogComponent: null,
 		};
 	},
 	computed: {
@@ -314,6 +324,7 @@ export default {
 
 		renderResistor(component) {
 			const { gridSize } = this;
+			const state = component.parameters.state || 'normal';
 
 			// Draw resistor symbol (zigzag pattern)
 			this.context.strokeStyle = '#000000';
@@ -324,20 +335,81 @@ export default {
 			this.context.moveTo(-3 * gridSize, 0);
 			this.context.lineTo(-2 * gridSize, 0);
 
-			// Zigzag body
-			const zigzagHeight = 0.8 * gridSize;
-			const segments = 6;
-			const segmentLength = (2 * gridSize) / segments;
+			if (state === 'short') {
+				// Short state: draw straight line through
+				this.context.lineTo(2 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
 
-			for (let i = 0; i <= segments; i++) {
-				const x = -2 * gridSize + i * segmentLength;
-				const y = (i % 2 === 0) ? -zigzagHeight / 2 : zigzagHeight / 2;
-				this.context.lineTo(x, y);
+				// Draw "SHORT" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('SHORT', 0, gridSize * 0.5);
+			} else if (state === 'open') {
+				// Open state: draw with gap in the middle
+				this.context.stroke();
+
+				// Draw right side separately with gap
+				this.context.beginPath();
+				this.context.moveTo(2 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
+
+				// Draw zigzag body with gap
+				this.context.beginPath();
+				const zigzagHeight = 0.8 * gridSize;
+				const segments = 6;
+				const segmentLength = (2 * gridSize) / segments;
+
+				// Left half of zigzag
+				for (let i = 0; i <= segments / 2; i++) {
+					const x = -2 * gridSize + i * segmentLength;
+					const y = (i % 2 === 0) ? -zigzagHeight / 2 : zigzagHeight / 2;
+					if (i === 0) {
+						this.context.moveTo(x, y);
+					} else {
+						this.context.lineTo(x, y);
+					}
+				}
+				this.context.stroke();
+
+				// Right half of zigzag
+				this.context.beginPath();
+				for (let i = segments / 2 + 1; i <= segments; i++) {
+					const x = -2 * gridSize + i * segmentLength;
+					const y = (i % 2 === 0) ? -zigzagHeight / 2 : zigzagHeight / 2;
+					if (i === segments / 2 + 1) {
+						this.context.moveTo(x, y);
+					} else {
+						this.context.lineTo(x, y);
+					}
+				}
+				this.context.stroke();
+
+				// Draw "OPEN" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('OPEN', 0, gridSize * 0.5);
+			} else {
+				// Normal state: draw complete zigzag
+				const zigzagHeight = 0.8 * gridSize;
+				const segments = 6;
+				const segmentLength = (2 * gridSize) / segments;
+
+				for (let i = 0; i <= segments; i++) {
+					const x = -2 * gridSize + i * segmentLength;
+					const y = (i % 2 === 0) ? -zigzagHeight / 2 : zigzagHeight / 2;
+					this.context.lineTo(x, y);
+				}
+
+				// Right lead
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
 			}
-
-			// Right lead
-			this.context.lineTo(3 * gridSize, 0);
-			this.context.stroke();
 
 			// Draw label
 			if (component.label) {
@@ -351,34 +423,71 @@ export default {
 
 		renderCapacitor(component) {
 			const { gridSize } = this;
+			const state = component.parameters.state || 'normal';
 
 			// Draw capacitor symbol (two parallel lines)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 
-			// Left lead
-			this.context.beginPath();
-			this.context.moveTo(-3 * gridSize, 0);
-			this.context.lineTo(-0.5 * gridSize, 0);
-			this.context.stroke();
+			if (state === 'short') {
+				// Short state: draw straight line through
+				this.context.beginPath();
+				this.context.moveTo(-3 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
 
-			// Left plate
-			this.context.beginPath();
-			this.context.moveTo(-0.5 * gridSize, -gridSize);
-			this.context.lineTo(-0.5 * gridSize, gridSize);
-			this.context.stroke();
+				// Draw "SHORT" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('SHORT', 0, gridSize * 0.5);
+			} else if (state === 'open') {
+				// Open state: draw plates without connecting leads
+				// Left plate
+				this.context.beginPath();
+				this.context.moveTo(-0.5 * gridSize, -gridSize);
+				this.context.lineTo(-0.5 * gridSize, gridSize);
+				this.context.stroke();
 
-			// Right plate
-			this.context.beginPath();
-			this.context.moveTo(0.5 * gridSize, -gridSize);
-			this.context.lineTo(0.5 * gridSize, gridSize);
-			this.context.stroke();
+				// Right plate
+				this.context.beginPath();
+				this.context.moveTo(0.5 * gridSize, -gridSize);
+				this.context.lineTo(0.5 * gridSize, gridSize);
+				this.context.stroke();
 
-			// Right lead
-			this.context.beginPath();
-			this.context.moveTo(0.5 * gridSize, 0);
-			this.context.lineTo(3 * gridSize, 0);
-			this.context.stroke();
+				// Draw "OPEN" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('OPEN', 0, gridSize * 1.2);
+			} else {
+				// Normal state: draw complete capacitor
+				// Left lead
+				this.context.beginPath();
+				this.context.moveTo(-3 * gridSize, 0);
+				this.context.lineTo(-0.5 * gridSize, 0);
+				this.context.stroke();
+
+				// Left plate
+				this.context.beginPath();
+				this.context.moveTo(-0.5 * gridSize, -gridSize);
+				this.context.lineTo(-0.5 * gridSize, gridSize);
+				this.context.stroke();
+
+				// Right plate
+				this.context.beginPath();
+				this.context.moveTo(0.5 * gridSize, -gridSize);
+				this.context.lineTo(0.5 * gridSize, gridSize);
+				this.context.stroke();
+
+				// Right lead
+				this.context.beginPath();
+				this.context.moveTo(0.5 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
+			}
 
 			// Draw label
 			if (component.label) {
@@ -392,34 +501,79 @@ export default {
 
 		renderInductor(component) {
 			const { gridSize } = this;
+			const state = component.parameters.state || 'normal';
 
 			// Draw inductor symbol (coil/loops)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 
-			// Left lead
-			this.context.beginPath();
-			this.context.moveTo(-3 * gridSize, 0);
-			this.context.lineTo(-2 * gridSize, 0);
-			this.context.stroke();
-
-			// Coil loops
-			const loopRadius = 0.4 * gridSize;
-			const numLoops = 4;
-			const loopSpacing = (2 * gridSize) / numLoops;
-
-			for (let i = 0; i < numLoops; i++) {
-				const centerX = -2 * gridSize + loopSpacing * i + loopRadius;
+			if (state === 'short') {
+				// Short state: draw straight line through
 				this.context.beginPath();
-				this.context.arc(centerX, 0, loopRadius, Math.PI, 0, false);
+				this.context.moveTo(-3 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
+				this.context.stroke();
+
+				// Draw "SHORT" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('SHORT', 0, gridSize * 0.5);
+			} else if (state === 'open') {
+				// Open state: draw coils with gap in the middle
+				const loopRadius = 0.4 * gridSize;
+				const numLoops = 4;
+				const loopSpacing = (2 * gridSize) / numLoops;
+
+				// Draw left half of coils
+				for (let i = 0; i < numLoops / 2; i++) {
+					const centerX = -2 * gridSize + loopSpacing * i + loopRadius;
+					this.context.beginPath();
+					this.context.arc(centerX, 0, loopRadius, Math.PI, 0, false);
+					this.context.stroke();
+				}
+
+				// Draw right half of coils
+				for (let i = numLoops / 2 + 1; i < numLoops; i++) {
+					const centerX = -2 * gridSize + loopSpacing * i + loopRadius;
+					this.context.beginPath();
+					this.context.arc(centerX, 0, loopRadius, Math.PI, 0, false);
+					this.context.stroke();
+				}
+
+				// Draw "OPEN" label
+				this.context.fillStyle = '#ff0000';
+				this.context.font = 'bold 10px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText('OPEN', 0, gridSize * 0.5);
+			} else {
+				// Normal state: draw complete inductor
+				// Left lead
+				this.context.beginPath();
+				this.context.moveTo(-3 * gridSize, 0);
+				this.context.lineTo(-2 * gridSize, 0);
+				this.context.stroke();
+
+				// Coil loops
+				const loopRadius = 0.4 * gridSize;
+				const numLoops = 4;
+				const loopSpacing = (2 * gridSize) / numLoops;
+
+				for (let i = 0; i < numLoops; i++) {
+					const centerX = -2 * gridSize + loopSpacing * i + loopRadius;
+					this.context.beginPath();
+					this.context.arc(centerX, 0, loopRadius, Math.PI, 0, false);
+					this.context.stroke();
+				}
+
+				// Right lead
+				this.context.beginPath();
+				this.context.moveTo(2 * gridSize, 0);
+				this.context.lineTo(3 * gridSize, 0);
 				this.context.stroke();
 			}
-
-			// Right lead
-			this.context.beginPath();
-			this.context.moveTo(2 * gridSize, 0);
-			this.context.lineTo(3 * gridSize, 0);
-			this.context.stroke();
 
 			// Draw label
 			if (component.label) {
@@ -888,6 +1042,22 @@ export default {
 			// Rotate option for all components
 			menuItems.push({ label: 'Rotate', action: 'rotate' });
 
+			// State toggle option for passive components (resistor, capacitor, inductor)
+			if (component.type === 'resistor' || component.type === 'capacitor' || component.type === 'inductor') {
+				const currentState = component.parameters.state || 'normal';
+
+				// Add submenu-style state options
+				if (currentState !== 'normal') {
+					menuItems.push({ label: 'State: Normal', action: 'state-normal' });
+				}
+				if (currentState !== 'open') {
+					menuItems.push({ label: 'State: Open', action: 'state-open' });
+				}
+				if (currentState !== 'short') {
+					menuItems.push({ label: 'State: Short', action: 'state-short' });
+				}
+			}
+
 			// Invert option for speakers and voltage sources
 			if (component.type === 'speaker' || component.type === 'source') {
 				const isInverted = component.parameters.inverted;
@@ -950,6 +1120,15 @@ export default {
 				case 'rotate':
 					this.rotateComponent(component);
 					break;
+				case 'state-normal':
+					this.setComponentState(component, 'normal');
+					break;
+				case 'state-open':
+					this.setComponentState(component, 'open');
+					break;
+				case 'state-short':
+					this.setComponentState(component, 'short');
+					break;
 				case 'invert':
 					this.invertComponent(component);
 					break;
@@ -975,8 +1154,22 @@ export default {
 		},
 
 		openTuneDialog(component) {
-			// TODO: Implement tune dialog in a future task
-			console.log('Open tune dialog for component:', component.label);
+			this.tuneDialogComponent = component;
+			this.tuneDialogVisible = true;
+		},
+
+		closeTuneDialog() {
+			this.tuneDialogVisible = false;
+			this.tuneDialogComponent = null;
+		},
+
+		handleTuneUpdate({ componentId, parameters }) {
+			// Update component parameters in the store
+			this.$store.commit('circuit/updateComponent', {
+				componentId,
+				updates: { parameters },
+			});
+			this.renderCircuit();
 		},
 
 		rotateComponent(component) {
@@ -985,6 +1178,15 @@ export default {
 			this.$store.commit('circuit/updateComponent', {
 				componentId: component.id,
 				updates: { rotation: component.rotation },
+			});
+			this.renderCircuit();
+		},
+
+		setComponentState(component, state) {
+			// Set component state (normal, open, short)
+			this.$store.commit('circuit/updateComponent', {
+				componentId: component.id,
+				updates: { parameters: { ...component.parameters, state } },
 			});
 			this.renderCircuit();
 		},

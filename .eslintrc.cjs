@@ -31,6 +31,7 @@ module.exports = {
 	rules: {
 		'no-console': 'off',
 		'no-debugger': 'warn',
+		'no-alert': 'error',
 		'no-iterator': 'off',
 		'no-restricted-syntax': 'off',
 		'no-plusplus': 'off',

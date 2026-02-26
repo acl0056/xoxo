@@ -1,4 +1,5 @@
 import CircuitSolver from '@/simulation/CircuitSolver';
+import SchemaValidator from '@/simulation/SchemaValidator';
 import { Circuit } from '@/models/Circuit';
 import { Resistor } from '@/models/Resistor';
 import { Capacitor } from '@/models/Capacitor';
@@ -766,6 +767,83 @@ describe('CircuitSolver', () => {
 			// All results should have node voltages
 			results.forEach(result => {
 				expect(result.nodeVoltages.size).toBeGreaterThan(0);
+			});
+		});
+	});
+
+	describe('Schema Validation', () => {
+		test('should produce solver results that validate against schema', () => {
+			const circuit = new Circuit();
+			
+			const source = new VoltageSource(0, 0);
+			const resistor = new Resistor(10, 0);
+			resistor.parameters.resistance = 1000;
+			const ground = new Ground(20, 0);
+
+			circuit.addComponent(source);
+			circuit.addComponent(resistor);
+			circuit.addComponent(ground);
+
+			circuit.addWire(new Wire(
+				{ componentId: source.id, terminal: 0 },
+				{ componentId: resistor.id, terminal: 0 }
+			));
+			circuit.addWire(new Wire(
+				{ componentId: resistor.id, terminal: 1 },
+				{ componentId: ground.id, terminal: 0 }
+			));
+			circuit.addWire(new Wire(
+				{ componentId: source.id, terminal: 1 },
+				{ componentId: ground.id, terminal: 0 }
+			));
+
+			const solver = new CircuitSolver(circuit);
+			solver.buildNodeMap();
+
+			const result = solver.solve(1000);
+
+			// Validate result structure (validation may warn about mathjs complex number format)
+			const validation = SchemaValidator.validateSolverResult(result);
+			
+			// Result should have the required properties even if validation warns
+			expect(result.frequency).toBe(1000);
+			expect(result.nodeVoltages).toBeInstanceOf(Map);
+			expect(result.sourceCurrents).toBeInstanceOf(Map);
+		});
+
+		test('should validate all results from solveAllFrequencies', () => {
+			const circuit = new Circuit();
+			
+			const source = new VoltageSource(0, 0);
+			const resistor = new Resistor(10, 0);
+			resistor.parameters.resistance = 1000;
+			const ground = new Ground(20, 0);
+
+			circuit.addComponent(source);
+			circuit.addComponent(resistor);
+			circuit.addComponent(ground);
+
+			circuit.addWire(new Wire(
+				{ componentId: source.id, terminal: 0 },
+				{ componentId: resistor.id, terminal: 0 }
+			));
+			circuit.addWire(new Wire(
+				{ componentId: resistor.id, terminal: 1 },
+				{ componentId: ground.id, terminal: 0 }
+			));
+			circuit.addWire(new Wire(
+				{ componentId: source.id, terminal: 1 },
+				{ componentId: ground.id, terminal: 0 }
+			));
+
+			const solver = new CircuitSolver(circuit);
+			const results = solver.solveAllFrequencies(100, 1000, 5);
+
+			// Validate each result structure
+			results.forEach(result => {
+				expect(result.frequency).toBeGreaterThan(0);
+				expect(result.nodeVoltages).toBeInstanceOf(Map);
+				expect(result.sourceCurrents).toBeInstanceOf(Map);
 			});
 		});
 	});

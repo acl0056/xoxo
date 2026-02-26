@@ -250,7 +250,7 @@ This document specifies the requirements for a cross-platform loudspeaker crosso
 5. THE System SHALL allow users to specify custom measurement angles for secondary FRD files
 6. THE System SHALL provide a control to switch the entire loudspeaker network simulation between measurement angles
 7. WHEN switching measurement angles, THE System SHALL update all loudspeaker components simultaneously to their corresponding off-axis data
-8. IF a loudspeaker component lacks data for the selected angle, THEN THE System SHALL display a warning and use the closest available angle
+8. IF a loudspeaker component lacks data for the selected angle, THEN THE System SHALL exclude that driver from the simulation (effectively muting it) and display a warning indicator
 9. THE Graph_Viewer SHALL indicate which measurement angle is currently active in the simulation
 10. WHEN a user right-clicks on a loudspeaker component and selects "Tune", THE System SHALL open a dialog for configuring FRD files, ZMA files, and delay parameters
 11. THE driver Tune dialog SHALL include a name field for the driver

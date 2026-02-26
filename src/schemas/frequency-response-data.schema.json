@@ -1,0 +1,69 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "frequency-response-data.schema.json",
+	"title": "Frequency Response Data",
+	"description": "Output from FrequencyAnalyzer methods (calculateSPL and calculateSystemResponse)",
+	"type": "object",
+	"required": ["frequencies", "spl", "phase"],
+	"properties": {
+		"frequencies": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"exclusiveMinimum": 0
+			},
+			"minItems": 1,
+			"description": "Frequency points in Hz"
+		},
+		"spl": {
+			"type": "array",
+			"items": {
+				"type": "number"
+			},
+			"description": "Sound Pressure Level values in dB (may include -Infinity for muted or no signal)"
+		},
+		"phase": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"minimum": -180,
+				"maximum": 180
+			},
+			"description": "Phase values in degrees, normalized to -180 to +180 range"
+		},
+		"speakerResponses": {
+			"type": "object",
+			"description": "Individual speaker responses keyed by component ID (only present in calculateSystemResponse output)",
+			"additionalProperties": {
+				"type": "object",
+				"required": ["frequencies", "spl", "phase"],
+				"properties": {
+					"frequencies": {
+						"type": "array",
+						"items": {
+							"type": "number",
+							"exclusiveMinimum": 0
+						},
+						"description": "Frequency points in Hz"
+					},
+					"spl": {
+						"type": "array",
+						"items": {
+							"type": "number"
+						},
+						"description": "SPL values in dB for this speaker"
+					},
+					"phase": {
+						"type": "array",
+						"items": {
+							"type": "number",
+							"minimum": -180,
+							"maximum": 180
+						},
+						"description": "Phase values in degrees for this speaker"
+					}
+				}
+			}
+		}
+	}
+}

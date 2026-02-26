@@ -1,0 +1,46 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "solver-result.schema.json",
+	"title": "Circuit Solver Result",
+	"description": "Result from CircuitSolver.solve() for a single frequency point",
+	"type": "object",
+	"required": ["frequency", "nodeVoltages", "sourceCurrents"],
+	"properties": {
+		"frequency": {
+			"type": "number",
+			"exclusiveMinimum": 0,
+			"description": "Frequency in Hz at which the circuit was solved"
+		},
+		"nodeVoltages": {
+			"type": "object",
+			"description": "Map of node IDs to complex voltage values. Each node ID is a string in format 'componentId_terminalIndex'. Values are complex numbers with 're' and 'im' properties.",
+			"additionalProperties": {
+				"$ref": "#/definitions/complexNumber"
+			}
+		},
+		"sourceCurrents": {
+			"type": "object",
+			"description": "Map of voltage source component IDs to complex current values. Values are complex numbers with 're' and 'im' properties.",
+			"additionalProperties": {
+				"$ref": "#/definitions/complexNumber"
+			}
+		}
+	},
+	"definitions": {
+		"complexNumber": {
+			"type": "object",
+			"required": ["re", "im"],
+			"properties": {
+				"re": {
+					"type": "number",
+					"description": "Real part of complex number"
+				},
+				"im": {
+					"type": "number",
+					"description": "Imaginary part of complex number"
+				}
+			},
+			"description": "Complex number representation with real and imaginary parts"
+		}
+	}
+}

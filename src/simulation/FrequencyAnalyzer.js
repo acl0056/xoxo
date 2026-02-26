@@ -1,0 +1,433 @@
+import Complex from 'complex.js';
+import SchemaValidator from './SchemaValidator';
+
+/**
+ * FrequencyAnalyzer class
+ * Analyzes circuit simulation results to calculate frequency response and SPL
+ * Handles speaker sensitivity adjustments, delays, polarity inversion, and phase calculations
+ */
+class FrequencyAnalyzer {
+	/**
+	 * Create a new FrequencyAnalyzer
+	 * @param {Circuit} circuit - The circuit being analyzed
+	 * @param {Object} solverResults - Results from CircuitSolver containing node voltages
+	 */
+	constructor(circuit, solverResults) {
+		this.circuit = circuit;
+		this.solverResults = solverResults;
+	}
+
+	/**
+	 * Calculate SPL for an individual speaker at all frequencies
+	 * @param {Speaker} speakerComponent - The speaker component to analyze
+	 * @param {number} currentAngle - Current off-axis angle (0 for on-axis)
+	 * @returns {Object} - {frequencies: number[], spl: number[], phase: number[]}
+	 */
+	calculateSPL(speakerComponent, currentAngle = 0) {
+		// Check if speaker is muted
+		if (speakerComponent.parameters.muted) {
+			// Return zero SPL for all frequencies
+			const frequencies = this.solverResults.frequencies || [];
+			return {
+				frequencies,
+				spl: frequencies.map(() => -Infinity),
+				phase: frequencies.map(() => 0),
+			};
+		}
+
+		// Get the appropriate FRD data based on current angle
+		const { frdData: onAxisData, offAxisData } = speakerComponent;
+		let frdData = onAxisData;
+
+		// If off-axis angle is requested and available, use it
+		if (currentAngle > 0 && offAxisData) {
+			const offAxisEntry = offAxisData.find(
+				(entry) => entry.angle === currentAngle,
+			);
+			if (offAxisEntry) {
+				frdData = offAxisEntry.data;
+			}
+			// If requested angle not available, fall back to on-axis data
+		}
+
+		// Check if FRD data is available
+		if (!frdData || !frdData.frequencies || frdData.frequencies.length === 0) {
+			throw new Error(`Speaker ${speakerComponent.label} has no FRD data loaded`);
+		}
+
+		// Get simulation frequencies
+		const { frequencies = [], componentVoltages = {} } = this.solverResults;
+		const spl = [];
+		const phase = [];
+
+		// Get voltage across speaker terminals from solver results
+		const speakerVoltages = componentVoltages[speakerComponent.id] || [];
+
+		for (let i = 0; i < frequencies.length; i++) {
+			const frequency = frequencies[i];
+
+			// Interpolate speaker's FRD data at this frequency
+			const frdMagnitude = this.interpolate(
+				frdData.frequencies,
+				frdData.magnitudes,
+				frequency,
+			);
+			const frdPhase = this.interpolate(
+				frdData.frequencies,
+				frdData.phases,
+				frequency,
+			);
+
+			// Get voltage magnitude and phase from solver
+			const voltage = speakerVoltages[i] || new Complex(0, 0);
+			const voltageMagnitude = voltage.abs();
+			const voltagePhase = voltage.arg() * (180 / Math.PI); // Convert radians to degrees
+
+			// Calculate SPL: speaker's SPL response + voltage contribution
+			// SPL = FRD_magnitude + 20*log10(voltage_magnitude)
+			let calculatedSPL = frdMagnitude;
+			if (voltageMagnitude > 0) {
+				calculatedSPL += 20 * Math.log10(voltageMagnitude);
+			} else {
+				calculatedSPL = -Infinity;
+			}
+
+			// Apply sensitivity adjustment
+			calculatedSPL += speakerComponent.parameters.sensitivity;
+
+			// Calculate phase: FRD phase + voltage phase
+			let calculatedPhase = frdPhase + voltagePhase;
+
+			// Apply delay as phase shift
+			// Phase shift = -360 * frequency * delay (delay in seconds)
+			const delaySeconds = speakerComponent.parameters.delay / 1000;
+			const delayPhaseShift = -360 * frequency * delaySeconds;
+			calculatedPhase += delayPhaseShift;
+
+			// Apply polarity inversion (180 degree phase shift)
+			if (speakerComponent.parameters.inverted) {
+				calculatedPhase += 180;
+			}
+
+			// Normalize phase to -180 to +180 range
+			while (calculatedPhase > 180) {
+				calculatedPhase -= 360;
+			}
+			while (calculatedPhase < -180) {
+				calculatedPhase += 360;
+			}
+
+			spl.push(calculatedSPL);
+			phase.push(calculatedPhase);
+		}
+
+		const result = {
+			frequencies,
+			spl,
+			phase,
+		};
+
+		// Validate result against schema
+		const validation = SchemaValidator.validateFrequencyResponseData(result);
+		if (!validation.valid) {
+			console.warn(`Frequency response data validation warning for speaker ${speakerComponent.label}:`, validation.errors);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Calculate combined system response from all speakers
+	 * @param {number} currentAngle - Current off-axis angle (0 for on-axis)
+	 * @returns {Object} - {frequencies: number[], spl: number[], phase: number[], speakerResponses: Object}
+	 */
+	calculateSystemResponse(currentAngle = 0) {
+		// Get all speaker components
+		const speakers = this.circuit.components.filter(
+			(component) => component.type === 'speaker',
+		);
+
+		if (speakers.length === 0) {
+			throw new Error('No speakers found in circuit');
+		}
+
+		// Calculate individual speaker responses
+		const speakerResponses = {};
+		const individualResponses = [];
+
+		for (const speaker of speakers) {
+			try {
+				const response = this.calculateSPL(speaker, currentAngle);
+				speakerResponses[speaker.id] = response;
+				individualResponses.push(response);
+			} catch (error) {
+				console.warn(`Failed to calculate SPL for speaker ${speaker.label}: ${error.message}`);
+			}
+		}
+
+		if (individualResponses.length === 0) {
+			throw new Error('No valid speaker responses calculated');
+		}
+
+		// Get frequencies from first response (all should have same frequencies)
+		const { frequencies } = individualResponses[0];
+
+		// Combine responses using complex addition
+		const combinedSPL = [];
+		const combinedPhase = [];
+
+		for (let i = 0; i < frequencies.length; i++) {
+			// Convert each speaker's SPL and phase to complex pressure
+			let totalPressure = new Complex(0, 0);
+
+			for (const response of individualResponses) {
+				const spl = response.spl[i];
+				const phase = response.phase[i];
+
+				// Skip if SPL is -Infinity (muted or no signal)
+				if (!Number.isFinite(spl)) {
+					continue;
+				}
+
+				// Convert SPL to pressure magnitude (arbitrary reference)
+				// Pressure = 10^(SPL/20)
+				const pressureMagnitude = 10 ** (spl / 20);
+
+				// Convert to complex number with phase
+				const phaseRadians = (phase * Math.PI) / 180;
+				const pressure = new Complex({ abs: pressureMagnitude, arg: phaseRadians });
+
+				// Add to total
+				totalPressure = totalPressure.add(pressure);
+			}
+
+			// Convert back to SPL and phase
+			const totalMagnitude = totalPressure.abs();
+			const totalPhase = totalPressure.arg() * (180 / Math.PI);
+
+			let totalSPL;
+			if (totalMagnitude > 0) {
+				totalSPL = 20 * Math.log10(totalMagnitude);
+			} else {
+				totalSPL = -Infinity;
+			}
+
+			combinedSPL.push(totalSPL);
+			combinedPhase.push(totalPhase);
+		}
+
+		const result = {
+			frequencies,
+			spl: combinedSPL,
+			phase: combinedPhase,
+			speakerResponses,
+		};
+
+		// Validate result against schema
+		const validation = SchemaValidator.validateFrequencyResponseData(result);
+		if (!validation.valid) {
+			console.warn('System frequency response data validation warning:', validation.errors);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Calculate input impedance at all frequencies
+	 * @returns {Object} - {frequencies: number[], impedances: number[], phases: number[]}
+	 */
+	calculateImpedance() {
+		const frequencies = this.solverResults.frequencies || [];
+		const impedances = [];
+		const phases = [];
+
+		// Get voltage source component
+		const voltageSource = this.circuit.components.find(
+			(component) => component.type === 'source',
+		);
+
+		if (!voltageSource) {
+			throw new Error('No voltage source found in circuit');
+		}
+
+		// Get source current from solver results
+		const sourceCurrent = this.solverResults.sourceCurrents?.[voltageSource.id] || [];
+
+		for (let i = 0; i < frequencies.length; i++) {
+			const current = sourceCurrent[i] || new Complex(0, 0);
+			const voltage = voltageSource.getVoltage();
+
+			// Calculate impedance: Z = V / I
+			let impedance;
+			if (current.abs() > 1e-12) {
+				impedance = new Complex(voltage, 0).div(current);
+			} else {
+				// Open circuit or very high impedance
+				impedance = new Complex(1e12, 0);
+			}
+
+			impedances.push(impedance.abs());
+			phases.push(impedance.arg() * (180 / Math.PI));
+		}
+
+		return {
+			frequencies,
+			impedances,
+			phases,
+		};
+	}
+
+	/**
+	 * Apply fractional octave smoothing to frequency response data
+	 * @param {number[]} frequencies - Frequency array
+	 * @param {number[]} magnitudes - Magnitude array (dB)
+	 * @param {string} smoothingType - Type of smoothing: 'none', '1/24', '1/12', '1/6', '1/3', '1/2', '1', 'ERB'
+	 * @returns {number[]} - Smoothed magnitude array
+	 */
+	applySmoothing(frequencies, magnitudes, smoothingType) {
+		if (smoothingType === 'none' || !smoothingType) {
+			return magnitudes;
+		}
+
+		// Parse smoothing type to get octave fraction
+		let octaveFraction;
+		switch (smoothingType) {
+			case '1/24':
+				octaveFraction = 1 / 24;
+				break;
+			case '1/12':
+				octaveFraction = 1 / 12;
+				break;
+			case '1/6':
+				octaveFraction = 1 / 6;
+				break;
+			case '1/3':
+				octaveFraction = 1 / 3;
+				break;
+			case '1/2':
+				octaveFraction = 1 / 2;
+				break;
+			case '1':
+				octaveFraction = 1;
+				break;
+			case 'ERB':
+				// ERB (Equivalent Rectangular Bandwidth) - frequency-dependent
+				return this.applyERBSmoothing(frequencies, magnitudes);
+			default:
+				console.warn(`Unknown smoothing type: ${smoothingType}`);
+				return magnitudes;
+		}
+
+		// Apply fractional octave smoothing
+		const smoothed = [];
+
+		for (let i = 0; i < frequencies.length; i++) {
+			const centerFreq = frequencies[i];
+
+			// Calculate bandwidth for this octave fraction
+			// Lower bound: f / 2^(octaveFraction/2)
+			// Upper bound: f * 2^(octaveFraction/2)
+			const factor = 2 ** (octaveFraction / 2);
+			const lowerBound = centerFreq / factor;
+			const upperBound = centerFreq * factor;
+
+			// Find all points within this bandwidth
+			let sum = 0;
+			let count = 0;
+
+			for (let j = 0; j < frequencies.length; j++) {
+				if (frequencies[j] >= lowerBound && frequencies[j] <= upperBound) {
+					// Convert dB to linear, accumulate, then convert back
+					sum += 10 ** (magnitudes[j] / 20);
+					count++;
+				}
+			}
+
+			// Calculate average in linear domain, then convert to dB
+			if (count > 0) {
+				const average = sum / count;
+				smoothed.push(20 * Math.log10(average));
+			} else {
+				smoothed.push(magnitudes[i]);
+			}
+		}
+
+		return smoothed;
+	}
+
+	/**
+	 * Apply ERB (Equivalent Rectangular Bandwidth) smoothing
+	 * @param {number[]} frequencies - Frequency array
+	 * @param {number[]} magnitudes - Magnitude array (dB)
+	 * @returns {number[]} - Smoothed magnitude array
+	 */
+	applyERBSmoothing(frequencies, magnitudes) {
+		const smoothed = [];
+
+		for (let i = 0; i < frequencies.length; i++) {
+			const centerFreq = frequencies[i];
+
+			// ERB formula: ERB(f) = 24.7 * (4.37 * f/1000 + 1)
+			const erbWidth = 24.7 * (4.37 * (centerFreq / 1000) + 1);
+
+			// Use ERB as bandwidth
+			const lowerBound = centerFreq - erbWidth / 2;
+			const upperBound = centerFreq + erbWidth / 2;
+
+			// Find all points within this bandwidth
+			let sum = 0;
+			let count = 0;
+
+			for (let j = 0; j < frequencies.length; j++) {
+				if (frequencies[j] >= lowerBound && frequencies[j] <= upperBound) {
+					sum += 10 ** (magnitudes[j] / 20);
+					count++;
+				}
+			}
+
+			// Calculate average
+			if (count > 0) {
+				const average = sum / count;
+				smoothed.push(20 * Math.log10(average));
+			} else {
+				smoothed.push(magnitudes[i]);
+			}
+		}
+
+		return smoothed;
+	}
+
+	/**
+	 * Linear interpolation helper
+	 * @param {number[]} xArray - X values (must be sorted)
+	 * @param {number[]} yArray - Y values
+	 * @param {number} x - X value to interpolate at
+	 * @returns {number} - Interpolated Y value
+	 */
+	interpolate(xArray, yArray, x) {
+		// Handle edge cases
+		if (x <= xArray[0]) {
+			return yArray[0];
+		}
+		if (x >= xArray[xArray.length - 1]) {
+			return yArray[yArray.length - 1];
+		}
+
+		// Find surrounding points
+		let i = 0;
+		while (i < xArray.length - 1 && xArray[i + 1] < x) {
+			i++;
+		}
+
+		// Linear interpolation
+		const x0 = xArray[i];
+		const x1 = xArray[i + 1];
+		const y0 = yArray[i];
+		const y1 = yArray[i + 1];
+
+		const t = (x - x0) / (x1 - x0);
+		return y0 + t * (y1 - y0);
+	}
+}
+
+export default FrequencyAnalyzer;

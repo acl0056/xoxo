@@ -23,6 +23,7 @@ This project uses Airbnb's JavaScript style guide as the base configuration with
 #### Code Practices
 - Console statements are allowed (`no-console: off`)
 - Debugger statements trigger warnings only
+- Alert dialogs are forbidden (`no-alert: error`) - use toast notifications instead
 - No maximum line length enforced (`max-len: off`)
 - Parameter reassignment is allowed (`no-param-reassign: off`)
 - Underscore dangles are allowed (`no-underscore-dangle: off`)
@@ -66,3 +67,14 @@ Jest environment is configured for test files matching:
 - Run ESLint to catch style violations before committing
 - Use clear, unabbreviated names to maintain code readability
 - Favor descriptive variable names even if they result in longer lines
+
+## User Notifications
+- Use toast notifications for user feedback (vue-toastification)
+- Never use `alert()`, `confirm()`, or `prompt()` - they block the UI and provide poor UX
+- Toast types:
+  - `this.toast.success('message')` - for successful operations
+  - `this.toast.error('message')` - for errors
+  - `this.toast.warning('message')` - for warnings
+  - `this.toast.info('message')` - for informational messages
+- In Vue components using Options API, access toast via `this.toast` (provided by setup())
+- Toast notifications are non-blocking, customizable, and provide better accessibility

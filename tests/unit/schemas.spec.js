@@ -16,6 +16,9 @@ import circuitSchema from '@/schemas/circuit.schema.json';
 import frdDataSchema from '@/schemas/frd-data.schema.json';
 import zmaDataSchema from '@/schemas/zma-data.schema.json';
 import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
+import solverResultSchema from '@/schemas/solver-result.schema.json';
+import frequencyResponseDataSchema from '@/schemas/frequency-response-data.schema.json';
+import impedanceResponseDataSchema from '@/schemas/impedance-response-data.schema.json';
 
 describe('JSON Schema Validation', () => {
 	let ajv;
@@ -181,6 +184,190 @@ describe('JSON Schema Validation', () => {
 		});
 	});
 
+	describe('Solver Result Schema', () => {
+		it('should be a valid JSON Schema', () => {
+			expect(() => {
+				ajv.compile(solverResultSchema);
+			}).not.toThrow();
+		});
+
+		it('should compile without errors', () => {
+			const validate = ajv.compile(solverResultSchema);
+			expect(validate).toBeDefined();
+			expect(typeof validate).toBe('function');
+		});
+
+		it('should have required properties', () => {
+			expect(solverResultSchema.$schema).toBe('http://json-schema.org/draft-07/schema#');
+			expect(solverResultSchema.$id).toBe('solver-result.schema.json');
+			expect(solverResultSchema.type).toBe('object');
+			expect(solverResultSchema.required).toContain('frequency');
+			expect(solverResultSchema.required).toContain('nodeVoltages');
+			expect(solverResultSchema.required).toContain('sourceCurrents');
+		});
+
+		it('should have complex number definition', () => {
+			expect(solverResultSchema.definitions).toBeDefined();
+			expect(solverResultSchema.definitions.complexNumber).toBeDefined();
+			expect(solverResultSchema.definitions.complexNumber.required).toContain('re');
+			expect(solverResultSchema.definitions.complexNumber.required).toContain('im');
+		});
+
+		it('should validate valid solver result data', () => {
+			const validate = ajv.compile(solverResultSchema);
+
+			const validData = {
+				frequency: 1000,
+				nodeVoltages: {
+					'node1': { re: 1.5, im: 0.5 },
+					'node2': { re: 2.0, im: -0.3 },
+				},
+				sourceCurrents: {
+					'source1': { re: 0.354, im: 0 },
+				},
+			};
+
+			expect(validate(validData)).toBe(true);
+		});
+
+		it('should reject invalid frequency values', () => {
+			const validate = ajv.compile(solverResultSchema);
+
+			const invalidData = {
+				frequency: 0, // Must be > 0
+				nodeVoltages: {},
+				sourceCurrents: {},
+			};
+
+			expect(validate(invalidData)).toBe(false);
+		});
+	});
+
+	describe('Frequency Response Data Schema', () => {
+		it('should be a valid JSON Schema', () => {
+			expect(() => {
+				ajv.compile(frequencyResponseDataSchema);
+			}).not.toThrow();
+		});
+
+		it('should compile without errors', () => {
+			const validate = ajv.compile(frequencyResponseDataSchema);
+			expect(validate).toBeDefined();
+			expect(typeof validate).toBe('function');
+		});
+
+		it('should have required properties', () => {
+			expect(frequencyResponseDataSchema.$schema).toBe('http://json-schema.org/draft-07/schema#');
+			expect(frequencyResponseDataSchema.$id).toBe('frequency-response-data.schema.json');
+			expect(frequencyResponseDataSchema.type).toBe('object');
+			expect(frequencyResponseDataSchema.required).toContain('frequencies');
+			expect(frequencyResponseDataSchema.required).toContain('spl');
+			expect(frequencyResponseDataSchema.required).toContain('phase');
+		});
+
+		it('should validate valid frequency response data', () => {
+			const validate = ajv.compile(frequencyResponseDataSchema);
+
+			const validData = {
+				frequencies: [100, 1000, 10000],
+				spl: [85, 90, 88],
+				phase: [-45, -90, -135],
+			};
+
+			expect(validate(validData)).toBe(true);
+		});
+
+		it('should validate system response with speaker responses', () => {
+			const validate = ajv.compile(frequencyResponseDataSchema);
+
+			const validData = {
+				frequencies: [100, 1000, 10000],
+				spl: [85, 90, 88],
+				phase: [-45, -90, -135],
+				speakerResponses: {
+					'speaker1': {
+						frequencies: [100, 1000, 10000],
+						spl: [85, 90, 88],
+						phase: [-45, -90, -135],
+					},
+				},
+			};
+
+			expect(validate(validData)).toBe(true);
+		});
+
+		it('should enforce phase range constraints', () => {
+			const validate = ajv.compile(frequencyResponseDataSchema);
+
+			const invalidData = {
+				frequencies: [100, 1000],
+				spl: [85, 90],
+				phase: [-181, 0], // Out of range
+			};
+
+			expect(validate(invalidData)).toBe(false);
+		});
+	});
+
+	describe('Impedance Response Data Schema', () => {
+		it('should be a valid JSON Schema', () => {
+			expect(() => {
+				ajv.compile(impedanceResponseDataSchema);
+			}).not.toThrow();
+		});
+
+		it('should compile without errors', () => {
+			const validate = ajv.compile(impedanceResponseDataSchema);
+			expect(validate).toBeDefined();
+			expect(typeof validate).toBe('function');
+		});
+
+		it('should have required properties', () => {
+			expect(impedanceResponseDataSchema.$schema).toBe('http://json-schema.org/draft-07/schema#');
+			expect(impedanceResponseDataSchema.$id).toBe('impedance-response-data.schema.json');
+			expect(impedanceResponseDataSchema.type).toBe('object');
+			expect(impedanceResponseDataSchema.required).toContain('frequencies');
+			expect(impedanceResponseDataSchema.required).toContain('impedances');
+			expect(impedanceResponseDataSchema.required).toContain('phases');
+		});
+
+		it('should validate valid impedance response data', () => {
+			const validate = ajv.compile(impedanceResponseDataSchema);
+
+			const validData = {
+				frequencies: [100, 1000, 10000],
+				impedances: [8.0, 8.5, 9.0],
+				phases: [-10, 0, 10],
+			};
+
+			expect(validate(validData)).toBe(true);
+		});
+
+		it('should enforce positive impedance values', () => {
+			const validate = ajv.compile(impedanceResponseDataSchema);
+
+			const invalidData = {
+				frequencies: [100, 1000],
+				impedances: [-8.0, 8.5], // Negative impedance not allowed
+				phases: [0, 0],
+			};
+
+			expect(validate(invalidData)).toBe(false);
+		});
+
+		it('should enforce phase range constraints', () => {
+			const validate = ajv.compile(impedanceResponseDataSchema);
+
+			const invalidData = {
+				frequencies: [100, 1000],
+				impedances: [8.0, 8.5],
+				phases: [0, 181], // Out of range
+			};
+
+			expect(validate(invalidData)).toBe(false);
+		});
+	});
+
 	describe('Schema Cross-Validation', () => {
 		it('should compile all schemas together without conflicts', () => {
 			const ajvInstance = new Ajv({
@@ -195,6 +382,9 @@ describe('JSON Schema Validation', () => {
 				ajvInstance.compile(frdDataSchema);
 				ajvInstance.compile(zmaDataSchema);
 				ajvInstance.compile(simulationResultsSchema);
+				ajvInstance.compile(solverResultSchema);
+				ajvInstance.compile(frequencyResponseDataSchema);
+				ajvInstance.compile(impedanceResponseDataSchema);
 			}).not.toThrow();
 		});
 
@@ -204,6 +394,9 @@ describe('JSON Schema Validation', () => {
 				frdDataSchema.$id,
 				zmaDataSchema.$id,
 				simulationResultsSchema.$id,
+				solverResultSchema.$id,
+				frequencyResponseDataSchema.$id,
+				impedanceResponseDataSchema.$id,
 			];
 
 			const uniqueIds = new Set(schemaIds);
@@ -216,6 +409,9 @@ describe('JSON Schema Validation', () => {
 			expect(frdDataSchema.$schema).toBe(expectedVersion);
 			expect(zmaDataSchema.$schema).toBe(expectedVersion);
 			expect(simulationResultsSchema.$schema).toBe(expectedVersion);
+			expect(solverResultSchema.$schema).toBe(expectedVersion);
+			expect(frequencyResponseDataSchema.$schema).toBe(expectedVersion);
+			expect(impedanceResponseDataSchema.$schema).toBe(expectedVersion);
 		});
 	});
 

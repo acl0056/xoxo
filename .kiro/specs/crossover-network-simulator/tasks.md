@@ -180,99 +180,118 @@
 	- [x] 18.4 Write unit tests for component state effects
 	- [x] 18.5 Write property test: ESR simulation impact (Property 12)
 
-- [ ] 19. Frequency Response Analysis
-	- [ ] 19.1 Implement FrequencyAnalyzer class
-	- [ ] 19.2 Implement SPL calculation for individual speakers
-	- [ ] 19.3 Implement combined system response calculation
-	- [ ] 19.4 Implement sensitivity adjustment application
-	- [ ] 19.5 Implement delay/phase shift application
-	- [ ] 19.6 Implement polarity inversion handling
-	- [ ] 19.7 Write unit tests for frequency response calculations
-	- [ ] 19.8 Write property test: Polarity inversion (Property 26)
+- [x] 19. Frequency Response Analysis
+	- [x] 19.1 Implement FrequencyAnalyzer class
+	- [x] 19.2 Implement SPL calculation for individual speakers
+	- [x] 19.3 Implement combined system response calculation
+	- [x] 19.4 Implement sensitivity adjustment application
+	- [x] 19.5 Implement delay/phase shift application
+	- [x] 19.6 Implement polarity inversion handling
+	- [x] 19.7 Write unit tests for frequency response calculations
+	- [x] 19.8 Write property test: Polarity inversion (Property 26)
 
-- [ ] 20. Impedance Calculation
-	- [ ] 20.1 Implement input impedance calculation at each frequency
-	- [ ] 20.2 Implement impedance magnitude and phase extraction
-	- [ ] 20.3 Write unit tests for impedance calculations
+- [x] 20. Impedance Calculation
+	- [x] 20.1 Implement input impedance calculation at each frequency
+	- [x] 20.2 Implement impedance magnitude and phase extraction
+	- [x] 20.3 Run ESLint on impedance calculation code and fix any issues
+	- [x] 20.4 Write unit tests for impedance calculations
 
-- [ ] 21. Hilbert Transform
-	- [ ] 21.1 Research and implement Hilbert Transform algorithm
-	- [ ] 21.2 Implement minimum phase derivation from magnitude data
-	- [ ] 21.3 Write unit tests comparing measured vs derived phase
-	- [ ] 21.4 Write property test: Minimum phase derivation (Property 17)
+- [x] 20.5 Create Missing Schemas for Module Boundaries
+	- [x] 20.5.1 Create solver-result.schema.json for CircuitSolver.solve() return type
+	- [x] 20.5.2 Create frequency-response-data.schema.json for FrequencyAnalyzer output
+	- [x] 20.5.3 Create impedance-response-data.schema.json for ImpedanceCalculator output
+	- [x] 20.5.4 Add schema validation at module boundaries (CircuitSolver, FrequencyAnalyzer, ImpedanceCalculator)
+	- [x] 20.5.5 Update existing tests to validate against new schemas
+	- [x] 20.5.6 Write unit tests to validate schema files are valid JSON Schema
 
-- [ ] 22. Circuit Validation
-	- [ ] 22.1 Implement floating node detection
-	- [ ] 22.2 Implement short circuit detection
-	- [ ] 22.3 Implement missing ground detection
-	- [ ] 22.4 Implement disconnected component detection
-	- [ ] 22.5 Write unit tests for each validation error type
-	- [ ] 22.6 Write property test: Invalid circuit error reporting (Property 16)
-	- [ ] 22.7 Write property test: Disconnected component exclusion (Property 18)
+- [x] 21. Hilbert Transform
+	- [x] 21.1 Research and implement Hilbert Transform algorithm
+	- [x] 21.2 Implement minimum phase derivation from magnitude data
+	- [x] 21.3 Run ESLint on Hilbert Transform code and fix any issues
+	- [x] 21.4 Write unit tests comparing measured vs derived phase
+	- [x] 21.5 Write property test: Minimum phase derivation (Property 17)
 
-- [ ] 23. Voltage Source Calculations
-	- [ ] 23.1 Implement voltage calculation from power and impedance (V = sqrt(P * Z))
-	- [ ] 23.2 Implement default initialization (1W at 8Ω = 2.828 Vrms)
-	- [ ] 23.3 Write unit tests for voltage source calculations
-	- [ ] 23.4 Write property test: Voltage source calculation (Property 25)
+- [x] 22. Circuit Validation
+	- [x] 22.1 Implement floating node detection
+	- [x] 22.2 Implement short circuit detection
+	- [x] 22.3 Implement missing ground detection
+	- [x] 22.4 Implement disconnected component detection
+	- [x] 22.5 Run ESLint on circuit validation code and fix any issues
+	- [x] 22.6 Write unit tests for each validation error type
+	- [x] 22.7 Write property test: Invalid circuit error reporting (Property 16)
+	- [x] 22.8 Write property test: Disconnected component exclusion (Property 18)
+
+- [x] 23. Voltage Source Calculations
+	- [x] 23.1 Implement voltage calculation from power and impedance (V = sqrt(P * Z))
+	- [x] 23.2 Implement default initialization (1W at 8Ω = 2.828 Vrms)
+	- [x] 23.3 Run ESLint on voltage source code and fix any issues
+	- [x] 23.4 Write unit tests for voltage source calculations
+	- [x] 23.5 Write property test: Voltage source calculation (Property 25)
 
 ## Phase 7: Graph Visualization
 
-- [ ] 24. Frequency Response Graph
-	- [ ] 24.1 Create FrequencyResponseGraph.vue component
-	- [ ] 24.2 Implement logarithmic frequency axis rendering
-	- [ ] 24.3 Implement linear dB magnitude axis rendering
-	- [ ] 24.4 Implement grid line rendering
-	- [ ] 24.5 Implement curve rendering for multiple traces
-	- [ ] 24.6 Implement curve color management
-	- [ ] 24.7 Implement hover tooltips with frequency/magnitude values
-	- [ ] 24.8 Write unit tests for axis calculations
+- [x] 24. Frequency Response Graph
+	- [x] 24.1 Create FrequencyResponseGraph.vue component
+	- [x] 24.2 Implement logarithmic frequency axis rendering
+	- [x] 24.3 Implement linear dB magnitude axis rendering
+	- [x] 24.4 Implement grid line rendering
+	- [x] 24.5 Implement curve rendering for multiple traces
+	- [x] 24.6 Implement curve color management
+	- [x] 24.7 Implement hover tooltips with frequency/magnitude values
+	- [x] 24.8 Run ESLint on FrequencyResponseGraph component and fix any issues
+	- [x] 24.9 Write unit tests for axis calculations
 
-- [ ] 25. Impedance Graph
-	- [ ] 25.1 Create ImpedanceGraph.vue component
-	- [ ] 25.2 Implement impedance curve rendering
-	- [ ] 25.3 Implement phase curve rendering
-	- [ ] 25.4 Reuse axis and grid rendering from frequency response graph
-	- [ ] 25.5 Write unit tests for impedance graph rendering
+- [x] 25. Impedance Graph
+	- [x] 25.1 Create ImpedanceGraph.vue component
+	- [x] 25.2 Implement impedance curve rendering
+	- [x] 25.3 Implement phase curve rendering
+	- [x] 25.4 Reuse axis and grid rendering from frequency response graph
+	- [x] 25.5 Run ESLint on ImpedanceGraph component and fix any issues
+	- [x] 25.6 Write unit tests for impedance graph rendering
 
-- [ ] 26. Graph Controls and Menus
-	- [ ] 26.1 Implement Curves menu for frequency response graph
-	- [ ] 26.2 Implement curve visibility toggles
-	- [ ] 26.3 Implement curve color selection
-	- [ ] 26.4 Implement phase curve toggle
-	- [ ] 26.5 Implement smoothing options (1/24, 1/12, 1/6, 1/3, 1/2, 1, ERB)
-	- [ ] 26.6 Implement smoothing algorithm for fractional octave smoothing
-	- [ ] 26.7 Implement Curves menu for impedance graph
-	- [ ] 26.8 Write unit tests for smoothing calculations
+- [-] 26. Graph Controls and Menus
+	- [x] 26.1 Implement Curves menu for frequency response graph
+	- [x] 26.2 Implement curve visibility toggles
+	- [x] 26.3 Implement curve color selection
+	- [x] 26.4 Implement phase curve toggle
+	- [x] 26.5 Implement smoothing options (1/24, 1/12, 1/6, 1/3, 1/2, 1, ERB)
+	- [x] 26.6 Implement smoothing algorithm for fractional octave smoothing
+	- [x] 26.7 Implement Curves menu for impedance graph
+	- [x] 26.8 Run ESLint on graph controls code and fix any issues
+	- [x] 26.9 Write unit tests for smoothing calculations
 
-- [ ] 27. Graph Scale Controls
-	- [ ] 27.1 Implement Scale menu for frequency response graph
-	- [ ] 27.2 Implement min/max frequency inputs
-	- [ ] 27.3 Implement vertical center value input
-	- [ ] 27.4 Implement vertical step size input
-	- [ ] 27.5 Implement Scale menu for impedance graph
-	- [ ] 27.6 Write unit tests for scale transformations
+- [x] 27. Graph Scale Controls
+	- [x] 27.1 Implement Scale menu for frequency response graph
+	- [x] 27.2 Implement min/max frequency inputs
+	- [x] 27.3 Implement vertical center value input
+	- [x] 27.4 Implement vertical step size input
+	- [x] 27.5 Implement Scale menu for impedance graph
+	- [x] 27.6 Run ESLint on scale controls code and fix any issues
+	- [x] 27.7 Write unit tests for scale transformations
 
-- [ ] 28. Hold Feature
-	- [ ] 28.1 Implement Hold button for frequency response graph
-	- [ ] 28.2 Implement graph state capture on Hold activation
-	- [ ] 28.3 Implement gray overlay rendering of held curves
-	- [ ] 28.4 Implement Hold button for impedance graph
-	- [ ] 28.5 Write unit tests for hold state management
+- [x] 28. Hold Feature
+	- [x] 28.1 Implement Hold button for frequency response graph
+	- [x] 28.2 Implement graph state capture on Hold activation
+	- [x] 28.3 Implement gray overlay rendering of held curves
+	- [x] 28.4 Implement Hold button for impedance graph
+	- [x] 28.5 Run ESLint on hold feature code and fix any issues
+	- [x] 28.6 Write unit tests for hold state management
 
-- [ ] 29. Graph Export
-	- [ ] 29.1 Implement FRD file export from frequency response graph
-	- [ ] 29.2 Implement ZMA file export from impedance graph
-	- [ ] 29.3 Implement graph snapshot to PNG file
-	- [ ] 29.4 Implement graph snapshot to clipboard
-	- [ ] 29.5 Write unit tests for export functionality
+- [x] 29. Graph Export
+	- [x] 29.1 Implement FRD file export from frequency response graph
+	- [x] 29.2 Implement ZMA file export from impedance graph
+	- [x] 29.3 Implement graph snapshot to PNG file
+	- [x] 29.4 Implement graph snapshot to clipboard
+	- [x] 29.5 Run ESLint on graph export code and fix any issues
+	- [x] 29.6 Write unit tests for export functionality
 
-- [ ] 30. External File Comparison
-	- [ ] 30.1 Implement "Get File" menu item for loading external FRD files
-	- [ ] 30.2 Implement external FRD curve rendering in frequency response graph
-	- [ ] 30.3 Implement "Get File" menu item for loading external ZMA files
-	- [ ] 30.4 Implement external ZMA curve rendering in impedance graph
-	- [ ] 30.5 Write unit tests for external file loading
+- [x] 30. External File Comparison
+	- [x] 30.1 Implement "Get File" menu item for loading external FRD files
+	- [x] 30.2 Implement external FRD curve rendering in frequency response graph
+	- [x] 30.3 Implement "Get File" menu item for loading external ZMA files
+	- [x] 30.4 Implement external ZMA curve rendering in impedance graph
+	- [x] 30.5 Run ESLint on external file comparison code and fix any issues
+	- [x] 30.6 Write unit tests for external file loading
 
 ## Phase 8: Off-Axis Response
 
@@ -281,15 +300,18 @@
 	- [ ] 31.2 Implement off-axis file loading and parsing
 	- [ ] 31.3 Implement angle validation (0-180 degrees)
 	- [ ] 31.4 Implement off-axis file UI in Tune dialog
-	- [ ] 31.5 Write unit tests for off-axis data management
+	- [ ] 31.5 Run ESLint on off-axis data management code and fix any issues
+	- [ ] 31.6 Write unit tests for off-axis data management
 
 - [ ] 32. Angle Switching
 	- [ ] 32.1 Implement global angle control in UI
 	- [ ] 32.2 Implement angle switching logic for all speakers
-	- [ ] 32.3 Implement fallback to closest available angle
-	- [ ] 32.4 Implement angle indicator in graph viewer
-	- [ ] 32.5 Write unit tests for angle switching
-	- [ ] 32.6 Write property test: Off-axis angle switching (Property 23)
+	- [ ] 32.3 Implement driver exclusion (effective muting) when angle data is missing
+	- [ ] 32.4 Implement warning indicator for drivers missing angle data
+	- [ ] 32.5 Implement angle indicator in graph viewer
+	- [ ] 32.6 Run ESLint on angle switching code and fix any issues
+	- [ ] 32.7 Write unit tests for angle switching
+	- [ ] 32.8 Write property test: Off-axis angle switching (Property 23)
 
 ## Phase 9: Vuex State Management
 
@@ -300,7 +322,8 @@
 	- [ ] 33.4 Implement mutations for annotation add/remove/update
 	- [ ] 33.5 Implement actions for file operations
 	- [ ] 33.6 Implement undo/redo state management
-	- [ ] 33.7 Write unit tests for state mutations
+	- [ ] 33.7 Run ESLint on circuit state module and fix any issues
+	- [ ] 33.8 Write unit tests for state mutations
 
 - [ ] 34. Simulation State Module
 	- [ ] 34.1 Implement simulation state module (simulation.js)
@@ -309,7 +332,8 @@
 	- [ ] 34.4 Implement frequency response state
 	- [ ] 34.5 Implement impedance response state
 	- [ ] 34.6 Implement simulation action with async solver
-	- [ ] 34.7 Write unit tests for simulation state management
+	- [ ] 34.7 Run ESLint on simulation state module and fix any issues
+	- [ ] 34.8 Write unit tests for simulation state management
 
 - [ ] 35. UI State Module
 	- [ ] 35.1 Implement UI state module (ui.js)
@@ -317,7 +341,8 @@
 	- [ ] 35.3 Implement zoom level state
 	- [ ] 35.4 Implement selected component state
 	- [ ] 35.5 Implement graph scale settings state
-	- [ ] 35.6 Write unit tests for UI state management
+	- [ ] 35.6 Run ESLint on UI state module and fix any issues
+	- [ ] 35.7 Write unit tests for UI state management
 
 ## Phase 10: Application Integration
 
@@ -327,7 +352,8 @@
 	- [ ] 36.3 Implement window management
 	- [ ] 36.4 Implement IPC communication between main and renderer
 	- [ ] 36.5 Implement recent files persistence
-	- [ ] 36.6 Write unit tests for IPC handlers
+	- [ ] 36.6 Run ESLint on Electron main process code and fix any issues
+	- [ ] 36.7 Write unit tests for IPC handlers
 
 - [ ] 37. Application Lifecycle
 	- [ ] 37.1 Implement new project initialization with default voltage source
@@ -336,14 +362,16 @@
 	- [ ] 37.4 Implement error logging to file
 	- [ ] 37.5 Implement crash recovery data saving
 	- [ ] 37.6 Implement about dialog
-	- [ ] 37.7 Write unit tests for lifecycle events
+	- [ ] 37.7 Run ESLint on application lifecycle code and fix any issues
+	- [ ] 37.8 Write unit tests for lifecycle events
 
 - [ ] 38. Auto-Simulation
 	- [ ] 38.1 Implement auto-simulate toggle in UI
 	- [ ] 38.2 Implement parameter change detection
 	- [ ] 38.3 Implement debounced simulation trigger
 	- [ ] 38.4 Implement simulation progress indicator
-	- [ ] 38.5 Write unit tests for auto-simulation logic
+	- [ ] 38.5 Run ESLint on auto-simulation code and fix any issues
+	- [ ] 38.6 Write unit tests for auto-simulation logic
 
 ## Phase 11: Annotation System
 
@@ -353,8 +381,9 @@
 	- [ ] 39.3 Implement font size control
 	- [ ] 39.4 Implement annotation positioning and dragging
 	- [ ] 39.5 Implement annotation deletion
-	- [ ] 39.6 Write unit tests for annotation management
-	- [ ] 39.7 Write property test: Annotation simulation independence (Property 4)
+	- [ ] 39.6 Run ESLint on text annotation code and fix any issues
+	- [ ] 39.7 Write unit tests for annotation management
+	- [ ] 39.8 Write property test: Annotation simulation independence (Property 4)
 
 ## Phase 12: Testing and Validation
 

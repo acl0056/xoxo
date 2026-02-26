@@ -1,5 +1,6 @@
 import { create, all } from 'mathjs';
 import Complex from 'complex.js';
+import SchemaValidator from './SchemaValidator';
 
 const math = create(all);
 
@@ -276,11 +277,19 @@ class CircuitSolver {
 				sourceCurrents.set(sourceId, current);
 			}
 
-			return {
+			const result = {
 				frequency,
 				nodeVoltages,
 				sourceCurrents,
 			};
+
+			// Validate result against schema
+			const validation = SchemaValidator.validateSolverResult(result);
+			if (!validation.valid) {
+				console.warn(`Solver result validation warning at ${frequency} Hz:`, validation.errors);
+			}
+
+			return result;
 		} catch (error) {
 			throw new Error(`Failed to solve circuit at ${frequency} Hz: ${error.message}`);
 		}

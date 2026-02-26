@@ -12,16 +12,71 @@ This project follows a **schema-first development methodology** where JSON Schem
 2. Update code to match the schema
 3. Update tests to validate against the schema
 
+## When to Create a Schema
+
+You MUST create a JSON Schema when data crosses code boundaries (between different JavaScript files/modules) AND meets ANY of these criteria:
+
+1. **More than 3 properties** in the data structure
+2. **Nested properties** (objects within objects, arrays of objects)
+3. **Data is serialized** (saved to files, sent over network)
+
+### Examples of Code Boundaries Requiring Schemas:
+
+- **Function returns** from one module consumed by another module
+- **Class method parameters** when called from a different file
+- **Module exports** that are imported elsewhere
+- **Event payloads** passed between components
+- **File I/O** (always requires schema)
+
+### Example: CircuitSolver Return Type
+
+```javascript
+// src/simulation/CircuitSolver.js
+class CircuitSolver {
+	/**
+	 * Solve circuit at a single frequency
+	 * Returns data matching solver-result.schema.json
+	 */
+	solve(frequency) {
+		return {
+			frequency,
+			nodeVoltages,    // Map<string, Complex>
+			sourceCurrents   // Map<string, Complex>
+		};
+	}
+	
+	/**
+	 * Solve circuit across all frequencies
+	 * Returns array of solver-result.schema.json objects
+	 */
+	solveAllFrequencies() {
+		// This crosses a boundary - consumed by FrequencyAnalyzer, ImpedanceCalculator
+		// Has nested properties (Maps with complex values)
+		// REQUIRES: solver-results-array.schema.json
+		return results;
+	}
+}
+```
+
+### When Schema is NOT Required:
+
+- Simple primitives (single string, number, boolean)
+- Data that stays within a single file/class
+- Temporary variables in a function
+- Data with ≤3 properties AND no nesting
+
 ## Schema Location
 
 All JSON Schema files are stored in `src/schemas/`:
 
 ```
 src/schemas/
-├── circuit.schema.json          # Main circuit document schema
-├── frd-data.schema.json         # Frequency response data schema
-├── zma-data.schema.json         # Impedance data schema
-└── simulation-results.schema.json  # Simulation output schema
+├── circuit.schema.json              # Main circuit document schema
+├── frd-data.schema.json             # Frequency response data schema
+├── zma-data.schema.json             # Impedance data schema
+├── simulation-results.schema.json   # Simulation output schema
+├── solver-result.schema.json        # Single frequency solve result
+└── solver-results-array.schema.json # Array of solve results
 ```
 
 ## When Making Changes

@@ -1,105 +1,233 @@
+import { Circuit } from '@/models/Circuit';
+import { VoltageSource } from '@/models/VoltageSource';
+
+// Debounce timer for auto-simulation
+let simulationDebounceTimer = null;
+const SIMULATION_DEBOUNCE_DELAY = 300; // milliseconds
+
+/**
+ * Trigger debounced simulation
+ * This function will be called whenever circuit parameters change
+ * @param {Object} store - Vuex store instance
+ */
+function triggerDebouncedSimulation(store) {
+	// Clear any existing timer
+	if (simulationDebounceTimer) {
+		clearTimeout(simulationDebounceTimer);
+	}
+
+	// Set a new timer to run simulation after delay
+	simulationDebounceTimer = setTimeout(() => {
+		// Check if auto-simulate is enabled
+		// Access the root state through the store's state property
+		const rootState = store.state || store.rootState;
+		if (rootState && rootState.simulation && rootState.simulation.autoSimulate) {
+			store.dispatch('simulation/runSimulation', null, { root: true });
+		}
+		simulationDebounceTimer = null;
+	}, SIMULATION_DEBOUNCE_DELAY);
+}
+
 export default {
 	namespaced: true,
 	state: {
-		components: [],
-		wires: [],
-		nodes: [],
-		annotations: [],
-		metadata: {
-			name: '',
-			created: null,
-			modified: null,
-			version: '1.0',
-		},
+		circuit: null, // Circuit instance
 		undoStack: [],
 		redoStack: [],
+		isDirty: false, // Unsaved changes flag
+		currentFilePath: null, // Path to the currently loaded file
+		recentFiles: [], // Array of recently opened file paths
 	},
 	mutations: {
+		// Circuit mutations
+		SET_CIRCUIT(state, circuit) {
+			state.circuit = circuit;
+		},
 		// Component mutations
-		addComponent(state, component) {
-			state.components.push(component);
+		ADD_COMPONENT(state, component) {
+			if (state.circuit) {
+				state.circuit.addComponent(component);
+				state.isDirty = true;
+			}
 		},
-		removeComponent(state, componentId) {
-			state.components = state.components.filter((component) => component.id !== componentId);
+		REMOVE_COMPONENT(state, componentId) {
+			if (state.circuit) {
+				state.circuit.removeComponent(componentId);
+				state.isDirty = true;
+			}
 		},
-		updateComponent(state, { componentId, updates }) {
-			const component = state.components.find((c) => c.id === componentId);
-			if (component) {
-				Object.assign(component, updates);
+		UPDATE_COMPONENT(state, { componentId, updates }) {
+			if (state.circuit) {
+				state.circuit.updateComponent(componentId, updates);
+				state.isDirty = true;
 			}
 		},
 		// Wire mutations
-		addWire(state, wire) {
-			state.wires.push(wire);
-		},
-		removeWire(state, wireId) {
-			state.wires = state.wires.filter((wire) => wire.id !== wireId);
-		},
-		// Annotation mutations
-		addAnnotation(state, annotation) {
-			state.annotations.push(annotation);
-		},
-		removeAnnotation(state, annotationId) {
-			state.annotations = state.annotations.filter((annotation) => annotation.id !== annotationId);
-		},
-		updateAnnotation(state, { annotationId, updates }) {
-			const annotation = state.annotations.find((a) => a.id === annotationId);
-			if (annotation) {
-				Object.assign(annotation, updates);
+		ADD_WIRE(state, wire) {
+			if (state.circuit) {
+				state.circuit.addWire(wire);
+				state.isDirty = true;
 			}
 		},
-		// Metadata mutations
-		updateMetadata(state, metadata) {
-			state.metadata = { ...state.metadata, ...metadata };
+		REMOVE_WIRE(state, wireId) {
+			if (state.circuit) {
+				state.circuit.removeWire(wireId);
+				state.isDirty = true;
+			}
+		},
+		// Annotation mutations
+		ADD_ANNOTATION(state, annotation) {
+			if (state.circuit) {
+				state.circuit.addAnnotation(annotation);
+				state.isDirty = true;
+			}
+		},
+		REMOVE_ANNOTATION(state, annotationId) {
+			if (state.circuit) {
+				state.circuit.removeAnnotation(annotationId);
+				state.isDirty = true;
+			}
+		},
+		UPDATE_ANNOTATION(state, { annotationId, updates }) {
+			if (state.circuit) {
+				state.circuit.updateAnnotation(annotationId, updates);
+				state.isDirty = true;
+			}
 		},
 		// Undo/Redo mutations
-		pushUndo(state, action) {
+		PUSH_UNDO(state, action) {
 			state.undoStack.push(action);
 		},
-		popUndo(state) {
+		POP_UNDO(state) {
 			return state.undoStack.pop();
 		},
-		clearUndoStack(state) {
+		CLEAR_UNDO(state) {
 			state.undoStack = [];
 		},
-		pushRedo(state, action) {
+		PUSH_REDO(state, action) {
 			state.redoStack.push(action);
 		},
-		popRedo(state) {
+		POP_REDO(state) {
 			return state.redoStack.pop();
 		},
-		clearRedoStack(state) {
+		CLEAR_REDO(state) {
 			state.redoStack = [];
+		},
+		// File operation mutations
+		SET_DIRTY(state, isDirty) {
+			state.isDirty = isDirty;
+		},
+		CLEAR_DIRTY(state) {
+			state.isDirty = false;
+		},
+		SET_FILE_PATH(state, filePath) {
+			state.currentFilePath = filePath;
+		},
+		ADD_RECENT_FILE(state, filePath) {
+			// Remove the file if it already exists in the list
+			state.recentFiles = state.recentFiles.filter((f) => f !== filePath);
+			// Add to the beginning of the list
+			state.recentFiles.unshift(filePath);
+			// Keep only the last 10 files
+			if (state.recentFiles.length > 10) {
+				state.recentFiles = state.recentFiles.slice(0, 10);
+			}
 		},
 	},
 	actions: {
+		// Initialize a new circuit
+		newFile({ commit, dispatch }) {
+			const circuit = new Circuit();
+			// Add default voltage source as per requirements
+			const voltageSource = new VoltageSource(10, 20);
+			circuit.addComponent(voltageSource);
+
+			commit('SET_CIRCUIT', circuit);
+			commit('SET_FILE_PATH', null);
+			commit('CLEAR_DIRTY');
+			commit('CLEAR_UNDO');
+			commit('CLEAR_REDO');
+
+			// Trigger initial simulation
+			dispatch('simulation/runSimulation', null, { root: true });
+		},
+
+		// Load a circuit from file
+		async loadFile({ commit, dispatch }, { filePath, circuitData }) {
+			try {
+				const circuit = Circuit.fromJSON(circuitData);
+				commit('SET_CIRCUIT', circuit);
+				commit('SET_FILE_PATH', filePath);
+				commit('ADD_RECENT_FILE', filePath);
+				commit('CLEAR_DIRTY');
+				commit('CLEAR_UNDO');
+				commit('CLEAR_REDO');
+
+				// Trigger simulation after loading circuit
+				dispatch('simulation/runSimulation', null, { root: true });
+
+				return { success: true };
+			} catch (error) {
+				return { success: false, error: error.message };
+			}
+		},
+
+		// Save the current circuit
+		async saveFile({ state, commit }, filePath) {
+			if (!state.circuit) {
+				return { success: false, error: 'No circuit to save' };
+			}
+
+			try {
+				const circuitData = state.circuit.toJSON();
+				commit('SET_FILE_PATH', filePath);
+				commit('ADD_RECENT_FILE', filePath);
+				commit('CLEAR_DIRTY');
+				return { success: true, data: circuitData };
+			} catch (error) {
+				return { success: false, error: error.message };
+			}
+		},
+
 		// Undoable actions for components
-		addComponentWithUndo({ commit }, component) {
+		addComponent({ commit, state }, component) {
+			if (!state.circuit) return;
+
 			// Record the action for undo
 			const undoAction = {
 				type: 'removeComponent',
 				payload: component.id,
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('addComponent', component);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('ADD_COMPONENT', component);
+
+			// Trigger debounced simulation
+			triggerDebouncedSimulation(this);
 		},
-		removeComponentWithUndo({ commit, state }, componentId) {
+		removeComponent({ commit, state }, componentId) {
+			if (!state.circuit) return;
+
 			// Find the component to save its state for undo
-			const component = state.components.find((c) => c.id === componentId);
+			const component = state.circuit.getComponent(componentId);
 			if (!component) return;
 
 			const undoAction = {
 				type: 'addComponent',
-				payload: JSON.parse(JSON.stringify(component)), // Deep clone
+				payload: JSON.parse(JSON.stringify(component.toJSON ? component.toJSON() : component)),
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('removeComponent', componentId);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('REMOVE_COMPONENT', componentId);
+
+			// Trigger debounced simulation
+			triggerDebouncedSimulation(this);
 		},
-		updateComponentWithUndo({ commit, state }, { componentId, updates }) {
+		updateComponent({ commit, state }, { componentId, updates }) {
+			if (!state.circuit) return;
+
 			// Find the component to save its previous state
-			const component = state.components.find((c) => c.id === componentId);
+			const component = state.circuit.getComponent(componentId);
 			if (!component) return;
 
 			// Save the previous values of the fields being updated
@@ -112,56 +240,71 @@ export default {
 				type: 'updateComponent',
 				payload: { componentId, updates: previousValues },
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('updateComponent', { componentId, updates });
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('UPDATE_COMPONENT', { componentId, updates });
+
+			// Trigger debounced simulation
+			triggerDebouncedSimulation(this);
 		},
 		// Undoable actions for wires
-		addWireWithUndo({ commit }, wire) {
+		addWire({ commit }, wire) {
 			const undoAction = {
 				type: 'removeWire',
 				payload: wire.id,
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('addWire', wire);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('ADD_WIRE', wire);
+
+			// Trigger debounced simulation
+			triggerDebouncedSimulation(this);
 		},
-		removeWireWithUndo({ commit, state }, wireId) {
-			const wire = state.wires.find((w) => w.id === wireId);
+		removeWire({ commit, state }, wireId) {
+			if (!state.circuit) return;
+
+			const wire = state.circuit.getWire(wireId);
 			if (!wire) return;
 
 			const undoAction = {
 				type: 'addWire',
-				payload: JSON.parse(JSON.stringify(wire)),
+				payload: JSON.parse(JSON.stringify(wire.toJSON ? wire.toJSON() : wire)),
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('removeWire', wireId);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('REMOVE_WIRE', wireId);
+
+			// Trigger debounced simulation
+			triggerDebouncedSimulation(this);
 		},
 		// Undoable actions for annotations
-		addAnnotationWithUndo({ commit }, annotation) {
+		addAnnotation({ commit }, annotation) {
 			const undoAction = {
 				type: 'removeAnnotation',
 				payload: annotation.id,
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('addAnnotation', annotation);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('ADD_ANNOTATION', annotation);
 		},
-		removeAnnotationWithUndo({ commit, state }, annotationId) {
-			const annotation = state.annotations.find((a) => a.id === annotationId);
+		removeAnnotation({ commit, state }, annotationId) {
+			if (!state.circuit) return;
+
+			const annotation = state.circuit.getAnnotation(annotationId);
 			if (!annotation) return;
 
 			const undoAction = {
 				type: 'addAnnotation',
-				payload: JSON.parse(JSON.stringify(annotation)),
+				payload: JSON.parse(JSON.stringify(annotation.toJSON ? annotation.toJSON() : annotation)),
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('removeAnnotation', annotationId);
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('REMOVE_ANNOTATION', annotationId);
 		},
-		updateAnnotationWithUndo({ commit, state }, { annotationId, updates }) {
-			const annotation = state.annotations.find((a) => a.id === annotationId);
+		updateAnnotation({ commit, state }, { annotationId, updates }) {
+			if (!state.circuit) return;
+
+			const annotation = state.circuit.getAnnotation(annotationId);
 			if (!annotation) return;
 
 			const previousValues = {};
@@ -173,42 +316,48 @@ export default {
 				type: 'updateAnnotation',
 				payload: { annotationId, updates: previousValues },
 			};
-			commit('pushUndo', undoAction);
-			commit('clearRedoStack');
-			commit('updateAnnotation', { annotationId, updates });
+			commit('PUSH_UNDO', undoAction);
+			commit('CLEAR_REDO');
+			commit('UPDATE_ANNOTATION', { annotationId, updates });
 		},
 		// Undo action
 		undo({ commit, state }) {
-			if (state.undoStack.length === 0) return;
+			if (state.undoStack.length === 0 || !state.circuit) return;
 
 			const action = state.undoStack[state.undoStack.length - 1];
-			commit('popUndo');
+			commit('POP_UNDO');
 
 			// Create the redo action (inverse of the undo action)
 			let redoAction;
+			let shouldTriggerSimulation = false;
 			switch (action.type) {
 				case 'addComponent': {
-					redoAction = {
-						type: 'removeComponent',
-						payload: action.payload.id,
-					};
-					commit('removeComponent', action.payload.id);
-					commit('addComponent', action.payload);
+					const component = state.circuit.getComponent(action.payload.id);
+					if (component) {
+						redoAction = {
+							type: 'removeComponent',
+							payload: component.id,
+						};
+						commit('REMOVE_COMPONENT', action.payload.id);
+					}
+					commit('ADD_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'removeComponent': {
-					const component = state.components.find((c) => c.id === action.payload);
+					const component = state.circuit.getComponent(action.payload);
 					if (component) {
 						redoAction = {
 							type: 'addComponent',
-							payload: JSON.parse(JSON.stringify(component)),
+							payload: JSON.parse(JSON.stringify(component.toJSON ? component.toJSON() : component)),
 						};
 					}
-					commit('removeComponent', action.payload);
+					commit('REMOVE_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'updateComponent': {
-					const component = state.components.find((c) => c.id === action.payload.componentId);
+					const component = state.circuit.getComponent(action.payload.componentId);
 					if (component) {
 						const currentValues = {};
 						Object.keys(action.payload.updates).forEach((key) => {
@@ -219,51 +368,62 @@ export default {
 							payload: { componentId: action.payload.componentId, updates: currentValues },
 						};
 					}
-					commit('updateComponent', action.payload);
+					commit('UPDATE_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'addWire': {
-					redoAction = {
-						type: 'removeWire',
-						payload: action.payload.id,
-					};
-					commit('removeWire', action.payload.id);
-					commit('addWire', action.payload);
+					const wire = state.circuit.getWire(action.payload.id);
+					if (wire) {
+						redoAction = {
+							type: 'removeWire',
+							payload: wire.id,
+						};
+						commit('REMOVE_WIRE', action.payload.id);
+					}
+					commit('ADD_WIRE', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'removeWire': {
-					const wire = state.wires.find((w) => w.id === action.payload);
+					const wire = state.circuit.getWire(action.payload);
 					if (wire) {
 						redoAction = {
 							type: 'addWire',
-							payload: JSON.parse(JSON.stringify(wire)),
+							payload: JSON.parse(JSON.stringify(wire.toJSON ? wire.toJSON() : wire)),
 						};
 					}
-					commit('removeWire', action.payload);
+					commit('REMOVE_WIRE', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'addAnnotation': {
-					redoAction = {
-						type: 'removeAnnotation',
-						payload: action.payload.id,
-					};
-					commit('removeAnnotation', action.payload.id);
-					commit('addAnnotation', action.payload);
+					const annotation = state.circuit.getAnnotation(action.payload.id);
+					if (annotation) {
+						redoAction = {
+							type: 'removeAnnotation',
+							payload: annotation.id,
+						};
+						commit('REMOVE_ANNOTATION', action.payload.id);
+					}
+					commit('ADD_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				case 'removeAnnotation': {
-					const annotation = state.annotations.find((a) => a.id === action.payload);
+					const annotation = state.circuit.getAnnotation(action.payload);
 					if (annotation) {
 						redoAction = {
 							type: 'addAnnotation',
-							payload: JSON.parse(JSON.stringify(annotation)),
+							payload: JSON.parse(JSON.stringify(annotation.toJSON ? annotation.toJSON() : annotation)),
 						};
 					}
-					commit('removeAnnotation', action.payload);
+					commit('REMOVE_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				case 'updateAnnotation': {
-					const annotation = state.annotations.find((a) => a.id === action.payload.annotationId);
+					const annotation = state.circuit.getAnnotation(action.payload.annotationId);
 					if (annotation) {
 						const currentValues = {};
 						Object.keys(action.payload.updates).forEach((key) => {
@@ -274,7 +434,8 @@ export default {
 							payload: { annotationId: action.payload.annotationId, updates: currentValues },
 						};
 					}
-					commit('updateAnnotation', action.payload);
+					commit('UPDATE_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				default:
@@ -282,40 +443,48 @@ export default {
 			}
 
 			if (redoAction) {
-				commit('pushRedo', redoAction);
+				commit('PUSH_REDO', redoAction);
+			}
+
+			// Trigger debounced simulation if needed
+			if (shouldTriggerSimulation) {
+				triggerDebouncedSimulation(this);
 			}
 		},
 		// Redo action
 		redo({ commit, state }) {
-			if (state.redoStack.length === 0) return;
+			if (state.redoStack.length === 0 || !state.circuit) return;
 
 			const action = state.redoStack[state.redoStack.length - 1];
-			commit('popRedo');
+			commit('POP_REDO');
 
 			// Create the undo action (inverse of the redo action)
 			let undoAction;
+			let shouldTriggerSimulation = false;
 			switch (action.type) {
 				case 'addComponent': {
 					undoAction = {
 						type: 'removeComponent',
 						payload: action.payload.id,
 					};
-					commit('addComponent', action.payload);
+					commit('ADD_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'removeComponent': {
-					const component = state.components.find((c) => c.id === action.payload);
+					const component = state.circuit.getComponent(action.payload);
 					if (component) {
 						undoAction = {
 							type: 'addComponent',
-							payload: JSON.parse(JSON.stringify(component)),
+							payload: JSON.parse(JSON.stringify(component.toJSON ? component.toJSON() : component)),
 						};
 					}
-					commit('removeComponent', action.payload);
+					commit('REMOVE_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'updateComponent': {
-					const component = state.components.find((c) => c.id === action.payload.componentId);
+					const component = state.circuit.getComponent(action.payload.componentId);
 					if (component) {
 						const currentValues = {};
 						Object.keys(action.payload.updates).forEach((key) => {
@@ -326,7 +495,8 @@ export default {
 							payload: { componentId: action.payload.componentId, updates: currentValues },
 						};
 					}
-					commit('updateComponent', action.payload);
+					commit('UPDATE_COMPONENT', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'addWire': {
@@ -334,18 +504,20 @@ export default {
 						type: 'removeWire',
 						payload: action.payload.id,
 					};
-					commit('addWire', action.payload);
+					commit('ADD_WIRE', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'removeWire': {
-					const wire = state.wires.find((w) => w.id === action.payload);
+					const wire = state.circuit.getWire(action.payload);
 					if (wire) {
 						undoAction = {
 							type: 'addWire',
-							payload: JSON.parse(JSON.stringify(wire)),
+							payload: JSON.parse(JSON.stringify(wire.toJSON ? wire.toJSON() : wire)),
 						};
 					}
-					commit('removeWire', action.payload);
+					commit('REMOVE_WIRE', action.payload);
+					shouldTriggerSimulation = true;
 					break;
 				}
 				case 'addAnnotation': {
@@ -353,22 +525,24 @@ export default {
 						type: 'removeAnnotation',
 						payload: action.payload.id,
 					};
-					commit('addAnnotation', action.payload);
+					commit('ADD_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				case 'removeAnnotation': {
-					const annotation = state.annotations.find((a) => a.id === action.payload);
+					const annotation = state.circuit.getAnnotation(action.payload);
 					if (annotation) {
 						undoAction = {
 							type: 'addAnnotation',
-							payload: JSON.parse(JSON.stringify(annotation)),
+							payload: JSON.parse(JSON.stringify(annotation.toJSON ? annotation.toJSON() : annotation)),
 						};
 					}
-					commit('removeAnnotation', action.payload);
+					commit('REMOVE_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				case 'updateAnnotation': {
-					const annotation = state.annotations.find((a) => a.id === action.payload.annotationId);
+					const annotation = state.circuit.getAnnotation(action.payload.annotationId);
 					if (annotation) {
 						const currentValues = {};
 						Object.keys(action.payload.updates).forEach((key) => {
@@ -379,7 +553,8 @@ export default {
 							payload: { annotationId: action.payload.annotationId, updates: currentValues },
 						};
 					}
-					commit('updateAnnotation', action.payload);
+					commit('UPDATE_ANNOTATION', action.payload);
+					// Annotations don't affect simulation
 					break;
 				}
 				default:
@@ -387,12 +562,29 @@ export default {
 			}
 
 			if (undoAction) {
-				commit('pushUndo', undoAction);
+				commit('PUSH_UNDO', undoAction);
+			}
+
+			// Trigger debounced simulation if needed
+			if (shouldTriggerSimulation) {
+				triggerDebouncedSimulation(this);
 			}
 		},
 	},
 	getters: {
-		getComponentById: (state) => (componentId) => state.components.find((c) => c.id === componentId),
-		getWireById: (state) => (wireId) => state.wires.find((w) => w.id === wireId),
+		getCircuit: (state) => state.circuit,
+		getComponentById: (state) => (componentId) => {
+			if (!state.circuit) return null;
+			return state.circuit.getComponent(componentId);
+		},
+		getWireById: (state) => (wireId) => {
+			if (!state.circuit) return null;
+			return state.circuit.getWire(wireId);
+		},
+		isDirty: (state) => state.isDirty,
+		getCurrentFilePath: (state) => state.currentFilePath,
+		getRecentFiles: (state) => state.recentFiles,
+		canUndo: (state) => state.undoStack.length > 0,
+		canRedo: (state) => state.redoStack.length > 0,
 	},
 };

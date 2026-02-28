@@ -24,10 +24,10 @@ export class VoltageSource extends Component {
 		};
 
 		// Set terminals for a voltage source (+ and - terminals)
-		// Terminals at -3 and +3 from center
+		// Terminals at x=3, 2 grid units apart vertically
 		this.terminals = [
-			{ x: -3, y: 0 }, // Negative terminal
-			{ x: 3, y: 0 }, // Positive terminal
+			{ x: 3, y: -1 }, // Top terminal (positive for normal polarity)
+			{ x: 3, y: 1 }, // Bottom terminal (negative for normal polarity)
 		];
 	}
 

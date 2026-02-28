@@ -19,13 +19,26 @@ export default defineConfig(({ mode }) => {
 				{
 					// Main process entry point - use absolute path
 					entry: path.join(__dirname, 'src/main/index.js'),
+					onstart(args) {
+						// Copy additional main process files after build
+						const { execSync } = require('child_process');
+						execSync('node scripts/copy-main-files.js', { stdio: 'inherit' });
+						args.startup();
+					},
 					vite: {
 						build: {
 							outDir: path.join(__dirname, 'dist/main'),
 							sourcemap: isDevelopment,
 							minify: isProduction,
 							rollupOptions: {
-								external: ['electron'],
+								external: (id) => {
+									// Only externalize electron and Node.js built-ins
+									return id === 'electron' || /^node:/.test(id);
+								},
+								output: {
+									format: 'cjs',
+									entryFileNames: 'index.js',
+								},
 							},
 						},
 					},

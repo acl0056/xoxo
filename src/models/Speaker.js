@@ -33,10 +33,10 @@ export class Speaker extends Component {
 		this.offAxisData = []; // Parsed off-axis data
 
 		// Set terminals for a speaker (+ and - terminals)
-		// Terminals at -3 and +3 from center
+		// Terminals at same x, 2 grid units apart vertically
 		this.terminals = [
-			{ x: -3, y: 0 }, // Negative terminal
-			{ x: 3, y: 0 }, // Positive terminal
+			{ x: 0, y: -1 }, // Top terminal (positive for normal polarity)
+			{ x: 0, y: 1 }, // Bottom terminal (negative for normal polarity)
 		];
 	}
 
@@ -46,10 +46,18 @@ export class Speaker extends Component {
 	 * @returns {Promise<void>}
 	 */
 	async loadFrdFile(filePath) {
-		// This will be implemented when FRD parser is available
-		// For now, just store the file path
+		// Import FrdParser dynamically to avoid circular dependencies
+		const FrdParser = (await import('../io/FrdParser')).default;
+
 		this.parameters.frdFile = filePath;
-		// TODO: Parse FRD file and populate this.frdData
+
+		try {
+			this.frdData = FrdParser.parse(filePath);
+		} catch (error) {
+			console.error('Failed to load FRD file:', error);
+			this.frdData = null;
+			throw error;
+		}
 	}
 
 	/**
@@ -58,10 +66,18 @@ export class Speaker extends Component {
 	 * @returns {Promise<void>}
 	 */
 	async loadZmaFile(filePath) {
-		// This will be implemented when ZMA parser is available
-		// For now, just store the file path
+		// Import ZmaParser dynamically to avoid circular dependencies
+		const ZmaParser = (await import('../io/ZmaParser')).default;
+
 		this.parameters.zmaFile = filePath;
-		// TODO: Parse ZMA file and populate this.zmaData
+
+		try {
+			this.zmaData = ZmaParser.parse(filePath);
+		} catch (error) {
+			console.error('Failed to load ZMA file:', error);
+			this.zmaData = null;
+			throw error;
+		}
 	}
 
 	/**
@@ -92,7 +108,8 @@ export class Speaker extends Component {
 			});
 		}
 
-		// TODO: Parse off-axis FRD file and populate this.offAxisData
+		// Parse off-axis FRD file and populate this.offAxisData
+		await this.loadOffAxisData();
 	}
 
 	/**
@@ -106,8 +123,49 @@ export class Speaker extends Component {
 
 		if (index >= 0) {
 			this.parameters.offAxisFiles.splice(index, 1);
-			// TODO: Remove corresponding data from this.offAxisData
+			// Remove corresponding data from this.offAxisData
+			const dataIndex = this.offAxisData.findIndex(
+				(data) => data.angle === angle,
+			);
+			if (dataIndex >= 0) {
+				this.offAxisData.splice(dataIndex, 1);
+			}
 		}
+	}
+
+	/**
+	 * Load and parse all off-axis FRD files
+	 * @returns {Promise<void>}
+	 */
+	async loadOffAxisData() {
+		// Import FrdParser dynamically to avoid circular dependencies
+		const FrdParser = (await import('../io/FrdParser')).default;
+
+		this.offAxisData = [];
+
+		for (const offAxisFile of this.parameters.offAxisFiles) {
+			try {
+				const data = FrdParser.parse(offAxisFile.frdPath);
+				this.offAxisData.push({
+					angle: offAxisFile.angle,
+					frequencies: data.frequencies,
+					magnitudes: data.magnitudes,
+					phases: data.phases,
+				});
+			} catch (error) {
+				console.error(`Failed to load off-axis file at ${offAxisFile.angle}°:`, error);
+				// Continue loading other files even if one fails
+			}
+		}
+	}
+
+	/**
+	 * Get off-axis data for a specific angle
+	 * @param {number} angle - Measurement angle in degrees
+	 * @returns {Object|null} Off-axis data or null if not found
+	 */
+	getOffAxisData(angle) {
+		return this.offAxisData.find((data) => data.angle === angle) || null;
 	}
 
 	/**

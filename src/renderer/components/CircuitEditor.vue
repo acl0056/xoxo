@@ -49,6 +49,12 @@
 			@close="closeTuneDialog"
 			@update="handleTuneUpdate"
 		/>
+		<AnnotationDialog
+			:visible="annotationDialogVisible"
+			:annotation="annotationDialogAnnotation"
+			@close="closeAnnotationDialog"
+			@update="handleAnnotationUpdate"
+		/>
 	</div>
 </template>
 
@@ -56,12 +62,21 @@
 import { mapState, mapMutations, mapActions } from 'vuex';
 import ContextMenu from './ContextMenu.vue';
 import TuneDialog from './TuneDialog.vue';
+import AnnotationDialog from './AnnotationDialog.vue';
+import { Wire } from '@/models/Wire';
+import { Resistor } from '@/models/Resistor';
+import { Capacitor } from '@/models/Capacitor';
+import { Inductor } from '@/models/Inductor';
+import { Speaker } from '@/models/Speaker';
+import { Ground } from '@/models/Ground';
+import { TextAnnotation } from '@/models/TextAnnotation';
 
 export default {
 	name: 'CircuitEditor',
 	components: {
 		ContextMenu,
 		TuneDialog,
+		AnnotationDialog,
 	},
 	data() {
 		return {
@@ -76,6 +91,7 @@ export default {
 			wireStart: null,
 			wireSegments: [],
 			selectedWire: null,
+			selectedAnnotation: null,
 			dragOffset: { x: 0, y: 0 },
 			lastMouseX: 0,
 			lastMouseY: 0,
@@ -87,10 +103,13 @@ export default {
 			contextMenuTargetType: null,
 			tuneDialogVisible: false,
 			tuneDialogComponent: null,
+			annotationDialogVisible: false,
+			annotationDialogAnnotation: null,
 		};
 	},
 	computed: {
 		...mapState('ui', ['zoomLevel', 'selectedComponentId']),
+		...mapState('simulation', ['excludedSpeakers', 'currentAngle']),
 		zoomPercent: {
 			get() {
 				return this.zoomLevel;
@@ -287,7 +306,7 @@ export default {
 		},
 
 		renderComponents() {
-			const { circuit } = this.$store.state;
+			const circuit = this.$store.state.circuit.circuit;
 			if (!circuit || !circuit.components) return;
 
 			circuit.components.forEach((component) => {
@@ -329,6 +348,21 @@ export default {
 			// Draw resistor symbol (zigzag pattern)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
+
+			// Draw terminal connection dots (black, larger than grid dots)
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Left terminal
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Right terminal
+			this.context.beginPath();
+			this.context.arc(3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
 			this.context.beginPath();
 
 			// Left lead
@@ -429,6 +463,20 @@ export default {
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 
+			// Draw terminal connection dots (black, larger than grid dots)
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Left terminal
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Right terminal
+			this.context.beginPath();
+			this.context.arc(3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
 			if (state === 'short') {
 				// Short state: draw straight line through
 				this.context.beginPath();
@@ -506,6 +554,20 @@ export default {
 			// Draw inductor symbol (coil/loops)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
+
+			// Draw terminal connection dots (black, larger than grid dots)
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Left terminal
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Right terminal
+			this.context.beginPath();
+			this.context.arc(3 * gridSize, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
 
 			if (state === 'short') {
 				// Short state: draw straight line through
@@ -591,41 +653,67 @@ export default {
 			// Draw speaker symbol (cone shape)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
+			this.context.lineCap = 'round';
 
 			// Determine terminal labels based on polarity
-			const negativeLabel = component.parameters.inverted ? '+' : '-';
-			const positiveLabel = component.parameters.inverted ? '-' : '+';
+			// Normal polarity: + on top, - below
+			const topLabel = component.parameters.inverted ? '-' : '+';
+			const bottomLabel = component.parameters.inverted ? '+' : '-';
 
-			// Left lead (negative)
+			// Draw terminal connection dots (black, larger than grid dots)
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Top terminal connection point (positive for normal polarity)
 			this.context.beginPath();
-			this.context.moveTo(-3 * gridSize, 0);
-			this.context.lineTo(-1.5 * gridSize, 0);
+			this.context.arc(0, -gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Bottom terminal connection point (negative for normal polarity)
+			this.context.beginPath();
+			this.context.arc(0, gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw connection lines from terminals to speaker polygon
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+
+			// Top connection line (horizontal from top terminal to speaker polygon)
+			this.context.beginPath();
+			this.context.moveTo(0, -gridSize);
+			this.context.lineTo(gridSize, -gridSize);
 			this.context.stroke();
 
-			// Speaker cone
+			// Bottom connection line (horizontal from bottom terminal to speaker polygon)
 			this.context.beginPath();
-			this.context.moveTo(-1.5 * gridSize, -gridSize);
-			this.context.lineTo(-1.5 * gridSize, gridSize);
-			this.context.lineTo(0.5 * gridSize, 1.5 * gridSize);
-			this.context.lineTo(1.5 * gridSize, 1.5 * gridSize);
-			this.context.lineTo(1.5 * gridSize, -1.5 * gridSize);
-			this.context.lineTo(0.5 * gridSize, -1.5 * gridSize);
+			this.context.moveTo(0, gridSize);
+			this.context.lineTo(gridSize, gridSize);
+			this.context.stroke();
+
+			// Speaker cone - drawn to the right of the terminals
+			// Polygon with left edge at terminal dots, expanding to the right
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.beginPath();
+			this.context.moveTo(gridSize, -2 * gridSize); // Left top (aligned with top terminal)
+			this.context.lineTo(gridSize, 2 * gridSize); // Left bottom (aligned with bottom terminal)
+			this.context.lineTo(2.5 * gridSize, 2 * gridSize); // Middle bottom
+			this.context.lineTo(5 * gridSize, 4 * gridSize); // Right bottom
+			this.context.lineTo(5 * gridSize, -4 * gridSize); // Right top
+			this.context.lineTo(2.5 * gridSize, -2 * gridSize); // Middle top
 			this.context.closePath();
 			this.context.stroke();
 
-			// Right lead (positive)
-			this.context.beginPath();
-			this.context.moveTo(1.5 * gridSize, 0);
-			this.context.lineTo(3 * gridSize, 0);
-			this.context.stroke();
+			// Reset line cap to default
+			this.context.lineCap = 'butt';
 
 			// Draw terminal labels
 			this.context.fillStyle = '#000000';
-			this.context.font = '10px Arial';
+			this.context.font = '24px Arial';
 			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			this.context.fillText(negativeLabel, -2.2 * gridSize, 0);
-			this.context.fillText(positiveLabel, 2.2 * gridSize, 0);
+			this.context.fillText(topLabel, 2 * gridSize, -gridSize);
+			this.context.fillText(bottomLabel, 2 * gridSize, gridSize);
 
 			// Draw component label
 			if (component.label) {
@@ -644,48 +732,110 @@ export default {
 				this.context.lineTo(2 * gridSize, 2 * gridSize);
 				this.context.stroke();
 			}
+
+			// Draw warning indicator if speaker is excluded due to missing angle data
+			if (this.excludedSpeakers.includes(component.id)) {
+				// Draw warning triangle in top-right corner
+				this.context.fillStyle = '#ff9800';
+				this.context.strokeStyle = '#000000';
+				this.context.lineWidth = 1;
+
+				const warningX = 2 * gridSize;
+				const warningY = -2 * gridSize;
+				const warningSize = gridSize * 0.6;
+
+				// Triangle
+				this.context.beginPath();
+				this.context.moveTo(warningX, warningY - warningSize);
+				this.context.lineTo(warningX - warningSize * 0.866, warningY + warningSize * 0.5);
+				this.context.lineTo(warningX + warningSize * 0.866, warningY + warningSize * 0.5);
+				this.context.closePath();
+				this.context.fill();
+				this.context.stroke();
+
+				// Exclamation mark
+				this.context.fillStyle = '#000000';
+				this.context.font = 'bold 8px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'middle';
+				this.context.fillText('!', warningX, warningY);
+
+				// Draw warning text below component
+				this.context.font = '10px Arial';
+				this.context.fillStyle = '#ff9800';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText(`No ${this.currentAngle}° data`, 0, 2.5 * gridSize);
+			}
 		},
 
 		renderVoltageSource(component) {
 			const { gridSize } = this;
 
-			// Draw voltage source symbol (circle with +/- signs)
+			// Draw voltage source symbol (rectangle with +/- signs)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 
 			// Determine terminal labels based on polarity
-			const negativeLabel = component.parameters.inverted ? '+' : '-';
-			const positiveLabel = component.parameters.inverted ? '-' : '+';
+			// Normal polarity: + on top, - below
+			const topLabel = component.parameters.inverted ? '-' : '+';
+			const bottomLabel = component.parameters.inverted ? '+' : '-';
 
-			// Left lead (negative)
-			this.context.beginPath();
-			this.context.moveTo(-3 * gridSize, 0);
-			this.context.lineTo(-1.5 * gridSize, 0);
-			this.context.stroke();
-
-			// Circle
-			this.context.beginPath();
-			this.context.arc(0, 0, 1.5 * gridSize, 0, Math.PI * 2);
-			this.context.stroke();
-
-			// Right lead (positive)
-			this.context.beginPath();
-			this.context.moveTo(1.5 * gridSize, 0);
-			this.context.lineTo(3 * gridSize, 0);
-			this.context.stroke();
-
-			// Draw +/- signs inside circle
+			// Draw terminal connection dots (black, larger than grid dots)
+			// Positioned 3 grid units to the right
 			this.context.fillStyle = '#000000';
-			this.context.font = 'bold 16px Arial';
+			const terminalRadius = 3;
+
+			// Top terminal connection point (positive for normal polarity)
+			this.context.beginPath();
+			this.context.arc(3 * gridSize, -gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Bottom terminal connection point (negative for normal polarity)
+			this.context.beginPath();
+			this.context.arc(3 * gridSize, gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Rectangle
+			const rectWidth = 5 * gridSize;
+			const rectHeight = 6 * gridSize;
+			const rectX = -rectWidth - gridSize * 3;
+			const rectY = -rectHeight;
+			const rectActualWidth = rectWidth * 2;
+			const rectActualHeight = rectHeight * 2;
+			this.context.strokeRect(rectX, rectY, rectActualWidth, rectActualHeight);
+
+			// Draw connection lines from rectangle right edge to terminals
+			const rightEdgeX = rectX + rectActualWidth;
+
+			// Top connection line
+			this.context.beginPath();
+			this.context.moveTo(rightEdgeX, -gridSize);
+			this.context.lineTo(3 * gridSize, -gridSize);
+			this.context.stroke();
+
+			// Bottom connection line
+			this.context.beginPath();
+			this.context.moveTo(rightEdgeX, gridSize);
+			this.context.lineTo(3 * gridSize, gridSize);
+			this.context.stroke();
+
+			// Draw +/- signs inside rectangle
+			this.context.fillStyle = '#000000';
+			this.context.font = '24px Arial';
 			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			this.context.fillText(negativeLabel, -0.7 * gridSize, 0);
-			this.context.fillText(positiveLabel, 0.7 * gridSize, 0);
+			this.context.fillText(topLabel, gridSize, -0.7 * gridSize);
+			this.context.fillText(bottomLabel, gridSize, 0.7 * gridSize);
 
-			// Draw terminal labels
-			this.context.font = '10px Arial';
-			this.context.fillText(negativeLabel, -2.2 * gridSize, 0);
-			this.context.fillText(positiveLabel, 2.2 * gridSize, 0);
+			// Draw "Power Amp" text in the center of the rectangle
+			this.context.font = '22px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			const rectCenterX = rectX + rectActualWidth / 2;
+			const rectCenterY = rectY + rectActualHeight / 2;
+			this.context.fillText('Power', rectCenterX, rectCenterY - 12);
+			this.context.fillText('Amp', rectCenterX, rectCenterY + 12);
 
 			// Draw component label (voltage sources typically don't have labels)
 			if (component.label) {
@@ -703,16 +853,23 @@ export default {
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 
-			// Vertical line from terminal
+			// Draw terminal connection dot (black, larger than grid dots)
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+			this.context.beginPath();
+			this.context.arc(0, 0, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Vertical line from terminal (doubled size)
 			this.context.beginPath();
 			this.context.moveTo(0, 0);
-			this.context.lineTo(0, gridSize);
+			this.context.lineTo(0, 2 * gridSize);
 			this.context.stroke();
 
-			// Three horizontal lines
-			const lineWidths = [1.5, 1.0, 0.5];
+			// Three horizontal lines (doubled size)
+			const lineWidths = [3.0, 2.0, 1.0];
 			lineWidths.forEach((width, index) => {
-				const y = gridSize + ((index + 1) * 0.3 * gridSize);
+				const y = 2 * gridSize + ((index + 1) * 0.6 * gridSize);
 				this.context.beginPath();
 				this.context.moveTo((-width * gridSize) / 2, y);
 				this.context.lineTo((width * gridSize) / 2, y);
@@ -806,17 +963,32 @@ export default {
 			// Convert screen coordinates to world coordinates
 			const world = this.screenToWorld(screenX, screenY);
 
+			console.log('=== MOUSE DOWN ===');
+			console.log('Screen coords:', { screenX, screenY });
+			console.log('World coords:', world);
+			console.log('Zoom level:', this.zoomLevel);
+			console.log('Scroll:', { scrollX: this.scrollX, scrollY: this.scrollY });
+			console.log('Circuit state:', this.$store.state.circuit);
+			console.log('Number of components:', this.$store.state.circuit?.circuit?.components?.length || 0);
+
 			// Check if clicking on a component
 			const clickedComponent = this.getComponentAtPosition(world.x, world.y);
+			console.log('Clicked component:', clickedComponent ? `${clickedComponent.type} (${clickedComponent.id})` : 'none');
 
 			if (clickedComponent) {
 				// Select the component
-				this.$store.commit('ui/setSelectedComponent', clickedComponent.id);
+				this.$store.commit('ui/SET_SELECTED_COMPONENT', clickedComponent.id);
+				this.selectedAnnotation = null;
 
 				// Check if clicking on a terminal for wire creation
 				const terminal = this.getTerminalAtPosition(clickedComponent, world.x, world.y);
+				console.log('Terminal detected:', terminal);
 
 				if (terminal !== null) {
+					// Prevent default drag behavior
+					event.preventDefault();
+					console.log('Starting WIRE mode - preventDefault called');
+					
 					// Start wire creation mode
 					this.dragMode = 'wire';
 					this.wireStart = {
@@ -826,7 +998,9 @@ export default {
 						y: world.y,
 					};
 					this.wireSegments = [];
+					console.log('Wire start:', this.wireStart);
 				} else {
+					console.log('Starting MOVE mode');
 					// Start component move mode
 					this.dragMode = 'move';
 					this.dragOffset = {
@@ -835,17 +1009,36 @@ export default {
 					};
 				}
 			} else {
-				// Check if clicking on a wire
-				const clickedWire = this.getWireAtPosition(world.x, world.y);
+				// Check if clicking on an annotation
+				const clickedAnnotation = this.getAnnotationAtPosition(world.x, world.y);
 
-				if (clickedWire) {
-					// Select the wire (for future deletion)
-					this.selectedWire = clickedWire.id;
-				} else {
-					// Deselect everything and start pan mode
-					this.$store.commit('ui/setSelectedComponent', null);
+				if (clickedAnnotation) {
+					// Select the annotation
+					this.selectedAnnotation = clickedAnnotation.id;
+					this.$store.commit('ui/SET_SELECTED_COMPONENT', null);
 					this.selectedWire = null;
-					this.dragMode = 'pan';
+
+					// Start annotation move mode
+					this.dragMode = 'move-annotation';
+					this.dragOffset = {
+						x: world.x - clickedAnnotation.x * this.gridSize,
+						y: world.y - clickedAnnotation.y * this.gridSize,
+					};
+				} else {
+					// Check if clicking on a wire
+					const clickedWire = this.getWireAtPosition(world.x, world.y);
+
+					if (clickedWire) {
+						// Select the wire (for future deletion)
+						this.selectedWire = clickedWire.id;
+						this.selectedAnnotation = null;
+					} else {
+						// Deselect everything and start pan mode
+						this.$store.commit('ui/SET_SELECTED_COMPONENT', null);
+						this.selectedWire = null;
+						this.selectedAnnotation = null;
+						this.dragMode = 'pan';
+					}
 				}
 			}
 
@@ -860,6 +1053,10 @@ export default {
 
 			const deltaX = screenX - this.lastMouseX;
 			const deltaY = screenY - this.lastMouseY;
+
+			if (this.dragMode) {
+				console.log('Mouse move - dragMode:', this.dragMode, 'delta:', { deltaX, deltaY });
+			}
 
 			if (this.dragMode === 'move' && this.selectedComponentId) {
 				// Move the selected component
@@ -876,8 +1073,23 @@ export default {
 				});
 
 				this.renderCircuit();
+			} else if (this.dragMode === 'move-annotation' && this.selectedAnnotation) {
+				// Move the selected annotation
+				const world = this.screenToWorld(screenX, screenY);
+				const snapped = this.snapToGrid(world.x - this.dragOffset.x, world.y - this.dragOffset.y);
+
+				// Convert back to grid coordinates
+				const gridX = Math.round(snapped.x / this.gridSize);
+				const gridY = Math.round(snapped.y / this.gridSize);
+
+				this.$store.dispatch('circuit/updateAnnotation', {
+					annotationId: this.selectedAnnotation,
+					updates: { x: gridX, y: gridY },
+				});
+
+				this.renderCircuit();
 			} else if (this.dragMode === 'wire' && this.wireStart) {
-				// Update wire preview
+				// Update wire preview with Manhattan routing (only horizontal or vertical)
 				this.renderCircuit();
 
 				// Draw wire preview
@@ -888,22 +1100,42 @@ export default {
 				this.context.translate(-this.scrollX, -this.scrollY);
 				this.context.scale(this.zoomLevel / 100, this.zoomLevel / 100);
 
-				this.context.strokeStyle = '#ff6600';
-				this.context.lineWidth = 2;
-				this.context.setLineDash([5, 5]);
-				this.context.beginPath();
-				this.context.moveTo(this.wireStart.x, this.wireStart.y);
+				// Determine if wire should be horizontal or vertical based on which distance is greater
+				const deltaX = Math.abs(snapped.x - this.wireStart.x);
+				const deltaY = Math.abs(snapped.y - this.wireStart.y);
 
-				// Draw through segments
-				if (this.wireSegments && this.wireSegments.length > 0) {
-					this.wireSegments.forEach((segment) => {
-						this.context.lineTo(segment.x, segment.y);
-					});
+				let endX, endY;
+				if (deltaX > deltaY) {
+					// Horizontal wire
+					endX = snapped.x;
+					endY = this.wireStart.y;
+				} else {
+					// Vertical wire
+					endX = this.wireStart.x;
+					endY = snapped.y;
 				}
 
-				this.context.lineTo(snapped.x, snapped.y);
+				// Draw wire line
+				this.context.strokeStyle = '#0066cc';
+				this.context.lineWidth = 2;
+				this.context.beginPath();
+				this.context.moveTo(this.wireStart.x, this.wireStart.y);
+				this.context.lineTo(endX, endY);
 				this.context.stroke();
-				this.context.setLineDash([]);
+
+				// Draw terminal dots at both ends
+				this.context.fillStyle = '#000000';
+				const terminalRadius = 3;
+
+				// Start terminal dot
+				this.context.beginPath();
+				this.context.arc(this.wireStart.x, this.wireStart.y, terminalRadius, 0, 2 * Math.PI);
+				this.context.fill();
+
+				// End terminal dot
+				this.context.beginPath();
+				this.context.arc(endX, endY, terminalRadius, 0, 2 * Math.PI);
+				this.context.fill();
 
 				this.context.restore();
 			} else if (this.dragMode === 'pan') {
@@ -922,17 +1154,25 @@ export default {
 			const screenX = event.clientX - rect.left;
 			const screenY = event.clientY - rect.top;
 
+			console.log('=== MOUSE UP ===');
+			console.log('Drag mode:', this.dragMode);
+
 			if (this.dragMode === 'wire' && this.wireStart) {
 				// Complete wire creation
 				const world = this.screenToWorld(screenX, screenY);
+				console.log('Wire end world position:', world);
+				
 				const endComponent = this.getComponentAtPosition(world.x, world.y);
+				console.log('End component:', endComponent);
 
 				if (endComponent && endComponent.id !== this.wireStart.componentId) {
 					const endTerminal = this.getTerminalAtPosition(endComponent, world.x, world.y);
+					console.log('End terminal:', endTerminal);
 
 					if (endTerminal !== null) {
+						console.log('Creating wire from', this.wireStart.componentId, 'terminal', this.wireStart.terminal, 'to', endComponent.id, 'terminal', endTerminal);
+						
 						// Create the wire
-						const { Wire } = require('@/models/Wire');
 						const wire = new Wire(
 							{ componentId: this.wireStart.componentId, terminal: this.wireStart.terminal },
 							{ componentId: endComponent.id, terminal: endTerminal },
@@ -947,8 +1187,13 @@ export default {
 							});
 						}
 
+						console.log('Adding wire to circuit:', wire);
 						this.$store.commit('circuit/addWire', wire);
+					} else {
+						console.log('No terminal found at end position');
 					}
+				} else {
+					console.log('Invalid end component (same component or no component)');
 				}
 
 				this.wireStart = null;
@@ -992,6 +1237,22 @@ export default {
 				}
 
 				this.wireSegments.push({ x: snapped.x, y: snapped.y });
+			} else {
+				// Check if double-clicking on empty canvas to create annotation
+				const rect = this.$refs.canvas.getBoundingClientRect();
+				const screenX = event.clientX - rect.left;
+				const screenY = event.clientY - rect.top;
+
+				const world = this.screenToWorld(screenX, screenY);
+
+				// Check if clicking on a component or wire
+				const clickedComponent = this.getComponentAtPosition(world.x, world.y);
+				const clickedWire = this.getWireAtPosition(world.x, world.y);
+
+				if (!clickedComponent && !clickedWire) {
+					// Create annotation at this position
+					this.createAnnotation(world.x, world.y);
+				}
 			}
 		},
 
@@ -1012,15 +1273,23 @@ export default {
 				// Show component context menu
 				this.showComponentContextMenu(event.clientX, event.clientY, clickedComponent);
 			} else {
-				// Check if right-clicking on a wire
-				const clickedWire = this.getWireAtPosition(world.x, world.y);
+				// Check if right-clicking on an annotation
+				const clickedAnnotation = this.getAnnotationAtPosition(world.x, world.y);
 
-				if (clickedWire) {
-					// Show wire context menu
-					this.showWireContextMenu(event.clientX, event.clientY, clickedWire);
+				if (clickedAnnotation) {
+					// Show annotation context menu
+					this.showAnnotationContextMenu(event.clientX, event.clientY, clickedAnnotation);
 				} else {
-					// Close context menu if clicking on empty space
-					this.closeContextMenu();
+					// Check if right-clicking on a wire
+					const clickedWire = this.getWireAtPosition(world.x, world.y);
+
+					if (clickedWire) {
+						// Show wire context menu
+						this.showWireContextMenu(event.clientX, event.clientY, clickedWire);
+					} else {
+						// Close context menu if clicking on empty space
+						this.closeContextMenu();
+					}
 				}
 			}
 		},
@@ -1097,6 +1366,21 @@ export default {
 			this.contextMenuVisible = true;
 		},
 
+		showAnnotationContextMenu(x, y, annotation) {
+			this.contextMenuX = x;
+			this.contextMenuY = y;
+			this.contextMenuTarget = annotation;
+			this.contextMenuTargetType = 'annotation';
+
+			// Annotation context menu has Edit and Delete options
+			this.contextMenuItems = [
+				{ label: 'Edit', action: 'edit' },
+				{ label: 'Delete', action: 'delete' },
+			];
+
+			this.contextMenuVisible = true;
+		},
+
 		closeContextMenu() {
 			this.contextMenuVisible = false;
 			this.contextMenuTarget = null;
@@ -1109,6 +1393,8 @@ export default {
 				this.handleComponentAction(action, this.contextMenuTarget);
 			} else if (this.contextMenuTargetType === 'wire') {
 				this.handleWireAction(action, this.contextMenuTarget);
+			} else if (this.contextMenuTargetType === 'annotation') {
+				this.handleAnnotationAction(action, this.contextMenuTarget);
 			}
 		},
 
@@ -1153,6 +1439,19 @@ export default {
 			}
 		},
 
+		handleAnnotationAction(action, annotation) {
+			switch (action) {
+				case 'edit':
+					this.editAnnotation(annotation);
+					break;
+				case 'delete':
+					this.deleteAnnotation(annotation);
+					break;
+				default:
+					console.warn(`Unknown action: ${action}`);
+			}
+		},
+
 		openTuneDialog(component) {
 			this.tuneDialogComponent = component;
 			this.tuneDialogVisible = true;
@@ -1168,6 +1467,20 @@ export default {
 			this.$store.commit('circuit/updateComponent', {
 				componentId,
 				updates: { parameters },
+			});
+			this.renderCircuit();
+		},
+
+		closeAnnotationDialog() {
+			this.annotationDialogVisible = false;
+			this.annotationDialogAnnotation = null;
+		},
+
+		handleAnnotationUpdate({ annotationId, text, fontSize }) {
+			// Update annotation in the store
+			this.$store.dispatch('circuit/updateAnnotation', {
+				annotationId,
+				updates: { text, fontSize },
 			});
 			this.renderCircuit();
 		},
@@ -1228,7 +1541,7 @@ export default {
 
 			// Clear selection if this was the selected component
 			if (this.selectedComponentId === component.id) {
-				this.$store.commit('ui/setSelectedComponent', null);
+				this.$store.commit('ui/SET_SELECTED_COMPONENT', null);
 			}
 
 			this.renderCircuit();
@@ -1241,6 +1554,24 @@ export default {
 			// Clear selection if this was the selected wire
 			if (this.selectedWire === wire.id) {
 				this.selectedWire = null;
+			}
+
+			this.renderCircuit();
+		},
+
+		editAnnotation(annotation) {
+			// Open annotation dialog for editing
+			this.annotationDialogAnnotation = annotation;
+			this.annotationDialogVisible = true;
+		},
+
+		deleteAnnotation(annotation) {
+			// Remove the annotation
+			this.$store.dispatch('circuit/removeAnnotation', annotation.id);
+
+			// Clear selection if this was the selected annotation
+			if (this.selectedAnnotation === annotation.id) {
+				this.selectedAnnotation = null;
 			}
 
 			this.renderCircuit();
@@ -1262,7 +1593,7 @@ export default {
 				this.$store.dispatch('circuit/redo');
 				this.renderCircuit();
 			} else if (event.key === 'Delete' || event.key === 'Backspace') {
-				// Delete selected component or wire
+				// Delete selected component, wire, or annotation
 				if (this.selectedComponentId) {
 					const { circuit } = this.$store.state;
 					const component = circuit.components.find((c) => c.id === this.selectedComponentId);
@@ -1275,6 +1606,12 @@ export default {
 					if (wire) {
 						this.deleteWire(wire);
 					}
+				} else if (this.selectedAnnotation) {
+					const { circuit } = this.$store.state;
+					const annotation = circuit.annotations.find((a) => a.id === this.selectedAnnotation);
+					if (annotation) {
+						this.deleteAnnotation(annotation);
+					}
 				}
 			} else if (event.key === 't' || event.key === 'T') {
 				// Open tune dialog for selected component
@@ -1283,6 +1620,13 @@ export default {
 					const component = circuit.components.find((c) => c.id === this.selectedComponentId);
 					if (component && component.type !== 'ground') {
 						this.openTuneDialog(component);
+					}
+				} else if (this.selectedAnnotation) {
+					// Open annotation dialog for selected annotation
+					const { circuit } = this.$store.state;
+					const annotation = circuit.annotations.find((a) => a.id === this.selectedAnnotation);
+					if (annotation) {
+						this.editAnnotation(annotation);
 					}
 				}
 			} else if (event.key === ' ') {
@@ -1337,27 +1681,22 @@ export default {
 
 			switch (componentType) {
 				case 'resistor': {
-					const { Resistor } = require('@/models/Resistor');
 					ComponentClass = Resistor;
 					break;
 				}
 				case 'capacitor': {
-					const { Capacitor } = require('@/models/Capacitor');
 					ComponentClass = Capacitor;
 					break;
 				}
 				case 'inductor': {
-					const { Inductor } = require('@/models/Inductor');
 					ComponentClass = Inductor;
 					break;
 				}
 				case 'speaker': {
-					const { Speaker } = require('@/models/Speaker');
 					ComponentClass = Speaker;
 					break;
 				}
 				case 'ground': {
-					const { Ground } = require('@/models/Ground');
 					ComponentClass = Ground;
 					break;
 				}
@@ -1369,11 +1708,33 @@ export default {
 			// Create new component instance
 			const component = new ComponentClass(gridX, gridY);
 
-			// Add component to circuit
-			this.$store.commit('circuit/addComponent', component);
+			// Add component to circuit using action (for undo/redo support)
+			this.$store.dispatch('circuit/addComponent', component);
 
 			// Select the new component
-			this.$store.commit('ui/setSelectedComponent', component.id);
+			this.$store.commit('ui/SET_SELECTED_COMPONENT', component.id);
+
+			// Render the updated circuit after state updates
+			this.$nextTick(() => {
+				this.renderCircuit();
+			});
+		},
+
+		createAnnotation(worldX, worldY) {
+			// Snap to grid
+			const snapped = this.snapToGrid(worldX, worldY);
+			const gridX = Math.round(snapped.x / this.gridSize);
+			const gridY = Math.round(snapped.y / this.gridSize);
+
+			// Create new annotation with default text
+			const annotation = new TextAnnotation(gridX, gridY, 'New Annotation');
+
+			// Add annotation to circuit
+			this.$store.dispatch('circuit/addAnnotation', annotation);
+
+			// Open annotation dialog for editing
+			this.annotationDialogAnnotation = annotation;
+			this.annotationDialogVisible = true;
 
 			// Render the updated circuit
 			this.renderCircuit();
@@ -1404,20 +1765,37 @@ export default {
 		},
 
 		getComponentAtPosition(worldX, worldY) {
-			const { circuit } = this.$store.state;
-			if (!circuit || !circuit.components) return null;
+			const circuit = this.$store.state.circuit?.circuit;
+			console.log('  getComponentAtPosition - circuit:', circuit);
+			console.log('  Components:', circuit?.components);
+			
+			if (!circuit || !circuit.components) {
+				console.log('  No circuit or components found!');
+				return null;
+			}
+
+			console.log('  Checking components at world position:', { worldX, worldY });
 
 			// Check components in reverse order (top to bottom)
 			for (let i = circuit.components.length - 1; i >= 0; i--) {
 				const component = circuit.components[i];
 				const bounds = this.getComponentBounds(component);
 
-				if (worldX >= bounds.left && worldX <= bounds.right
-					&& worldY >= bounds.top && worldY <= bounds.bottom) {
+				const isInside = worldX >= bounds.left && worldX <= bounds.right
+					&& worldY >= bounds.top && worldY <= bounds.bottom;
+
+				console.log(`  Component ${component.type} (${component.id}):`, {
+					bounds,
+					isInside,
+				});
+
+				if (isInside) {
+					console.log(`  ✓ Found component: ${component.type}`);
 					return component;
 				}
 			}
 
+			console.log('  ✗ No component found at position');
 			return null;
 		},
 
@@ -1425,6 +1803,12 @@ export default {
 			const { gridSize } = this;
 			const centerX = component.x * gridSize;
 			const centerY = component.y * gridSize;
+
+			console.log(`    getComponentBounds for ${component.type}:`, {
+				componentGridPos: { x: component.x, y: component.y },
+				centerWorld: { x: centerX, y: centerY },
+				gridSize,
+			});
 
 			// Default bounds for passive components (6 grid dots wide)
 			let width = 6 * gridSize;
@@ -1438,6 +1822,8 @@ export default {
 				height = 3 * gridSize;
 			}
 
+			console.log(`    Base dimensions: width=${width}, height=${height}`);
+
 			// Account for rotation
 			const radians = (component.rotation * Math.PI) / 180;
 			const cos = Math.abs(Math.cos(radians));
@@ -1446,20 +1832,31 @@ export default {
 			const rotatedWidth = width * cos + height * sin;
 			const rotatedHeight = width * sin + height * cos;
 
-			return {
+			console.log(`    After rotation (${component.rotation}°): rotatedWidth=${rotatedWidth.toFixed(2)}, rotatedHeight=${rotatedHeight.toFixed(2)}`);
+
+			const bounds = {
 				left: centerX - rotatedWidth / 2,
 				right: centerX + rotatedWidth / 2,
 				top: centerY - rotatedHeight / 2,
 				bottom: centerY + rotatedHeight / 2,
 			};
+
+			console.log('    Final bounds:', bounds);
+
+			return bounds;
 		},
 
 		getTerminalAtPosition(component, worldX, worldY) {
 			const { gridSize } = this;
 			const hitRadius = gridSize * 0.5; // Half a grid unit
 
+			console.log('  getTerminalAtPosition called for:', component.type);
+			console.log('  World click position:', { worldX, worldY });
+			console.log('  Hit radius:', hitRadius);
+
 			// Get terminal positions for this component
 			const terminals = this.getComponentTerminals(component);
+			console.log('  Component terminals (grid coords):', terminals);
 
 			for (let i = 0; i < terminals.length; i++) {
 				const terminal = terminals[i];
@@ -1471,48 +1868,53 @@ export default {
 					+ (worldY - terminalWorldY) ** 2,
 				);
 
+				console.log(`  Terminal ${i}: grid(${terminal.x}, ${terminal.y}) world(${terminalWorldX}, ${terminalWorldY}) distance=${distance.toFixed(2)}`);
+
 				if (distance <= hitRadius) {
+					console.log(`  ✓ Terminal ${i} HIT!`);
 					return i;
 				}
 			}
 
+			console.log('  ✗ No terminal hit');
 			return null;
 		},
 
 		getComponentTerminals(component) {
-			// Return terminal positions in world coordinates (not grid coordinates)
+			// Return terminal positions in grid coordinates
 			const terminals = [];
 
-			// Most components have two terminals at -3 and +3 grid units
-			if (component.type === 'resistor' || component.type === 'capacitor'
-				|| component.type === 'inductor' || component.type === 'speaker'
-				|| component.type === 'source') {
+			console.log('    getComponentTerminals for:', component.type);
+			console.log('    Component position (grid):', { x: component.x, y: component.y });
+			console.log('    Component rotation:', component.rotation);
+			console.log('    Component.terminals:', component.terminals);
+
+			// Use the component's terminal definitions if available
+			if (component.terminals && component.terminals.length > 0) {
 				// Apply rotation to terminal positions
 				const radians = (component.rotation * Math.PI) / 180;
 				const cos = Math.cos(radians);
 				const sin = Math.sin(radians);
 
-				// Left terminal at -3 grid units from center
-				const leftX = -3 * cos;
-				const leftY = -3 * sin;
-				terminals.push({
-					x: component.x + leftX,
-					y: component.y + leftY,
-				});
+				console.log('    Rotation radians:', radians, 'cos:', cos.toFixed(3), 'sin:', sin.toFixed(3));
 
-				// Right terminal at +3 grid units from center
-				const rightX = 3 * cos;
-				const rightY = 3 * sin;
-				terminals.push({
-					x: component.x + rightX,
-					y: component.y + rightY,
+				component.terminals.forEach((terminal, index) => {
+					// Rotate terminal offset
+					const rotatedX = terminal.x * cos - terminal.y * sin;
+					const rotatedY = terminal.x * sin + terminal.y * cos;
+
+					const finalX = component.x + rotatedX;
+					const finalY = component.y + rotatedY;
+
+					console.log(`    Terminal ${index}: offset(${terminal.x}, ${terminal.y}) -> rotated(${rotatedX.toFixed(2)}, ${rotatedY.toFixed(2)}) -> final(${finalX.toFixed(2)}, ${finalY.toFixed(2)})`);
+
+					terminals.push({
+						x: finalX,
+						y: finalY,
+					});
 				});
-			} else if (component.type === 'ground') {
-				// Ground has one terminal at the top (in grid coordinates)
-				terminals.push({
-					x: component.x,
-					y: component.y,
-				});
+			} else {
+				console.log('    WARNING: No terminals defined for component!');
 			}
 
 			return terminals;
@@ -1594,6 +1996,35 @@ export default {
 
 			// Return distance to closest point
 			return Math.sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
+		},
+
+		getAnnotationAtPosition(worldX, worldY) {
+			const { circuit } = this.$store.state;
+			if (!circuit || !circuit.annotations) return null;
+
+			// Check annotations in reverse order (top to bottom)
+			for (let i = circuit.annotations.length - 1; i >= 0; i--) {
+				const annotation = circuit.annotations[i];
+
+				// Estimate text bounds
+				this.context.save();
+				this.context.font = `${annotation.fontSize}px Arial`;
+				const textMetrics = this.context.measureText(annotation.text);
+				const textWidth = textMetrics.width;
+				const textHeight = annotation.fontSize * 1.2; // Approximate height
+				this.context.restore();
+
+				const annotationX = annotation.x * this.gridSize;
+				const annotationY = annotation.y * this.gridSize;
+
+				// Check if click is within text bounds
+				if (worldX >= annotationX && worldX <= annotationX + textWidth
+					&& worldY >= annotationY && worldY <= annotationY + textHeight) {
+					return annotation;
+				}
+			}
+
+			return null;
 		},
 
 		handleZoomIn() {

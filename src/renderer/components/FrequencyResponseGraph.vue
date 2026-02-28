@@ -13,6 +13,7 @@
 			<button @click="toggleHold">
 				{{ holdActive ? 'Release' : 'Hold' }}
 			</button>
+			<AngleControl />
 		</div>
 
 		<!-- Scale Menu Modal -->
@@ -296,9 +297,13 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
+import AngleControl from './AngleControl.vue';
 
 export default {
 	name: 'FrequencyResponseGraph',
+	components: {
+		AngleControl,
+	},
 	setup() {
 		const toast = useToast();
 		return { toast };
@@ -331,7 +336,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState('simulation', ['frequencyResponse']),
+		...mapState('simulation', ['frequencyResponse', 'currentAngle']),
 		tooltipStyle() {
 			return {
 				left: `${this.tooltip.x + 10}px`,
@@ -436,6 +441,9 @@ export default {
 			// Draw grid and axes
 			this.drawGrid(margin, graphWidth, graphHeight);
 			this.drawAxes(margin, graphWidth, graphHeight);
+
+			// Draw angle indicator
+			this.drawAngleIndicator(width, margin);
 
 			// Draw held curves if active
 			if (this.holdActive && this.heldCurves) {
@@ -543,6 +551,18 @@ export default {
 
 				this.context.stroke();
 			});
+		},
+		drawAngleIndicator(width, margin) {
+			// Draw angle indicator in top-right corner
+			const angleText = this.currentAngle === 0
+				? 'Angle: 0° (On-Axis)'
+				: `Angle: ${this.currentAngle}°`;
+
+			this.context.font = '14px sans-serif';
+			this.context.fillStyle = '#333333';
+			this.context.textAlign = 'right';
+			this.context.fillText(angleText, width - margin.right - 10, margin.top + 15);
+			this.context.textAlign = 'left'; // Reset text alignment
 		},
 		frequencyToX(freq, marginLeft, graphWidth) {
 			const logMin = Math.log10(this.scaleSettings.minFreq);

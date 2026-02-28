@@ -249,7 +249,7 @@
 	- [x] 25.5 Run ESLint on ImpedanceGraph component and fix any issues
 	- [x] 25.6 Write unit tests for impedance graph rendering
 
-- [-] 26. Graph Controls and Menus
+- [x] 26. Graph Controls and Menus
 	- [x] 26.1 Implement Curves menu for frequency response graph
 	- [x] 26.2 Implement curve visibility toggles
 	- [x] 26.3 Implement curve color selection
@@ -295,95 +295,93 @@
 
 ## Phase 8: Off-Axis Response
 
-- [ ] 31. Off-Axis Data Management
-	- [ ] 31.1 Implement off-axis file storage in Speaker component
-	- [ ] 31.2 Implement off-axis file loading and parsing
-	- [ ] 31.3 Implement angle validation (0-180 degrees)
-	- [ ] 31.4 Implement off-axis file UI in Tune dialog
-	- [ ] 31.5 Run ESLint on off-axis data management code and fix any issues
-	- [ ] 31.6 Write unit tests for off-axis data management
+- [x] 31. Off-Axis Data Management
+	- [x] 31.1 Implement off-axis file storage in Speaker component
+	- [x] 31.2 Implement off-axis file loading and parsing
+	- [x] 31.3 Implement angle validation (0-180 degrees)
+	- [x] 31.4 Implement off-axis file UI in Tune dialog
+	- [x] 31.5 Run ESLint on off-axis data management code and fix any issues
+	- [x] 31.6 Write unit tests for off-axis data management
 
-- [ ] 32. Angle Switching
-	- [ ] 32.1 Implement global angle control in UI
-	- [ ] 32.2 Implement angle switching logic for all speakers
-	- [ ] 32.3 Implement driver exclusion (effective muting) when angle data is missing
-	- [ ] 32.4 Implement warning indicator for drivers missing angle data
-	- [ ] 32.5 Implement angle indicator in graph viewer
-	- [ ] 32.6 Run ESLint on angle switching code and fix any issues
-	- [ ] 32.7 Write unit tests for angle switching
-	- [ ] 32.8 Write property test: Off-axis angle switching (Property 23)
+- [x] 32. Angle Switching
+	- [x] 32.1 Implement global angle control in UI
+	- [x] 32.2 Implement angle switching logic for all speakers
+	- [x] 32.3 Implement driver exclusion (effective muting) when angle data is missing
+	- [x] 32.4 Implement warning indicator for drivers missing angle data
+	- [x] 32.5 Implement angle indicator in graph viewer
+	- [x] 32.6 Run ESLint on angle switching code and fix any issues
+	- [x] 32.7 Write unit tests for angle switching
+	- [x] 32.8 Write property test: Off-axis angle switching (Property 23)
 
 ## Phase 9: Vuex State Management
 
-- [ ] 33. Circuit State Module
-	- [ ] 33.1 Implement circuit state module (circuit.js)
-	- [ ] 33.2 Implement mutations for component add/remove/update
-	- [ ] 33.3 Implement mutations for wire add/remove
-	- [ ] 33.4 Implement mutations for annotation add/remove/update
-	- [ ] 33.5 Implement actions for file operations
-	- [ ] 33.6 Implement undo/redo state management
-	- [ ] 33.7 Run ESLint on circuit state module and fix any issues
-	- [ ] 33.8 Write unit tests for state mutations
+- [x] 33. Circuit State Module
+	- [x] 33.1 Implement circuit state module (circuit.js)
+	- [x] 33.2 Implement mutations for component add/remove/update
+	- [x] 33.3 Implement mutations for wire add/remove
+	- [x] 33.4 Implement mutations for annotation add/remove/update
+	- [x] 33.5 Implement actions for file operations
+	- [x] 33.6 Implement undo/redo state management
+	- [x] 33.7 Run ESLint on circuit state module and fix any issues
+	- [x] 33.8 Write unit tests for state mutations
 
-- [ ] 34. Simulation State Module
-	- [ ] 34.1 Implement simulation state module (simulation.js)
-	- [ ] 34.2 Implement auto-simulate toggle
-	- [ ] 34.3 Implement current angle state
-	- [ ] 34.4 Implement frequency response state
-	- [ ] 34.5 Implement impedance response state
-	- [ ] 34.6 Implement simulation action with async solver
-	- [ ] 34.7 Run ESLint on simulation state module and fix any issues
-	- [ ] 34.8 Write unit tests for simulation state management
+- [x] 34. Simulation State Module
+	- [x] 34.1 Implement simulation state module (simulation.js)
+	- [x] 34.2 Implement current angle state
+	- [x] 34.3 Implement frequency response state
+	- [x] 34.4 Implement impedance response state
+	- [x] 34.5 Implement simulation action with async solver
+	- [x] 34.6 Run ESLint on simulation state module and fix any issues
+	- [x] 34.7 Write unit tests for simulation state management
 
-- [ ] 35. UI State Module
-	- [ ] 35.1 Implement UI state module (ui.js)
-	- [ ] 35.2 Implement panel size/position state
-	- [ ] 35.3 Implement zoom level state
-	- [ ] 35.4 Implement selected component state
-	- [ ] 35.5 Implement graph scale settings state
-	- [ ] 35.6 Run ESLint on UI state module and fix any issues
-	- [ ] 35.7 Write unit tests for UI state management
+- [x] 35. UI State Module
+	- [x] 35.1 Implement UI state module (ui.js)
+	- [x] 35.2 Implement panel size/position state
+	- [x] 35.3 Implement zoom level state
+	- [x] 35.4 Implement selected component state
+	- [x] 35.5 Implement graph scale settings state
+	- [x] 35.6 Run ESLint on UI state module and fix any issues
+	- [x] 35.7 Write unit tests for UI state management
 
 ## Phase 10: Application Integration
 
-- [ ] 36. Electron Main Process
-	- [ ] 36.1 Implement application menu (File, Edit, View, Help)
-	- [ ] 36.2 Implement file dialog handlers (open, save, import)
-	- [ ] 36.3 Implement window management
-	- [ ] 36.4 Implement IPC communication between main and renderer
-	- [ ] 36.5 Implement recent files persistence
-	- [ ] 36.6 Run ESLint on Electron main process code and fix any issues
-	- [ ] 36.7 Write unit tests for IPC handlers
+- [x] 36. Electron Main Process
+	- [x] 36.1 Implement application menu (File, Edit, View, Help)
+	- [x] 36.2 Implement file dialog handlers (open, save, import)
+	- [x] 36.3 Implement window management
+	- [x] 36.4 Implement IPC communication between main and renderer
+	- [x] 36.5 Implement recent files persistence
+	- [x] 36.6 Run ESLint on Electron main process code and fix any issues
+	- [x] 36.7 Write unit tests for IPC handlers
 
-- [ ] 37. Application Lifecycle
-	- [ ] 37.1 Implement new project initialization with default voltage source
-	- [ ] 37.2 Implement unsaved changes prompt on close
-	- [ ] 37.3 Implement last opened file restoration
-	- [ ] 37.4 Implement error logging to file
-	- [ ] 37.5 Implement crash recovery data saving
-	- [ ] 37.6 Implement about dialog
-	- [ ] 37.7 Run ESLint on application lifecycle code and fix any issues
-	- [ ] 37.8 Write unit tests for lifecycle events
+- [x] 37. Application Lifecycle
+	- [x] 37.1 Implement new project initialization with default voltage source
+	- [x] 37.2 Implement unsaved changes prompt on close
+	- [x] 37.3 Implement last opened file restoration
+	- [x] 37.4 Implement error logging to file
+	- [x] 37.5 Implement crash recovery data saving
+	- [x] 37.6 Implement about dialog
+	- [x] 37.7 Run ESLint on application lifecycle code and fix any issues
+	- [x] 37.8 Write unit tests for lifecycle events
 
-- [ ] 38. Auto-Simulation
-	- [ ] 38.1 Implement auto-simulate toggle in UI
-	- [ ] 38.2 Implement parameter change detection
-	- [ ] 38.3 Implement debounced simulation trigger
-	- [ ] 38.4 Implement simulation progress indicator
-	- [ ] 38.5 Run ESLint on auto-simulation code and fix any issues
-	- [ ] 38.6 Write unit tests for auto-simulation logic
+- [x] 38. Auto-Simulation
+	- [x] 38.1 Implement parameter change detection in Vuex store
+	- [x] 38.2 Implement debounced simulation trigger (300ms delay)
+	- [x] 38.3 Ensure simulation runs automatically on circuit load
+	- [x] 38.4 Run ESLint on auto-simulation code and fix any issues
+	- [x] 38.5 Write unit tests for auto-simulation logic
 
 ## Phase 11: Annotation System
 
-- [ ] 39. Text Annotations
-	- [ ] 39.1 Implement text annotation creation on canvas
-	- [ ] 39.2 Implement text editing dialog
-	- [ ] 39.3 Implement font size control
-	- [ ] 39.4 Implement annotation positioning and dragging
-	- [ ] 39.5 Implement annotation deletion
-	- [ ] 39.6 Run ESLint on text annotation code and fix any issues
-	- [ ] 39.7 Write unit tests for annotation management
-	- [ ] 39.8 Write property test: Annotation simulation independence (Property 4)
+- [x] 39. Text Annotations
+	- [x] 39.1 Implement text annotation creation on canvas
+	- [x] 39.2 Implement text editing dialog
+	- [x] 39.3 Implement font size control
+	- [x] 39.4 Implement annotation positioning and dragging
+	- [x] 39.5 Implement annotation deletion
+	- [x] 39.6 Run ESLint on text annotation code and fix any issues
+	- [x] 39.7 Write unit tests for annotation management
+	- [x] 39.8 Write property test: Annotation simulation independence (Property 4)
 
 ## Phase 12: Testing and Validation
 

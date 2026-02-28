@@ -45,24 +45,24 @@ describe('Speaker', () => {
 	});
 
 	describe('loadFrdFile', () => {
-		it('should store the FRD file path', async () => {
+		it('should store the FRD file path and throw error for non-existent file', async () => {
 			const speaker = new Speaker(0, 0);
 			const filePath = '/path/to/speaker.frd';
 
-			await speaker.loadFrdFile(filePath);
-
+			await expect(speaker.loadFrdFile(filePath)).rejects.toThrow('FRD file not found');
 			expect(speaker.parameters.frdFile).toBe(filePath);
+			expect(speaker.frdData).toBeNull();
 		});
 	});
 
 	describe('loadZmaFile', () => {
-		it('should store the ZMA file path', async () => {
+		it('should store the ZMA file path and throw error for non-existent file', async () => {
 			const speaker = new Speaker(0, 0);
 			const filePath = '/path/to/speaker.zma';
 
-			await speaker.loadZmaFile(filePath);
-
+			await expect(speaker.loadZmaFile(filePath)).rejects.toThrow('ZMA file not found');
 			expect(speaker.parameters.zmaFile).toBe(filePath);
+			expect(speaker.zmaData).toBeNull();
 		});
 	});
 
@@ -174,6 +174,68 @@ describe('Speaker', () => {
 			speaker.removeOffAxisFile(30);
 
 			expect(speaker.parameters.offAxisFiles).toHaveLength(0);
+		});
+
+		it('should remove corresponding data from offAxisData', () => {
+			const speaker = new Speaker(0, 0);
+
+			// Manually add data to offAxisData to simulate loaded data
+			speaker.offAxisData = [
+				{ angle: 15, frequencies: [100], magnitudes: [80], phases: [0] },
+				{ angle: 30, frequencies: [100], magnitudes: [85], phases: [0] },
+				{ angle: 45, frequencies: [100], magnitudes: [82], phases: [0] },
+			];
+
+			speaker.parameters.offAxisFiles = [
+				{ angle: 15, frdPath: '/path/to/15deg.frd' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd' },
+				{ angle: 45, frdPath: '/path/to/45deg.frd' },
+			];
+
+			speaker.removeOffAxisFile(30);
+
+			expect(speaker.offAxisData).toHaveLength(2);
+			expect(speaker.offAxisData[0].angle).toBe(15);
+			expect(speaker.offAxisData[1].angle).toBe(45);
+		});
+	});
+
+	describe('getOffAxisData', () => {
+		it('should return off-axis data for a specific angle', () => {
+			const speaker = new Speaker(0, 0);
+
+			speaker.offAxisData = [
+				{ angle: 15, frequencies: [100, 200], magnitudes: [80, 85], phases: [0, -10] },
+				{ angle: 30, frequencies: [100, 200], magnitudes: [78, 83], phases: [0, -15] },
+			];
+
+			const data = speaker.getOffAxisData(30);
+
+			expect(data).toBeDefined();
+			expect(data.angle).toBe(30);
+			expect(data.frequencies).toEqual([100, 200]);
+			expect(data.magnitudes).toEqual([78, 83]);
+			expect(data.phases).toEqual([0, -15]);
+		});
+
+		it('should return null if angle does not exist', () => {
+			const speaker = new Speaker(0, 0);
+
+			speaker.offAxisData = [
+				{ angle: 15, frequencies: [100], magnitudes: [80], phases: [0] },
+			];
+
+			const data = speaker.getOffAxisData(45);
+
+			expect(data).toBeNull();
+		});
+
+		it('should return null if offAxisData is empty', () => {
+			const speaker = new Speaker(0, 0);
+
+			const data = speaker.getOffAxisData(30);
+
+			expect(data).toBeNull();
 		});
 	});
 

@@ -8,10 +8,12 @@
 				v-for="componentType in componentTypes"
 				:key="componentType.type"
 				class="palette-item"
-				:draggable="true"
-				@dragstart="startDrag($event, componentType)"
 			>
-				<div class="palette-icon">
+				<div
+					class="palette-icon"
+					:draggable="true"
+					@dragstart="startDrag($event, componentType)"
+				>
 					<img
 						v-if="componentType.icon"
 						:src="componentType.icon"
@@ -29,6 +31,12 @@
 </template>
 
 <script>
+import resistorIcon from '@/renderer/assets/icons/resistor.svg';
+import capacitorIcon from '@/renderer/assets/icons/capacitor.svg';
+import inductorIcon from '@/renderer/assets/icons/inductor.svg';
+import speakerIcon from '@/renderer/assets/icons/speaker.svg';
+import groundIcon from '@/renderer/assets/icons/ground.svg';
+
 export default {
 	name: 'ComponentPalette',
 	emits: ['drag-start'],
@@ -38,27 +46,27 @@ export default {
 				{
 					type: 'resistor',
 					label: 'Resistor',
-					icon: '@/renderer/assets/icons/resistor.svg',
+					icon: resistorIcon,
 				},
 				{
 					type: 'capacitor',
 					label: 'Capacitor',
-					icon: '@/renderer/assets/icons/capacitor.svg',
+					icon: capacitorIcon,
 				},
 				{
 					type: 'inductor',
 					label: 'Inductor',
-					icon: '@/renderer/assets/icons/inductor.svg',
+					icon: inductorIcon,
 				},
 				{
 					type: 'speaker',
 					label: 'Speaker',
-					icon: '@/renderer/assets/icons/speaker.svg',
+					icon: speakerIcon,
 				},
 				{
 					type: 'ground',
 					label: 'Ground',
-					icon: '@/renderer/assets/icons/ground.svg',
+					icon: groundIcon,
 				},
 			],
 		};
@@ -103,50 +111,51 @@ export default {
 	display: flex;
 	flex-direction: column;
 	padding: 8px;
-	gap: 4px;
+	gap: 8px;
 }
 
 .palette-item {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	gap: 8px;
-	padding: 8px;
+	padding: 12px;
 	background-color: white;
 	border: 1px solid #ccc;
 	border-radius: 4px;
-	cursor: grab;
-	transition: background-color 0.2s, transform 0.1s;
-}
-
-.palette-item:hover {
-	background-color: #f9f9f9;
-	border-color: #999;
-}
-
-.palette-item:active {
-	cursor: grabbing;
-	transform: scale(0.98);
 }
 
 .palette-icon {
-	width: 32px;
-	height: 32px;
+	width: 64px;
+	height: 64px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	background-color: #fafafa;
 	border: 1px solid #ddd;
 	border-radius: 3px;
+	cursor: grab;
+	transition: background-color 0.2s, transform 0.1s;
+}
+
+.palette-icon:hover {
+	background-color: #f0f0f0;
+	border-color: #999;
+}
+
+.palette-icon:active {
+	cursor: grabbing;
+	transform: scale(0.98);
 }
 
 .palette-icon img {
-	max-width: 28px;
-	max-height: 28px;
+	max-width: 56px;
+	max-height: 56px;
 	object-fit: contain;
 }
 
 .icon-placeholder {
-	font-size: 18px;
+	font-size: 32px;
 	font-weight: bold;
 	color: #666;
 }
@@ -155,5 +164,6 @@ export default {
 	font-size: 13px;
 	color: #333;
 	user-select: none;
+	text-align: center;
 }
 </style>

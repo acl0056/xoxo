@@ -297,7 +297,14 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
 import AngleControl from './AngleControl.vue';
+
+const ajv = new Ajv();
+addFormats(ajv);
+const validateSimulationResults = ajv.compile(simulationResultsSchema);
 
 export default {
 	name: 'FrequencyResponseGraph',
@@ -320,7 +327,7 @@ export default {
 			scaleSettings: {
 				minFreq: 20,
 				maxFreq: 20000,
-				centerValue: 0,
+				centerValue: 90,
 				stepSize: 5,
 			},
 			curves: [],
@@ -359,9 +366,24 @@ export default {
 		this.resizeCanvas();
 		window.addEventListener('resize', this.resizeCanvas);
 		this.renderGraph();
+
+		// Listen for simulation results broadcast from main window
+		const { ipcRenderer } = require('electron');
+		ipcRenderer.on('simulation-results', (event, results) => {
+			if (!validateSimulationResults(results)) {
+				console.error('Received invalid simulation results:', validateSimulationResults.errors);
+				return;
+			}
+			this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
+		});
+
+		// Request current results in case simulation already ran
+		ipcRenderer.send('request-simulation-results');
 	},
 	beforeUnmount() {
 		window.removeEventListener('resize', this.resizeCanvas);
+		const { ipcRenderer } = require('electron');
+		ipcRenderer.removeAllListeners('simulation-results');
 	},
 	methods: {
 		resizeCanvas() {
@@ -395,7 +417,7 @@ export default {
 				Object.entries(this.frequencyResponse.speakerResponses).forEach(([id, response]) => {
 					this.curves.push({
 						id,
-						label: `Speaker ${id}`,
+						label: response.label || `Speaker ${id}`,
 						frequencies: this.frequencyResponse.frequencies || [],
 						magnitudes: response.spl || [],
 						originalMagnitudes: [...(response.spl || [])],
@@ -425,7 +447,7 @@ export default {
 			const margin = {
 				top: 20,
 				right: 20,
-				bottom: 40,
+				bottom: 55,
 				left: 60,
 			};
 			const graphWidth = width - margin.left - margin.right;
@@ -498,23 +520,39 @@ export default {
 			this.context.lineTo(margin.left + graphWidth, margin.top + graphHeight);
 			this.context.stroke();
 
-			// X-axis labels (frequency)
+			// X-axis labels (frequency) with solid background
 			const freqLabels = this.generateFrequencyLabels();
+			this.context.font = '12px sans-serif';
 			freqLabels.forEach(({ freq, label }) => {
 				const x = this.frequencyToX(freq, margin.left, graphWidth);
-				this.context.fillText(label, x - 15, margin.top + graphHeight + 20);
+				const textX = x - 15;
+				const textY = margin.top + graphHeight + 18;
+				const textWidth = this.context.measureText(label).width;
+				this.context.fillStyle = '#ffffff';
+				this.context.fillRect(textX - 2, textY - 12, textWidth + 4, 16);
+				this.context.fillStyle = '#000000';
+				this.context.fillText(label, textX, textY);
 			});
 
-			// Y-axis labels (magnitude)
+			// Y-axis labels (magnitude) with solid background
 			const magLabels = this.generateMagnitudeLabels();
 			magLabels.forEach(({ mag, label }) => {
 				const y = this.magnitudeToY(mag, margin.top, graphHeight);
-				this.context.fillText(label, margin.left - 40, y + 4);
+				const textX = margin.left - 40;
+				const textY = y + 4;
+				const textWidth = this.context.measureText(label).width;
+				this.context.fillStyle = '#ffffff';
+				this.context.fillRect(textX - 2, textY - 12, textWidth + 4, 16);
+				this.context.fillStyle = '#000000';
+				this.context.fillText(label, textX, textY);
 			});
 
 			// Axis titles
 			this.context.font = '14px sans-serif';
-			this.context.fillText('Frequency (Hz)', margin.left + graphWidth / 2 - 50, margin.top + graphHeight + 35);
+			this.context.fillStyle = '#000000';
+			this.context.textAlign = 'center';
+			this.context.fillText('Frequency (Hz)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
+			this.context.textAlign = 'left';
 			this.context.save();
 			this.context.translate(15, margin.top + graphHeight / 2);
 			this.context.rotate(-Math.PI / 2);
@@ -522,6 +560,12 @@ export default {
 			this.context.restore();
 		},
 		drawCurves(curves, margin, graphWidth, graphHeight, isHeld) {
+			// Clip curves to graph area
+			this.context.save();
+			this.context.beginPath();
+			this.context.rect(margin.left, margin.top, graphWidth, graphHeight);
+			this.context.clip();
+
 			curves.forEach((curve) => {
 				if (!curve.visible || curve.frequencies.length === 0) return;
 
@@ -551,6 +595,8 @@ export default {
 
 				this.context.stroke();
 			});
+
+			this.context.restore(); // Remove clip region
 		},
 		drawAngleIndicator(width, margin) {
 			// Draw angle indicator in top-right corner
@@ -630,7 +676,7 @@ export default {
 			const margin = {
 				top: 20,
 				right: 20,
-				bottom: 40,
+				bottom: 55,
 				left: 60,
 			};
 			const graphWidth = this.canvas.width - margin.left - margin.right;
@@ -786,7 +832,7 @@ export default {
 		resetScaleSettings() {
 			this.scaleSettings.minFreq = 20;
 			this.scaleSettings.maxFreq = 20000;
-			this.scaleSettings.centerValue = 0;
+			this.scaleSettings.centerValue = 90;
 			this.scaleSettings.stepSize = 5;
 			this.renderGraph();
 		},

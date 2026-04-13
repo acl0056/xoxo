@@ -407,24 +407,33 @@ export default {
 
 			this.localParameters[this.valueParameterName] = newValue;
 			this.valueInput = formatEngineering(newValue);
+
+			// Emit update so the simulation refreshes immediately
+			this.$emit('update', {
+				componentId: this.component.id,
+				parameters: this.localParameters,
+			});
 		},
-		selectFrdFile() {
-			// This will be implemented with Electron IPC for file dialog
-			// For now, just a placeholder
-			console.log('Select FRD file');
-			// TODO: Implement file dialog via Electron IPC
+		async selectFrdFile() {
+			const { ipcRenderer } = require('electron');
+			const filePath = await ipcRenderer.invoke('show-frd-file-dialog');
+			if (filePath) {
+				this.localParameters.frdFile = filePath;
+			}
 		},
-		selectZmaFile() {
-			// This will be implemented with Electron IPC for file dialog
-			// For now, just a placeholder
-			console.log('Select ZMA file');
-			// TODO: Implement file dialog via Electron IPC
+		async selectZmaFile() {
+			const { ipcRenderer } = require('electron');
+			const filePath = await ipcRenderer.invoke('show-zma-file-dialog');
+			if (filePath) {
+				this.localParameters.zmaFile = filePath;
+			}
 		},
-		selectOffAxisFile(index) {
-			// This will be implemented with Electron IPC for file dialog
-			// For now, just a placeholder
-			console.log('Select off-axis file for index', index);
-			// TODO: Implement file dialog via Electron IPC
+		async selectOffAxisFile(index) {
+			const { ipcRenderer } = require('electron');
+			const filePath = await ipcRenderer.invoke('show-frd-file-dialog');
+			if (filePath) {
+				this.localParameters.offAxisFiles[index].frdPath = filePath;
+			}
 		},
 		addOffAxisFile() {
 			if (!this.localParameters.offAxisFiles) {

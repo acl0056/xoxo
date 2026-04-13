@@ -7,7 +7,12 @@ const { createApplicationMenu } = require('./menu');
 const FileHandlers = require('./fileHandlers');
 const logger = require('./logger');
 
+// Set app name for macOS menu bar (overrides "Electron" in dev mode)
+app.name = 'xoxo';
+
 let mainWindow;
+let frequencyResponseWindow;
+let impedanceWindow;
 let fileHandlers;
 let recentFiles = [];
 let lastOpenedFile = null;
@@ -169,12 +174,80 @@ function updateApplicationMenu() {
 		zoomOut: () => mainWindow.webContents.send('menu-zoom-out'),
 		resetZoom: () => mainWindow.webContents.send('menu-reset-zoom'),
 		showAbout: () => mainWindow.webContents.send('menu-show-about'),
+		openFrequencyResponseWindow: () => createFrequencyResponseWindow(),
+		openImpedanceWindow: () => createImpedanceWindow(),
 		openDocumentation: () => {
 			shell.openExternal('https://github.com/yourusername/xoxo/blob/main/README.md');
 		},
 		getRecentFilesMenu,
 	});
 	Menu.setApplicationMenu(menu);
+}
+
+/**
+ * Create the frequency response graph window
+ */
+function createFrequencyResponseWindow() {
+	if (frequencyResponseWindow && !frequencyResponseWindow.isDestroyed()) {
+		frequencyResponseWindow.focus();
+		return;
+	}
+
+	frequencyResponseWindow = new BrowserWindow({
+		width: 900,
+		height: 600,
+		title: 'Frequency Response',
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		},
+	});
+
+	if (process.env.NODE_ENV === 'development') {
+		frequencyResponseWindow.loadURL('http://localhost:5173?window=frequency-response');
+	} else {
+		frequencyResponseWindow.loadFile(
+			path.join(__dirname, '../renderer/index.html'),
+			{ query: { window: 'frequency-response' } },
+		);
+	}
+
+	frequencyResponseWindow.on('closed', () => {
+		frequencyResponseWindow = null;
+	});
+}
+
+/**
+ * Create the impedance graph window
+ */
+function createImpedanceWindow() {
+	if (impedanceWindow && !impedanceWindow.isDestroyed()) {
+		impedanceWindow.focus();
+		return;
+	}
+
+	impedanceWindow = new BrowserWindow({
+		width: 900,
+		height: 600,
+		title: 'Impedance',
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		},
+	});
+
+	if (process.env.NODE_ENV === 'development') {
+		impedanceWindow.loadURL('http://localhost:5173?window=impedance');
+	} else {
+		impedanceWindow.loadFile(
+			path.join(__dirname, '../renderer/index.html'),
+			{ query: { window: 'impedance' } },
+		);
+	}
+
+	impedanceWindow.on('closed', () => {
+		impedanceWindow = null;
+	});
 }
 
 /**
@@ -227,6 +300,25 @@ function createWindow() {
 }
 
 // IPC Handlers
+
+/**
+ * Forward simulation results from main window to graph windows
+ */
+ipcMain.on('simulation-results', (event, results) => {
+	if (frequencyResponseWindow && !frequencyResponseWindow.isDestroyed()) {
+		frequencyResponseWindow.webContents.send('simulation-results', results);
+	}
+	if (impedanceWindow && !impedanceWindow.isDestroyed()) {
+		impedanceWindow.webContents.send('simulation-results', results);
+	}
+});
+
+/**
+ * Handle graph window requesting current simulation results on open
+ */
+ipcMain.on('request-simulation-results', () => {
+	mainWindow.webContents.send('send-simulation-results');
+});
 
 /**
  * Handle show-open-dialog request from renderer
@@ -432,6 +524,19 @@ ipcMain.handle('get-app-version', async () => {
  */
 ipcMain.on('window-can-close', () => {
 	mainWindow.destroy();
+});
+
+/**
+ * Handle undo/redo state updates from renderer to enable/disable menu items
+ */
+ipcMain.on('update-undo-state', (event, { canUndo, canRedo }) => {
+	const menu = Menu.getApplicationMenu();
+	if (menu) {
+		const undoItem = menu.getMenuItemById('undo');
+		const redoItem = menu.getMenuItemById('redo');
+		if (undoItem) undoItem.enabled = canUndo;
+		if (redoItem) redoItem.enabled = canRedo;
+	}
 });
 
 // Application lifecycle

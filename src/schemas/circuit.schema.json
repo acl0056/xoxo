@@ -60,7 +60,7 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source"],
+					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment"],
 					"description": "Component type"
 				},
 				"label": {
@@ -143,6 +143,16 @@
 					"then": {
 						"properties": {
 							"parameters": { "$ref": "#/definitions/sourceParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "wire-segment" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/wireSegmentParameters" }
 						}
 					}
 				}
@@ -313,6 +323,17 @@
 				"inverted": {
 					"type": "boolean",
 					"description": "Polarity inversion flag"
+				}
+			}
+		},
+		"wireSegmentParameters": {
+			"type": "object",
+			"required": ["length"],
+			"properties": {
+				"length": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Wire segment length in grid units"
 				}
 			}
 		},

@@ -27,18 +27,31 @@ class CircuitSolver {
 		this.voltageSourceMap.clear();
 		this.groundNodeId = null;
 
-		// Find ground component
-		const groundComponent = this.circuit.components.find((component) => component.type === 'ground');
-		if (!groundComponent) {
+		// Find ALL ground components
+		const groundComponents = this.circuit.components.filter((component) => component.type === 'ground');
+		if (groundComponents.length === 0) {
 			throw new Error('Circuit must contain a ground node');
 		}
-		this.groundNodeId = groundComponent.id;
+		this.groundNodeId = groundComponents[0].id;
+		const groundIds = new Set(groundComponents.map((g) => g.id));
 
-		// Collect all unique nodes from wires, excluding ground
-		const nodeSet = new Set();
+		// Union-Find to merge terminals connected by wires into the same electrical node
+		const parent = new Map();
 
+		const find = (x) => {
+			if (!parent.has(x)) parent.set(x, x);
+			if (parent.get(x) !== x) parent.set(x, find(parent.get(x)));
+			return parent.get(x);
+		};
+
+		const union = (a, b) => {
+			const rootA = find(a);
+			const rootB = find(b);
+			if (rootA !== rootB) parent.set(rootA, rootB);
+		};
+
+		// Process all wires to merge connected terminals
 		for (const wire of this.circuit.wires) {
-			// Skip wires connected to components in 'open' state
 			const startComponent = this.circuit.components.find((c) => c.id === wire.startNode.componentId);
 			const endComponent = this.circuit.components.find((c) => c.id === wire.endNode.componentId);
 
@@ -46,23 +59,46 @@ class CircuitSolver {
 				continue;
 			}
 
-			// Create unique node identifiers for component terminals
 			const startNodeId = `${wire.startNode.componentId}_${wire.startNode.terminal}`;
 			const endNodeId = `${wire.endNode.componentId}_${wire.endNode.terminal}`;
 
-			if (wire.startNode.componentId !== this.groundNodeId) {
-				nodeSet.add(startNodeId);
-			}
-			if (wire.endNode.componentId !== this.groundNodeId) {
-				nodeSet.add(endNodeId);
+			// If either endpoint is ground, mark both as ground
+			const startIsGround = groundIds.has(wire.startNode.componentId);
+			const endIsGround = groundIds.has(wire.endNode.componentId);
+
+			if (startIsGround) {
+				union(endNodeId, 'GROUND');
+			} else if (endIsGround) {
+				union(startNodeId, 'GROUND');
+			} else {
+				union(startNodeId, endNodeId);
 			}
 		}
+		// Wire segments are handled as low-resistance components in the MNA matrix
 
-		// Assign matrix indices to nodes (starting from 0, ground is not in matrix)
+		// Collect unique representative nodes, excluding ground
+		const representativeToIndex = new Map();
 		let nodeIndex = 0;
-		for (const nodeId of nodeSet) {
-			this.nodeMap.set(nodeId, nodeIndex);
-			nodeIndex++;
+
+		// First pass: find all node IDs that belong to non-wire-segment components
+		const allNodeIds = new Set();
+		for (const wire of this.circuit.wires) {
+			const startNodeId = `${wire.startNode.componentId}_${wire.startNode.terminal}`;
+			const endNodeId = `${wire.endNode.componentId}_${wire.endNode.terminal}`;
+			allNodeIds.add(startNodeId);
+			allNodeIds.add(endNodeId);
+		}
+
+		// Assign matrix indices to unique representative nodes
+		for (const nodeId of allNodeIds) {
+			const rep = find(nodeId);
+			if (rep === 'GROUND' || find(rep) === 'GROUND') continue;
+			if (!representativeToIndex.has(rep)) {
+				representativeToIndex.set(rep, nodeIndex);
+				nodeIndex++;
+			}
+			// Map this nodeId to the same index as its representative
+			this.nodeMap.set(nodeId, representativeToIndex.get(rep));
 		}
 
 		// Assign indices for voltage source currents
@@ -74,7 +110,8 @@ class CircuitSolver {
 			}
 		}
 
-		return this.nodeMap.size + this.voltageSourceMap.size;
+		this.matrixSize = representativeToIndex.size + this.voltageSourceMap.size;
+		return this.matrixSize;
 	}
 
 	/**
@@ -83,7 +120,7 @@ class CircuitSolver {
 	 */
 	buildMNAMatrix(frequency) {
 		const omega = 2 * Math.PI * frequency;
-		const matrixSize = this.nodeMap.size + this.voltageSourceMap.size;
+		const matrixSize = this.matrixSize;
 
 		// Initialize matrix A and vector b with zeros
 		const A = math.zeros(matrixSize, matrixSize);
@@ -109,9 +146,11 @@ class CircuitSolver {
 			const node1Id = terminals[0];
 			const node2Id = terminals[1];
 
-			// Get node indices (null if ground)
-			const n1 = node1Id === this.groundNodeId ? null : this.nodeMap.get(node1Id);
-			const n2 = node2Id === this.groundNodeId ? null : this.nodeMap.get(node2Id);
+			// Get node indices (undefined means ground — node was merged to GROUND in union-find)
+			const n1Raw = this.nodeMap.get(node1Id);
+			const n2Raw = this.nodeMap.get(node2Id);
+			const n1 = n1Raw !== undefined ? n1Raw : null;
+			const n2 = n2Raw !== undefined ? n2Raw : null;
 
 			// Calculate component admittance or handle voltage source
 			if (component.type === 'source') {
@@ -195,6 +234,11 @@ class CircuitSolver {
 				return new Complex(0.125, 0); // 8 ohms nominal
 			}
 
+			case 'wire-segment': {
+				// Wire segment modeled as 1 milliohm resistance (~3 inches of 18 AWG copper)
+				return new Complex(1000, 0); // Y = 1/0.001 = 1000 siemens
+			}
+
 			default:
 				return new Complex(0, 0); // Unknown component type
 		}
@@ -263,18 +307,24 @@ class CircuitSolver {
 			// Solve using LU decomposition
 			const x = math.lusolve(A, b);
 
-			// Extract node voltages
-			const nodeVoltages = new Map();
+			// Extract node voltages as plain object with {re, im} values (per schema)
+			const nodeVoltages = {};
 			for (const [nodeId, index] of this.nodeMap.entries()) {
 				const voltage = x.subset(math.index(index, 0));
-				nodeVoltages.set(nodeId, voltage);
+				nodeVoltages[nodeId] = {
+					re: typeof voltage === 'object' && voltage.re !== undefined ? voltage.re : (typeof voltage === 'number' ? voltage : 0),
+					im: typeof voltage === 'object' && voltage.im !== undefined ? voltage.im : 0,
+				};
 			}
 
-			// Extract voltage source currents
-			const sourceCurrents = new Map();
+			// Extract voltage source currents as plain object with {re, im} values
+			const sourceCurrents = {};
 			for (const [sourceId, index] of this.voltageSourceMap.entries()) {
 				const current = x.subset(math.index(index, 0));
-				sourceCurrents.set(sourceId, current);
+				sourceCurrents[sourceId] = {
+					re: typeof current === 'object' && current.re !== undefined ? current.re : (typeof current === 'number' ? current : 0),
+					im: typeof current === 'object' && current.im !== undefined ? current.im : 0,
+				};
 			}
 
 			const result = {
@@ -326,18 +376,95 @@ class CircuitSolver {
 		this.frequencyPoints = this.generateFrequencyPoints(startFrequency, endFrequency, pointsPerDecade);
 
 		// Solve at each frequency
-		const results = [];
+		const perFrequencyResults = [];
+
+		let loggedFirst = false;
 		for (const frequency of this.frequencyPoints) {
 			try {
 				const result = this.solve(frequency);
-				results.push(result);
+				perFrequencyResults.push(result);
+
+				// DEBUG: Log voltage at each speaker's nodes at 1kHz
+				if (!loggedFirst && frequency >= 1000) {
+					loggedFirst = true;
+					console.log(`=== VOLTAGES AT ${frequency.toFixed(0)} Hz ===`);
+					for (const comp of this.circuit.components) {
+						if (comp.type === 'speaker' || comp.type === 'source') {
+							const terms = this.getComponentTerminals(comp);
+							if (terms.length >= 2) {
+								const v0 = result.nodeVoltages[terms[0]] || { re: 0, im: 0 };
+								const v1 = result.nodeVoltages[terms[1]] || { re: 0, im: 0 };
+								const mag0 = Math.sqrt(v0.re ** 2 + v0.im ** 2);
+								const mag1 = Math.sqrt(v1.re ** 2 + v1.im ** 2);
+								const diff = Math.sqrt((v0.re - v1.re) ** 2 + (v0.im - v1.im) ** 2);
+								console.log(`  ${comp.label || comp.type}: |V0|=${mag0.toFixed(4)} |V1|=${mag1.toFixed(4)} |Vdiff|=${diff.toFixed(6)} idx=[${this.nodeMap.get(terms[0])},${this.nodeMap.get(terms[1])}]`);
+							}
+						}
+					}
+					// Log wire-segment indices
+					console.log('  Wire-segment node indices:');
+					for (const comp of this.circuit.components) {
+						if (comp.type === 'wire-segment') {
+							const terms = this.getComponentTerminals(comp);
+							if (terms.length >= 2) {
+								const idx0 = this.nodeMap.get(terms[0]);
+								const idx1 = this.nodeMap.get(terms[1]);
+								const v0 = result.nodeVoltages[terms[0]] || { re: 0, im: 0 };
+								const v1 = result.nodeVoltages[terms[1]] || { re: 0, im: 0 };
+								const mag0 = Math.sqrt(v0.re ** 2 + v0.im ** 2);
+								const mag1 = Math.sqrt(v1.re ** 2 + v1.im ** 2);
+								console.log(`    ws at (${comp.x},${comp.y}) len=${comp.parameters.length} rot=${comp.rotation}: idx=[${idx0},${idx1}] |V|=[${mag0.toFixed(4)},${mag1.toFixed(4)}]`);
+							} else {
+								console.log(`    ws at (${comp.x},${comp.y}): only ${terms.length} terminals`);
+							}
+						}
+					}
+				}
 			} catch (error) {
 				console.error(`Error solving at ${frequency} Hz:`, error.message);
-				// Continue with other frequencies
 			}
 		}
 
-		return results;
+		// Transpose results into format expected by FrequencyAnalyzer:
+		// { frequencies: [], componentVoltages: { componentId: [Complex, ...] }, sourceCurrents: { sourceId: [Complex, ...] } }
+		const frequencies = perFrequencyResults.map((r) => r.frequency);
+
+		// Build componentVoltages: for each component, collect voltage across its terminals at each frequency
+		const componentVoltages = {};
+		for (const component of this.circuit.components) {
+			if (component.type === 'ground' || component.type === 'wire-segment') continue;
+
+			const terminals = this.getComponentTerminals(component);
+
+			if (terminals.length < 2) continue;
+
+			const node1Id = terminals[0];
+			const node2Id = terminals[1];
+
+			const voltages = perFrequencyResults.map((result) => {
+				const v1 = result.nodeVoltages[node1Id] || { re: 0, im: 0 };
+				const v2 = result.nodeVoltages[node2Id] || { re: 0, im: 0 };
+				// Voltage across component = V(node1) - V(node2)
+				return new Complex(v1.re - v2.re, v1.im - v2.im);
+			});
+
+			componentVoltages[component.id] = voltages;
+		}
+
+		// Build sourceCurrents: for each source, collect current at each frequency
+		const sourceCurrents = {};
+		for (const [sourceId] of this.voltageSourceMap) {
+			sourceCurrents[sourceId] = perFrequencyResults.map((result) => {
+				const current = result.sourceCurrents[sourceId] || { re: 0, im: 0 };
+				return new Complex(current.re, current.im);
+			});
+		}
+
+		return {
+			frequencies,
+			componentVoltages,
+			sourceCurrents,
+		};
 	}
 }
 

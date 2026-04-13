@@ -117,7 +117,7 @@ class FrequencyAnalyzer {
 				calculatedPhase += 360;
 			}
 
-			spl.push(calculatedSPL);
+			spl.push(Number.isFinite(calculatedSPL) ? calculatedSPL : -200);
 			phase.push(calculatedPhase);
 		}
 
@@ -158,6 +158,7 @@ class FrequencyAnalyzer {
 		for (const speaker of speakers) {
 			try {
 				const response = this.calculateSPL(speaker, currentAngle);
+				response.label = speaker.label || speaker.parameters.name || speaker.id;
 				speakerResponses[speaker.id] = response;
 				individualResponses.push(response);
 			} catch (error) {
@@ -212,7 +213,7 @@ class FrequencyAnalyzer {
 				totalSPL = -Infinity;
 			}
 
-			combinedSPL.push(totalSPL);
+			combinedSPL.push(Number.isFinite(totalSPL) ? totalSPL : -200);
 			combinedPhase.push(totalPhase);
 		}
 

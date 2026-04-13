@@ -33,10 +33,10 @@ export class Speaker extends Component {
 		this.offAxisData = []; // Parsed off-axis data
 
 		// Set terminals for a speaker (+ and - terminals)
-		// Terminals at same x, 2 grid units apart vertically
+		// Terminals at x=-1, 1 grid unit apart vertically from center
 		this.terminals = [
-			{ x: 0, y: -1 }, // Top terminal (positive for normal polarity)
-			{ x: 0, y: 1 }, // Bottom terminal (negative for normal polarity)
+			{ x: -1, y: -1 }, // Top terminal (positive for normal polarity)
+			{ x: -1, y: 1 }, // Bottom terminal (negative for normal polarity)
 		];
 	}
 

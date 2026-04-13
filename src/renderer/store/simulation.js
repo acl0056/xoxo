@@ -1,5 +1,12 @@
 import CircuitSolver from '@/simulation/CircuitSolver';
 import FrequencyAnalyzer from '@/simulation/FrequencyAnalyzer';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
+
+const ajv = new Ajv();
+addFormats(ajv);
+const validateSimulationResults = ajv.compile(simulationResultsSchema);
 
 export default {
 	namespaced: true,
@@ -119,6 +126,20 @@ export default {
 				// Update state with simulation results
 				commit('SET_FREQUENCY_RESPONSE', simulationResults.frequencyResponse);
 				commit('SET_IMPEDANCE_RESPONSE', simulationResults.impedanceResponse);
+
+				// Broadcast results to graph windows via IPC
+				const ipcPayload = {
+					frequencyResponse: simulationResults.frequencyResponse,
+					impedanceResponse: simulationResults.impedanceResponse,
+					timestamp: new Date().toISOString(),
+				};
+
+				if (!validateSimulationResults(ipcPayload)) {
+					console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
+				} else {
+					const { ipcRenderer } = require('electron');
+					ipcRenderer.send('simulation-results', ipcPayload);
+				}
 			} catch (error) {
 				commit('SET_SIMULATION_ERROR', error.message);
 

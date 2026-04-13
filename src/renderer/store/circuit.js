@@ -1,31 +1,14 @@
 import { Circuit } from '@/models/Circuit';
 import { VoltageSource } from '@/models/VoltageSource';
 
-// Debounce timer for auto-simulation
-let simulationDebounceTimer = null;
-const SIMULATION_DEBOUNCE_DELAY = 300; // milliseconds
-
 /**
- * Trigger debounced simulation
- * This function will be called whenever circuit parameters change
- * @param {Object} store - Vuex store instance
+ * Run simulation immediately whenever circuit changes
  */
-function triggerDebouncedSimulation(store) {
-	// Clear any existing timer
-	if (simulationDebounceTimer) {
-		clearTimeout(simulationDebounceTimer);
+function triggerSimulation(store) {
+	const rootState = store.state || store.rootState;
+	if (rootState && rootState.simulation && rootState.simulation.autoSimulate) {
+		store.dispatch('simulation/runSimulation', null, { root: true });
 	}
-
-	// Set a new timer to run simulation after delay
-	simulationDebounceTimer = setTimeout(() => {
-		// Check if auto-simulate is enabled
-		// Access the root state through the store's state property
-		const rootState = store.state || store.rootState;
-		if (rootState && rootState.simulation && rootState.simulation.autoSimulate) {
-			store.dispatch('simulation/runSimulation', null, { root: true });
-		}
-		simulationDebounceTimer = null;
-	}, SIMULATION_DEBOUNCE_DELAY);
 }
 
 export default {
@@ -139,7 +122,7 @@ export default {
 		newFile({ commit, dispatch }) {
 			const circuit = new Circuit();
 			// Add default voltage source as per requirements
-			const voltageSource = new VoltageSource(10, 20);
+			const voltageSource = new VoltageSource(20, 40);
 			circuit.addComponent(voltageSource);
 
 			commit('SET_CIRCUIT', circuit);
@@ -170,6 +153,18 @@ export default {
 			} catch (error) {
 				return { success: false, error: error.message };
 			}
+		},
+
+		// Load a Circuit object directly (preserves non-serialized data like embedded FRD/ZMA)
+		loadCircuitObject({ commit, dispatch }, { circuit, filePath = null }) {
+			commit('SET_CIRCUIT', circuit);
+			commit('SET_FILE_PATH', filePath);
+			commit('CLEAR_DIRTY');
+			commit('CLEAR_UNDO');
+			commit('CLEAR_REDO');
+
+			// Trigger simulation after loading circuit
+			dispatch('simulation/runSimulation', null, { root: true });
 		},
 
 		// Save the current circuit
@@ -203,7 +198,7 @@ export default {
 			commit('ADD_COMPONENT', component);
 
 			// Trigger debounced simulation
-			triggerDebouncedSimulation(this);
+			triggerSimulation(this);
 		},
 		removeComponent({ commit, state }, componentId) {
 			if (!state.circuit) return;
@@ -221,7 +216,7 @@ export default {
 			commit('REMOVE_COMPONENT', componentId);
 
 			// Trigger debounced simulation
-			triggerDebouncedSimulation(this);
+			triggerSimulation(this);
 		},
 		updateComponent({ commit, state }, { componentId, updates }) {
 			if (!state.circuit) return;
@@ -245,9 +240,9 @@ export default {
 			commit('UPDATE_COMPONENT', { componentId, updates });
 
 			// Trigger debounced simulation
-			triggerDebouncedSimulation(this);
+			triggerSimulation(this);
 		},
-		// Undoable actions for wires
+
 		addWire({ commit }, wire) {
 			const undoAction = {
 				type: 'removeWire',
@@ -258,7 +253,7 @@ export default {
 			commit('ADD_WIRE', wire);
 
 			// Trigger debounced simulation
-			triggerDebouncedSimulation(this);
+			triggerSimulation(this);
 		},
 		removeWire({ commit, state }, wireId) {
 			if (!state.circuit) return;
@@ -275,7 +270,7 @@ export default {
 			commit('REMOVE_WIRE', wireId);
 
 			// Trigger debounced simulation
-			triggerDebouncedSimulation(this);
+			triggerSimulation(this);
 		},
 		// Undoable actions for annotations
 		addAnnotation({ commit }, annotation) {
@@ -448,7 +443,7 @@ export default {
 
 			// Trigger debounced simulation if needed
 			if (shouldTriggerSimulation) {
-				triggerDebouncedSimulation(this);
+				triggerSimulation(this);
 			}
 		},
 		// Redo action
@@ -567,7 +562,7 @@ export default {
 
 			// Trigger debounced simulation if needed
 			if (shouldTriggerSimulation) {
-				triggerDebouncedSimulation(this);
+				triggerSimulation(this);
 			}
 		},
 	},

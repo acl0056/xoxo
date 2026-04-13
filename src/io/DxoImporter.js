@@ -6,6 +6,7 @@ import { Inductor } from '../models/Inductor';
 import { Speaker } from '../models/Speaker';
 import { Ground } from '../models/Ground';
 import { VoltageSource } from '../models/VoltageSource';
+import { WireSegment } from '../models/WireSegment';
 import { Wire } from '../models/Wire';
 
 /**
@@ -19,6 +20,19 @@ export class DxoImporter {
 	 */
 	static import(filePath) {
 		const content = fs.readFileSync(filePath, 'utf8');
+		const lines = content.split('\n').map((line) => line.trim());
+
+		const importer = new DxoImporter(filePath, lines);
+		return importer.parse();
+	}
+
+	/**
+	 * Import a .dxo file from content string and return a Circuit instance
+	 * @param {string} content - File content as string
+	 * @param {string} filePath - Original file path (for reference)
+	 * @returns {Circuit} - Parsed circuit
+	 */
+	static importFromContent(content, filePath = '') {
 		const lines = content.split('\n').map((line) => line.trim());
 
 		const importer = new DxoImporter(filePath, lines);
@@ -51,6 +65,9 @@ export class DxoImporter {
 		this.parseBaffle();
 		this.parseActiveBlocks();
 
+		// Translate all coordinates so the voltage source is near the origin
+		this.translateToOrigin();
+
 		// Map wires to component terminals
 		this.mapWiresToTerminals();
 
@@ -61,6 +78,40 @@ export class DxoImporter {
 		}
 
 		return this.circuit;
+	}
+
+	/**
+	 * Translate all component and wire coordinates so the voltage source
+	 * is placed at a reasonable position near the origin
+	 */
+	translateToOrigin() {
+		const targetX = 20;
+		const targetY = 40;
+
+		// Find the voltage source
+		const voltageSource = this.circuit.components.find((c) => c.type === 'source');
+		if (!voltageSource) return;
+
+		const offsetX = voltageSource.x - targetX;
+		const offsetY = voltageSource.y - targetY;
+
+		if (offsetX === 0 && offsetY === 0) return;
+
+		// Translate all components
+		for (const component of this.circuit.components) {
+			component.x -= offsetX;
+			component.y -= offsetY;
+		}
+
+		// Translate all wire endpoints
+		if (this.wireEndpoints) {
+			for (const wire of this.wireEndpoints) {
+				wire.x1 -= offsetX;
+				wire.y1 -= offsetY;
+				wire.x2 -= offsetX;
+				wire.y2 -= offsetY;
+			}
+		}
 	}
 
 	/**
@@ -210,7 +261,9 @@ export class DxoImporter {
 		}
 
 		// Set rotation based on orientation
-		component.rotation = isHorizontal ? 90 : 0;
+		// In DXO format: T (horizontal) = terminals left/right = rotation 0
+		// F (vertical) = terminals top/bottom = rotation 90
+		component.rotation = isHorizontal ? 0 : 90;
 
 		// Map state
 		if (state === 0) {
@@ -513,80 +566,206 @@ export class DxoImporter {
 		// Passive components have 2 terminals
 		if (component.type === 'resistor' || component.type === 'capacitor' || component.type === 'inductor') {
 			if (component.rotation === 0) {
-				// Vertical: terminals at top and bottom
-				terminals.push({ x, y: y - 3 });
-				terminals.push({ x, y: y + 3 });
-			} else {
 				// Horizontal: terminals at left and right
 				terminals.push({ x: x - 3, y });
 				terminals.push({ x: x + 3, y });
+			} else {
+				// Vertical: terminals at top and bottom
+				terminals.push({ x, y: y - 3 });
+				terminals.push({ x, y: y + 3 });
 			}
 		} else if (component.type === 'ground') {
 			// Ground has one terminal at its position
 			terminals.push({ x, y });
-		} else if (component.type === 'source' || component.type === 'speaker') {
-			// Voltage source and speakers have + and - terminals
-			// Assume similar layout to passive components
-			if (component.rotation === 0) {
-				terminals.push({ x, y: y - 3 });
-				terminals.push({ x, y: y + 3 });
-			} else {
-				terminals.push({ x: x - 3, y });
-				terminals.push({ x: x + 3, y });
-			}
+		} else if (component.type === 'source') {
+			// Voltage source terminals: {x:3, y:-2} and {x:3, y:2}
+			terminals.push({ x: x + 3, y: y - 2 });
+			terminals.push({ x: x + 3, y: y + 2 });
+		} else if (component.type === 'speaker') {
+			// Speaker terminals: {x:-1, y:-1} and {x:-1, y:1}
+			terminals.push({ x: x - 1, y: y - 1 });
+			terminals.push({ x: x - 1, y: y + 1 });
 		}
 
 		return terminals;
 	}
 
 	/**
-	 * Map wire endpoints to component terminals
+	 * Split wire segments at T-junctions where another wire's endpoint
+	 * falls on the interior of a wire segment
+	 */
+	splitWiresAtJunctions(wireEndpoints) {
+		// Collect all unique endpoints
+		const allEndpoints = new Set();
+		for (const wire of wireEndpoints) {
+			allEndpoints.add(`${wire.x1},${wire.y1}`);
+			allEndpoints.add(`${wire.x2},${wire.y2}`);
+		}
+
+		// Also collect component terminal positions as potential split points
+		for (const component of this.circuit.components) {
+			const terminals = this.calculateTerminalPositions(component, component.x, component.y);
+			for (const t of terminals) {
+				allEndpoints.add(`${t.x},${t.y}`);
+			}
+		}
+
+		// For each wire, check if any endpoint falls on its interior and split
+		let result = [...wireEndpoints];
+		let changed = true;
+
+		while (changed) {
+			changed = false;
+			const newResult = [];
+
+			for (const wire of result) {
+				const splitPoints = [];
+
+				for (const epKey of allEndpoints) {
+					const [px, py] = epKey.split(',').map(Number);
+
+					// Skip if this point is one of the wire's own endpoints
+					if ((px === wire.x1 && py === wire.y1) || (px === wire.x2 && py === wire.y2)) {
+						continue;
+					}
+
+					// Check if point is on this wire's interior
+					if (wire.y1 === wire.y2 && py === wire.y1) {
+						// Horizontal wire — check if px is between x1 and x2
+						const minX = Math.min(wire.x1, wire.x2);
+						const maxX = Math.max(wire.x1, wire.x2);
+						if (px > minX && px < maxX) {
+							splitPoints.push({ x: px, y: py });
+						}
+					} else if (wire.x1 === wire.x2 && px === wire.x1) {
+						// Vertical wire — check if py is between y1 and y2
+						const minY = Math.min(wire.y1, wire.y2);
+						const maxY = Math.max(wire.y1, wire.y2);
+						if (py > minY && py < maxY) {
+							splitPoints.push({ x: px, y: py });
+						}
+					}
+				}
+
+				if (splitPoints.length === 0) {
+					newResult.push(wire);
+				} else {
+					// Sort split points by distance from (x1,y1)
+					splitPoints.sort((a, b) => {
+						const distA = Math.abs(a.x - wire.x1) + Math.abs(a.y - wire.y1);
+						const distB = Math.abs(b.x - wire.x1) + Math.abs(b.y - wire.y1);
+						return distA - distB;
+					});
+
+					// Create sub-segments
+					let prevX = wire.x1;
+					let prevY = wire.y1;
+					for (const sp of splitPoints) {
+						newResult.push({
+							x1: prevX, y1: prevY, x2: sp.x, y2: sp.y,
+						});
+						prevX = sp.x;
+						prevY = sp.y;
+					}
+					newResult.push({
+						x1: prevX, y1: prevY, x2: wire.x2, y2: wire.y2,
+					});
+
+					changed = true;
+				}
+			}
+
+			result = newResult;
+		}
+
+		return result;
+	}
+
+	/**
+	 * Convert DXO wire endpoints into WireSegment components and build Wire connections for solver
 	 */
 	mapWiresToTerminals() {
 		if (!this.wireEndpoints) {
 			return;
 		}
 
-		this.wireEndpoints.forEach((wireData, index) => {
+		// Split wires at T-junctions: where one wire's endpoint falls on another wire's interior
+		this.wireEndpoints = this.splitWiresAtJunctions(this.wireEndpoints);
+
+		// Create WireSegment components for each DXO wire (visual/interactive)
+		this.wireEndpoints.forEach((wireData) => {
 			const {
 				x1, y1, x2, y2,
 			} = wireData;
 
-			// Find terminals at each endpoint
-			const terminal1 = this.findTerminalAtPosition(x1, y1);
-			const terminal2 = this.findTerminalAtPosition(x2, y2);
+			const deltaX = x2 - x1;
+			const deltaY = y2 - y1;
 
-			if (!terminal1) {
-				this.warnings.push(`Wire ${index + 1}: No terminal found at (${x1}, ${y1})`);
-				return;
+			const centerX = (x1 + x2) / 2;
+			const centerY = (y1 + y2) / 2;
+
+			let length;
+			let rotation;
+
+			if (deltaY === 0) {
+				length = Math.abs(deltaX);
+				rotation = 0;
+			} else if (deltaX === 0) {
+				length = Math.abs(deltaY);
+				rotation = 90;
+			} else {
+				length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				rotation = 0;
+				this.warnings.push(`Wire from (${x1},${y1}) to (${x2},${y2}) is diagonal`);
 			}
 
-			if (!terminal2) {
-				this.warnings.push(`Wire ${index + 1}: No terminal found at (${x2}, ${y2})`);
-				return;
+			if (length > 0) {
+				const wireSegment = new WireSegment(centerX, centerY, length, rotation);
+				this.circuit.addComponent(wireSegment);
 			}
-
-			// Create wire connecting the two terminals
-			const wire = new Wire(
-				{
-					componentId: terminal1.component.id,
-					terminal: terminal1.terminalIndex,
-				},
-				{
-					componentId: terminal2.component.id,
-					terminal: terminal2.terminalIndex,
-				},
-			);
-
-			// Check if wire is straight or needs segments
-			if (x1 !== x2 && y1 !== y2) {
-				// Wire has a corner - add segment point
-				// For now, assume L-shaped wires with one corner
-				wire.segments = [{ x: x1, y: y2 }];
-			}
-
-			this.circuit.addWire(wire);
 		});
+
+		// Build connectivity from terminal position overlaps for the solver
+		const positionToTerminals = new Map();
+
+		for (const component of this.circuit.components) {
+			if (!component.terminals) continue;
+			for (let t = 0; t < component.terminals.length; t++) {
+				const pos = component.getTerminalPosition(t);
+				if (!pos) continue;
+				const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
+				if (!positionToTerminals.has(key)) {
+					positionToTerminals.set(key, []);
+				}
+				positionToTerminals.get(key).push({
+					componentId: component.id,
+					terminalIndex: t,
+				});
+			}
+		}
+
+		// Create Wire objects for every pair of terminals sharing a grid position
+		const createdWires = new Set();
+		let wireCount = 0;
+		for (const [posKey, terminals] of positionToTerminals) {
+			for (let i = 0; i < terminals.length; i++) {
+				for (let j = i + 1; j < terminals.length; j++) {
+					const a = terminals[i];
+					const b = terminals[j];
+
+					const wireId = [a.componentId, a.terminalIndex, b.componentId, b.terminalIndex].sort().join('|');
+					if (createdWires.has(wireId)) continue;
+					createdWires.add(wireId);
+
+					const wire = new Wire(
+						{ componentId: a.componentId, terminal: a.terminalIndex },
+						{ componentId: b.componentId, terminal: b.terminalIndex },
+					);
+					this.circuit.addWire(wire);
+					wireCount++;
+				}
+			}
+		}
 	}
 
 	/**

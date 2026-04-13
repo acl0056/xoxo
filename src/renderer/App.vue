@@ -56,6 +56,30 @@ export default {
 			await this.handleSaveFileAs();
 		});
 
+		ipcRenderer.on('menu-import-dxo', async () => {
+			await this.handleImportDxo();
+		});
+
+		ipcRenderer.on('menu-undo', () => {
+			this.$store.dispatch('circuit/undo');
+		});
+
+		ipcRenderer.on('menu-redo', () => {
+			this.$store.dispatch('circuit/redo');
+		});
+
+		// Update menu undo/redo enabled state when stacks change
+		this.$store.subscribe((mutation) => {
+			const undoMutations = ['circuit/PUSH_UNDO', 'circuit/POP_UNDO', 'circuit/CLEAR_UNDO',
+				'circuit/PUSH_REDO', 'circuit/POP_REDO', 'circuit/CLEAR_REDO'];
+			if (undoMutations.includes(mutation.type)) {
+				ipcRenderer.send('update-undo-state', {
+					canUndo: this.$store.state.circuit.undoStack.length > 0,
+					canRedo: this.$store.state.circuit.redoStack.length > 0,
+				});
+			}
+		});
+
 		// Listen for auto-save for crash recovery
 		ipcRenderer.on('auto-save-for-crash-recovery', async () => {
 			await this.saveCrashRecoveryData();
@@ -64,6 +88,21 @@ export default {
 		// Listen for show about dialog
 		ipcRenderer.on('menu-show-about', () => {
 			this.showAboutDialog = true;
+		});
+
+		// Send current simulation results when a graph window requests them
+		ipcRenderer.on('send-simulation-results', () => {
+			const frequencyResponse = this.$store.getters['simulation/getFrequencyResponse'];
+			const impedanceResponse = this.$store.getters['simulation/getImpedanceResponse'];
+			if (frequencyResponse || impedanceResponse) {
+				// Deep clone via JSON to ensure all data is serializable for IPC
+				const payload = JSON.parse(JSON.stringify({
+					frequencyResponse,
+					impedanceResponse,
+					timestamp: new Date().toISOString(),
+				}));
+				ipcRenderer.send('simulation-results', payload);
+			}
 		});
 	},
 	methods: {
@@ -243,6 +282,39 @@ export default {
 			}
 
 			return this.saveToFile(filePath);
+		},
+
+		/**
+		 * Handle import DXO file menu action
+		 */
+		async handleImportDxo() {
+			const { ipcRenderer } = require('electron');
+
+			// Show file dialog for .dxo files
+			const filePath = await ipcRenderer.invoke('show-import-dxo-dialog');
+			if (!filePath) {
+				return; // User cancelled
+			}
+
+			// Read the file content
+			const result = await ipcRenderer.invoke('read-file', filePath);
+			if (!result.success) {
+				await ipcRenderer.invoke('show-error-dialog', 'Error Importing DXO', 'Failed to read file', result.error);
+				return;
+			}
+
+			try {
+				const { DxoImporter } = await import('@/io/DxoImporter');
+				const circuit = DxoImporter.importFromContent(result.data, filePath);
+
+				// Load the imported circuit directly (preserves embedded FRD/ZMA data)
+				this.$store.dispatch('circuit/loadCircuitObject', {
+					circuit,
+					filePath: null,
+				});
+			} catch (error) {
+				await ipcRenderer.invoke('show-error-dialog', 'Error Importing DXO', 'Failed to parse DXO file', error.message);
+			}
 		},
 
 		/**

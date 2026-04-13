@@ -290,7 +290,14 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
 import AngleControl from './AngleControl.vue';
+
+const ajv = new Ajv();
+addFormats(ajv);
+const validateSimulationResults = ajv.compile(simulationResultsSchema);
 
 export default {
 	name: 'ImpedanceGraph',
@@ -360,9 +367,24 @@ export default {
 		this.resizeCanvas();
 		window.addEventListener('resize', this.resizeCanvas);
 		this.renderGraph();
+
+		// Listen for simulation results broadcast from main window
+		const { ipcRenderer } = require('electron');
+		ipcRenderer.on('simulation-results', (event, results) => {
+			if (!validateSimulationResults(results)) {
+				console.error('Received invalid simulation results:', validateSimulationResults.errors);
+				return;
+			}
+			this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse);
+		});
+
+		// Request current results in case simulation already ran
+		ipcRenderer.send('request-simulation-results');
 	},
 	beforeUnmount() {
 		window.removeEventListener('resize', this.resizeCanvas);
+		const { ipcRenderer } = require('electron');
+		ipcRenderer.removeAllListeners('simulation-results');
 	},
 	methods: {
 		resizeCanvas() {

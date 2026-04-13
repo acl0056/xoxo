@@ -366,6 +366,7 @@ export default {
 		},
 		startIncrement(direction) {
 			if (!this.isPassiveComponent || !this.valueParameterName) return;
+			console.log('[TUNE] startIncrement', direction);
 
 			// Parse current value first
 			this.parseValueInput();
@@ -404,11 +405,13 @@ export default {
 
 			// Use E24 series for stepping
 			const newValue = stepE24(currentValue, direction);
+			console.log('[TUNE] incrementValue', direction, currentValue, '->', newValue);
 
 			this.localParameters[this.valueParameterName] = newValue;
 			this.valueInput = formatEngineering(newValue);
 
 			// Emit update so the simulation refreshes immediately
+			console.log('[TUNE] emitting update');
 			this.$emit('update', {
 				componentId: this.component.id,
 				parameters: this.localParameters,

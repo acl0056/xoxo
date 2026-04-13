@@ -74,6 +74,7 @@ class CircuitSolver {
 				union(startNodeId, endNodeId);
 			}
 		}
+
 		// Wire segments are handled as low-resistance components in the MNA matrix
 
 		// Collect unique representative nodes, excluding ground
@@ -378,48 +379,10 @@ class CircuitSolver {
 		// Solve at each frequency
 		const perFrequencyResults = [];
 
-		let loggedFirst = false;
 		for (const frequency of this.frequencyPoints) {
 			try {
 				const result = this.solve(frequency);
 				perFrequencyResults.push(result);
-
-				// DEBUG: Log voltage at each speaker's nodes at 1kHz
-				if (!loggedFirst && frequency >= 1000) {
-					loggedFirst = true;
-					console.log(`=== VOLTAGES AT ${frequency.toFixed(0)} Hz ===`);
-					for (const comp of this.circuit.components) {
-						if (comp.type === 'speaker' || comp.type === 'source') {
-							const terms = this.getComponentTerminals(comp);
-							if (terms.length >= 2) {
-								const v0 = result.nodeVoltages[terms[0]] || { re: 0, im: 0 };
-								const v1 = result.nodeVoltages[terms[1]] || { re: 0, im: 0 };
-								const mag0 = Math.sqrt(v0.re ** 2 + v0.im ** 2);
-								const mag1 = Math.sqrt(v1.re ** 2 + v1.im ** 2);
-								const diff = Math.sqrt((v0.re - v1.re) ** 2 + (v0.im - v1.im) ** 2);
-								console.log(`  ${comp.label || comp.type}: |V0|=${mag0.toFixed(4)} |V1|=${mag1.toFixed(4)} |Vdiff|=${diff.toFixed(6)} idx=[${this.nodeMap.get(terms[0])},${this.nodeMap.get(terms[1])}]`);
-							}
-						}
-					}
-					// Log wire-segment indices
-					console.log('  Wire-segment node indices:');
-					for (const comp of this.circuit.components) {
-						if (comp.type === 'wire-segment') {
-							const terms = this.getComponentTerminals(comp);
-							if (terms.length >= 2) {
-								const idx0 = this.nodeMap.get(terms[0]);
-								const idx1 = this.nodeMap.get(terms[1]);
-								const v0 = result.nodeVoltages[terms[0]] || { re: 0, im: 0 };
-								const v1 = result.nodeVoltages[terms[1]] || { re: 0, im: 0 };
-								const mag0 = Math.sqrt(v0.re ** 2 + v0.im ** 2);
-								const mag1 = Math.sqrt(v1.re ** 2 + v1.im ** 2);
-								console.log(`    ws at (${comp.x},${comp.y}) len=${comp.parameters.length} rot=${comp.rotation}: idx=[${idx0},${idx1}] |V|=[${mag0.toFixed(4)},${mag1.toFixed(4)}]`);
-							} else {
-								console.log(`    ws at (${comp.x},${comp.y}): only ${terms.length} terminals`);
-							}
-						}
-					}
-				}
 			} catch (error) {
 				console.error(`Error solving at ${frequency} Hz:`, error.message);
 			}

@@ -16,6 +16,7 @@ export default {
 		frequencyResponse: null,
 		impedanceResponse: null,
 		isSimulating: false,
+		simulationPending: false,
 		simulationError: null,
 		excludedSpeakers: [], // Array of speaker IDs excluded due to missing angle data
 	},
@@ -34,6 +35,9 @@ export default {
 		},
 		SET_SIMULATING(state, value) {
 			state.isSimulating = value;
+		},
+		SET_SIMULATION_PENDING(state, value) {
+			state.simulationPending = value;
 		},
 		SET_SIMULATION_ERROR(state, error) {
 			state.simulationError = error;
@@ -71,13 +75,19 @@ export default {
 		/**
 		 * Run circuit simulation asynchronously
 		 */
-		async runSimulation({ commit, rootState, state }) {
-			// Don't run if already simulating
+		async runSimulation({ commit, rootState, state, dispatch }) {
+			console.log('[SIM] runSimulation called, isSimulating:', state.isSimulating);
+			// If already simulating, queue a re-run after current one finishes
 			if (state.isSimulating) {
+				console.log('[SIM] already simulating, setting pending');
+				commit('SET_SIMULATION_PENDING', true);
 				return;
 			}
 
 			commit('SET_SIMULATING', true);
+			console.log('[SIM] starting simulation');
+			const simStart = performance.now();
+			commit('SET_SIMULATION_PENDING', false);
 			commit('SET_SIMULATION_ERROR', null);
 
 			try {
@@ -128,17 +138,20 @@ export default {
 				commit('SET_IMPEDANCE_RESPONSE', simulationResults.impedanceResponse);
 
 				// Broadcast results to graph windows via IPC
-				const ipcPayload = {
+				// Deep clone via JSON to ensure all data is serializable for IPC
+				// (strips -Infinity, NaN, Complex instances etc.)
+				const ipcPayload = JSON.parse(JSON.stringify({
 					frequencyResponse: simulationResults.frequencyResponse,
 					impedanceResponse: simulationResults.impedanceResponse,
 					timestamp: new Date().toISOString(),
-				};
+				}));
 
 				if (!validateSimulationResults(ipcPayload)) {
 					console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
 				} else {
 					const { ipcRenderer } = require('electron');
 					ipcRenderer.send('simulation-results', ipcPayload);
+					console.log('[SIM] results sent via IPC');
 				}
 			} catch (error) {
 				commit('SET_SIMULATION_ERROR', error.message);
@@ -148,6 +161,14 @@ export default {
 				commit('SET_IMPEDANCE_RESPONSE', null);
 			} finally {
 				commit('SET_SIMULATING', false);
+				console.log('[SIM] simulation complete', `${(performance.now() - simStart).toFixed(0)}ms`);
+
+				// If a simulation was requested while we were running, run again
+				if (state.simulationPending) {
+					console.log('[SIM] re-running pending simulation');
+					commit('SET_SIMULATION_PENDING', false);
+					dispatch('runSimulation');
+				}
 			}
 		},
 

@@ -5,9 +5,12 @@ import { VoltageSource } from '@/models/VoltageSource';
  * Run simulation immediately whenever circuit changes
  */
 function triggerSimulation(store) {
+	console.log('[CIRCUIT] triggerSimulation called');
 	const rootState = store.state || store.rootState;
 	if (rootState && rootState.simulation && rootState.simulation.autoSimulate) {
 		store.dispatch('simulation/runSimulation', null, { root: true });
+	} else {
+		console.log('[CIRCUIT] autoSimulate is off, skipping');
 	}
 }
 

@@ -156,6 +156,13 @@ class FrequencyAnalyzer {
 		const individualResponses = [];
 
 		for (const speaker of speakers) {
+			// Skip speakers that aren't connected to the circuit (no solver data)
+			const speakerVoltages = this.solverResults.componentVoltages?.[speaker.id];
+			if (!speakerVoltages || speakerVoltages.length === 0) continue;
+
+			// Skip speakers without FRD data
+			if (!speaker.frdData || !speaker.frdData.frequencies || speaker.frdData.frequencies.length === 0) continue;
+
 			try {
 				const response = this.calculateSPL(speaker, currentAngle);
 				response.label = speaker.label || speaker.parameters.name || speaker.id;

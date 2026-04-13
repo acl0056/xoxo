@@ -1497,11 +1497,13 @@ export default {
 		},
 
 		async handleTuneUpdate({ componentId, parameters }) {
+			console.log('[EDITOR] handleTuneUpdate received');
 			// Update component parameters in the store
 			await this.$store.dispatch('circuit/updateComponent', {
 				componentId,
 				updates: { parameters },
 			});
+			console.log('[EDITOR] updateComponent dispatched');
 
 			// If this is a speaker, reload FRD/ZMA data files whenever a path is set
 			const circuit = this.$store.state.circuit?.circuit;

@@ -297,14 +297,7 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
 import AngleControl from './AngleControl.vue';
-
-const ajv = new Ajv();
-addFormats(ajv);
-const validateSimulationResults = ajv.compile(simulationResultsSchema);
 
 export default {
 	name: 'FrequencyResponseGraph',
@@ -370,11 +363,9 @@ export default {
 		// Listen for simulation results broadcast from main window
 		const { ipcRenderer } = require('electron');
 		ipcRenderer.on('simulation-results', (event, results) => {
-			if (!validateSimulationResults(results)) {
-				console.error('Received invalid simulation results:', validateSimulationResults.errors);
-				return;
+			if (results.frequencyResponse) {
+				this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
 			}
-			this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
 		});
 
 		// Request current results in case simulation already ran
@@ -405,6 +396,7 @@ export default {
 					frequencies: this.frequencyResponse.frequencies || [],
 					magnitudes: this.frequencyResponse.spl || [],
 					originalMagnitudes: [...(this.frequencyResponse.spl || [])],
+					phases: this.frequencyResponse.phase || [],
 					color: this.curveColors.system || '#0066cc',
 					visible: true,
 					showPhase: false,
@@ -421,6 +413,7 @@ export default {
 						frequencies: this.frequencyResponse.frequencies || [],
 						magnitudes: response.spl || [],
 						originalMagnitudes: [...(response.spl || [])],
+						phases: response.phase || [],
 						color: this.curveColors[id] || this.generateColor(id),
 						visible: true,
 						showPhase: false,
@@ -444,9 +437,10 @@ export default {
 			if (!this.context) return;
 
 			const { width, height } = this.canvas;
+			const hasPhase = this.curves.some((c) => c.visible && c.showPhase && c.phases && c.phases.length > 0);
 			const margin = {
 				top: 20,
-				right: 20,
+				right: hasPhase ? 60 : 20,
 				bottom: 55,
 				left: 60,
 			};
@@ -463,6 +457,11 @@ export default {
 			// Draw grid and axes
 			this.drawGrid(margin, graphWidth, graphHeight);
 			this.drawAxes(margin, graphWidth, graphHeight);
+
+			// Draw phase axis if any curve has phase enabled
+			if (hasPhase) {
+				this.drawPhaseAxis(margin, graphWidth, graphHeight);
+			}
 
 			// Draw angle indicator
 			this.drawAngleIndicator(width, margin);
@@ -569,6 +568,7 @@ export default {
 			curves.forEach((curve) => {
 				if (!curve.visible || curve.frequencies.length === 0) return;
 
+				// Draw magnitude curve
 				this.context.strokeStyle = isHeld ? '#cccccc' : curve.color;
 				this.context.lineWidth = isHeld ? 1 : 2;
 				this.context.beginPath();
@@ -594,6 +594,41 @@ export default {
 				}
 
 				this.context.stroke();
+
+				// Draw phase curve if enabled
+				if (curve.showPhase && curve.phases && curve.phases.length > 0) {
+					this.context.strokeStyle = isHeld ? '#cccccc' : this.getPhaseColor(curve.color);
+					this.context.lineWidth = isHeld ? 1 : 1.5;
+					this.context.setLineDash([6, 3]);
+					this.context.beginPath();
+
+					let firstPhasePoint = true;
+					for (let i = 0; i < curve.frequencies.length; i++) {
+						const freq = curve.frequencies[i];
+						const phase = curve.phases[i];
+
+						if (freq < this.scaleSettings.minFreq || freq > this.scaleSettings.maxFreq) {
+							continue;
+						}
+
+						if (!Number.isFinite(phase)) {
+							continue;
+						}
+
+						const x = this.frequencyToX(freq, margin.left, graphWidth);
+						const y = this.phaseToY(phase, margin.top, graphHeight);
+
+						if (firstPhasePoint) {
+							this.context.moveTo(x, y);
+							firstPhasePoint = false;
+						} else {
+							this.context.lineTo(x, y);
+						}
+					}
+
+					this.context.stroke();
+					this.context.setLineDash([]);
+				}
 			});
 
 			this.context.restore(); // Remove clip region
@@ -623,6 +658,65 @@ export default {
 			const maxMag = this.scaleSettings.centerValue + range / 2;
 			const normalized = (maxMag - mag) / (maxMag - minMag);
 			return marginTop + normalized * graphHeight;
+		},
+		phaseToY(phase, marginTop, graphHeight) {
+			const minPhase = -180;
+			const maxPhase = 180;
+			const normalized = (maxPhase - phase) / (maxPhase - minPhase);
+			return marginTop + normalized * graphHeight;
+		},
+		getPhaseColor(baseColor) {
+			// Lighten the curve color for the phase line
+			// Parse hex color and blend toward a muted version
+			const r = parseInt(baseColor.slice(1, 3), 16);
+			const g = parseInt(baseColor.slice(3, 5), 16);
+			const b = parseInt(baseColor.slice(5, 7), 16);
+			// Shift hue slightly and reduce saturation
+			const pr = Math.min(255, r + 60);
+			const pg = Math.max(0, g - 20);
+			const pb = Math.max(0, b - 20);
+			return `rgb(${pr}, ${pg}, ${pb})`;
+		},
+		drawPhaseAxis(margin, graphWidth, graphHeight) {
+			const rightX = margin.left + graphWidth;
+			const phaseColor = '#cc6666';
+
+			// Draw right axis line
+			this.context.strokeStyle = phaseColor;
+			this.context.lineWidth = 2;
+			this.context.beginPath();
+			this.context.moveTo(rightX, margin.top);
+			this.context.lineTo(rightX, margin.top + graphHeight);
+			this.context.stroke();
+
+			// Phase axis labels (-180° to +180° in 60° steps)
+			this.context.font = '12px sans-serif';
+			this.context.fillStyle = phaseColor;
+			this.context.textAlign = 'left';
+
+			for (let phase = -180; phase <= 180; phase += 60) {
+				const y = this.phaseToY(phase, margin.top, graphHeight);
+				this.context.fillText(`${phase}°`, rightX + 5, y + 4);
+
+				// Small tick mark
+				this.context.beginPath();
+				this.context.moveTo(rightX, y);
+				this.context.lineTo(rightX + 4, y);
+				this.context.stroke();
+			}
+
+			// Phase axis title
+			this.context.font = '14px sans-serif';
+			this.context.save();
+			this.context.translate(rightX + 50, margin.top + graphHeight / 2);
+			this.context.rotate(-Math.PI / 2);
+			this.context.textAlign = 'center';
+			this.context.fillText('Phase (°)', 0, 0);
+			this.context.restore();
+
+			// Reset text alignment and color
+			this.context.textAlign = 'left';
+			this.context.fillStyle = '#000000';
 		},
 		xToFrequency(x, marginLeft, graphWidth) {
 			const normalized = (x - marginLeft) / graphWidth;

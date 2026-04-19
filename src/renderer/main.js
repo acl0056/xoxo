@@ -13,8 +13,10 @@ const windowType = params.get('window');
 let rootComponent;
 if (windowType === 'frequency-response') {
 	rootComponent = FrequencyResponseGraph;
+	document.title = 'Frequency Response';
 } else if (windowType === 'impedance') {
 	rootComponent = ImpedanceGraph;
+	document.title = 'Impedance';
 } else {
 	rootComponent = App;
 }

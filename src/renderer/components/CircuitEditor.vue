@@ -540,6 +540,7 @@ export default {
 				const coilSpan = 4 * gridSize; // from -2 to +2
 				const loopDiameter = coilSpan / numLoops;
 				const loopRadius = loopDiameter / 2;
+				const loopHeight = loopRadius * 1.5;
 				const coilStartX = -2 * gridSize;
 
 				// Left lead
@@ -550,12 +551,12 @@ export default {
 
 				// Draw left coil
 				this.context.beginPath();
-				this.context.arc(coilStartX + loopRadius, 0, loopRadius, Math.PI, 0, false);
+				this.context.ellipse(coilStartX + loopRadius, 0, loopRadius, loopHeight, 0, Math.PI, 0, false);
 				this.context.stroke();
 
 				// Draw right coil (skip middle one for gap)
 				this.context.beginPath();
-				this.context.arc(coilStartX + loopDiameter * 2 + loopRadius, 0, loopRadius, Math.PI, 0, false);
+				this.context.ellipse(coilStartX + loopDiameter * 2 + loopRadius, 0, loopRadius, loopHeight, 0, Math.PI, 0, false);
 				this.context.stroke();
 
 				// Right lead
@@ -576,6 +577,7 @@ export default {
 				const coilSpan = 4 * gridSize; // from -2 to +2
 				const loopDiameter = coilSpan / numLoops;
 				const loopRadius = loopDiameter / 2;
+				const loopHeight = loopRadius * 1.5;
 				const coilStartX = -2 * gridSize;
 
 				// Left lead
@@ -588,7 +590,7 @@ export default {
 				for (let i = 0; i < numLoops; i++) {
 					const centerX = coilStartX + loopDiameter * i + loopRadius;
 					this.context.beginPath();
-					this.context.arc(centerX, 0, loopRadius, Math.PI, 0, false);
+					this.context.ellipse(centerX, 0, loopRadius, loopHeight, 0, Math.PI, 0, false);
 					this.context.stroke();
 				}
 
@@ -852,7 +854,7 @@ export default {
 			const halfLength = (component.parameters.length / 2) * gridSize;
 
 			// Draw wire line
-			this.context.strokeStyle = '#0066cc';
+			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
 			this.context.lineCap = 'round';
 
@@ -862,7 +864,7 @@ export default {
 			this.context.stroke();
 
 			// Draw terminal connection dots at both ends
-			this.context.fillStyle = '#0066cc';
+			this.context.fillStyle = '#000000';
 			const terminalRadius = 3;
 
 			// Left/top terminal
@@ -1094,7 +1096,7 @@ export default {
 				}
 
 				// Draw wire line
-				this.context.strokeStyle = '#0066cc';
+				this.context.strokeStyle = '#000000';
 				this.context.lineWidth = 2;
 				this.context.beginPath();
 				this.context.moveTo(this.wireStart.x, this.wireStart.y);
@@ -1146,6 +1148,9 @@ export default {
 					});
 					this.$store.commit('circuit/CLEAR_REDO');
 					this.$store.commit('circuit/SET_DIRTY', true);
+
+					// Check for broken/new wire connections after move
+					this.updateWireConnections(this.selectedComponentId);
 				}
 				this.dragStartPosition = null;
 			} else if (this.dragMode === 'move-annotation' && this.selectedAnnotation && this.dragStartPosition) {
@@ -1970,6 +1975,101 @@ export default {
 			}
 
 			return terminals;
+		},
+
+		/**
+		 * After a component is moved, check all its wire connections.
+		 * Remove wires whose terminals no longer overlap, and
+		 * create new wires where terminals now overlap with other components.
+		 */
+		updateWireConnections(movedComponentId) {
+			const circuit = this.$store.state.circuit?.circuit;
+			if (!circuit) return;
+
+			const movedComponent = circuit.getComponent(movedComponentId);
+			if (!movedComponent) return;
+
+			const movedTerminals = this.getComponentTerminals(movedComponent);
+
+			// 1. Remove wires that are no longer spatially connected
+			const wiresToRemove = [];
+			for (const wire of circuit.wires) {
+				const involvesMovedComponent = wire.startNode.componentId === movedComponentId
+					|| wire.endNode.componentId === movedComponentId;
+
+				if (!involvesMovedComponent) continue;
+
+				const startComp = circuit.getComponent(wire.startNode.componentId);
+				const endComp = circuit.getComponent(wire.endNode.componentId);
+				if (!startComp || !endComp) {
+					wiresToRemove.push(wire.id);
+					continue;
+				}
+
+				const startTerminals = this.getComponentTerminals(startComp);
+				const endTerminals = this.getComponentTerminals(endComp);
+
+				const startPos = startTerminals[wire.startNode.terminal];
+				const endPos = endTerminals[wire.endNode.terminal];
+
+				if (!startPos || !endPos) {
+					wiresToRemove.push(wire.id);
+					continue;
+				}
+
+				// Check if terminals still overlap (within 0.1 grid units tolerance)
+				const distance = Math.sqrt(
+					(startPos.x - endPos.x) ** 2 + (startPos.y - endPos.y) ** 2,
+				);
+				if (distance > 0.1) {
+					wiresToRemove.push(wire.id);
+				}
+			}
+
+			for (const wireId of wiresToRemove) {
+				this.$store.dispatch('circuit/removeWire', wireId);
+			}
+
+			// 2. Create new wires where moved component terminals overlap other terminals
+			const allComponents = circuit.components.filter((c) => c.id !== movedComponentId);
+
+			for (let ti = 0; ti < movedTerminals.length; ti++) {
+				const movedPos = movedTerminals[ti];
+
+				for (const otherComponent of allComponents) {
+					const otherTerminals = this.getComponentTerminals(otherComponent);
+
+					for (let oi = 0; oi < otherTerminals.length; oi++) {
+						const otherPos = otherTerminals[oi];
+
+						const distance = Math.sqrt(
+							(movedPos.x - otherPos.x) ** 2 + (movedPos.y - otherPos.y) ** 2,
+						);
+
+						if (distance <= 0.1) {
+							// Check if this connection already exists
+							const alreadyConnected = circuit.wires.some((w) => (w.startNode.componentId === movedComponentId
+									&& w.startNode.terminal === ti
+									&& w.endNode.componentId === otherComponent.id
+									&& w.endNode.terminal === oi)
+								|| (w.startNode.componentId === otherComponent.id
+									&& w.startNode.terminal === oi
+									&& w.endNode.componentId === movedComponentId
+									&& w.endNode.terminal === ti));
+
+							if (!alreadyConnected) {
+								import('@/models/Wire').then(({ Wire }) => {
+									const newWire = new Wire(
+										{ componentId: movedComponentId, terminal: ti },
+										{ componentId: otherComponent.id, terminal: oi },
+									);
+									this.$store.dispatch('circuit/addWire', newWire);
+								});
+							}
+						}
+					}
+				}
+			}
 		},
 
 		getWireAtPosition(worldX, worldY) {

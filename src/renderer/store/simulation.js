@@ -108,20 +108,47 @@ export default {
 				const simulationResults = await new Promise((resolve, reject) => {
 					setTimeout(() => {
 						try {
+							let t0;
+
 							// Create circuit solver
+							t0 = performance.now();
 							const solver = new CircuitSolver(circuit);
+							console.log(`[SIM-PERF] new CircuitSolver: ${(performance.now() - t0).toFixed(1)}ms`);
 
 							// Solve circuit across all frequencies
-							const solverResults = solver.solveAllFrequencies();
+							t0 = performance.now();
+							const solverResults = solver.solveAllFrequencies(1, 100000, 50);
+							console.log(`[SIM-PERF] solveAllFrequencies: ${(performance.now() - t0).toFixed(1)}ms`);
 
 							// Create frequency analyzer
+							t0 = performance.now();
 							const analyzer = new FrequencyAnalyzer(circuit, solverResults);
+							console.log(`[SIM-PERF] new FrequencyAnalyzer: ${(performance.now() - t0).toFixed(1)}ms`);
 
-							// Calculate frequency response for current angle
-							const frequencyResponse = analyzer.calculateSystemResponse(state.currentAngle);
+							// Calculate impedance response first (doesn't depend on speakers)
+							let impedanceResponse = null;
+							try {
+								t0 = performance.now();
+								impedanceResponse = analyzer.calculateImpedance();
+								console.log(`[SIM-PERF] calculateImpedance: ${(performance.now() - t0).toFixed(1)}ms`);
+							} catch (impedanceError) {
+								console.warn('[SIM] impedance calculation failed:', impedanceError.message);
+							}
 
-							// Calculate impedance response
-							const impedanceResponse = analyzer.calculateImpedance();
+							// Calculate frequency response (requires speakers with FRD data)
+							let frequencyResponse = null;
+							try {
+								t0 = performance.now();
+								frequencyResponse = analyzer.calculateSystemResponse(state.currentAngle);
+								console.log(`[SIM-PERF] calculateSystemResponse: ${(performance.now() - t0).toFixed(1)}ms`);
+							} catch (freqError) {
+								console.warn('[SIM] frequency response calculation failed:', freqError.message);
+							}
+
+							if (!impedanceResponse && !frequencyResponse) {
+								reject(new Error('Both impedance and frequency response calculations failed'));
+								return;
+							}
 
 							resolve({
 								frequencyResponse,
@@ -134,26 +161,43 @@ export default {
 				});
 
 				// Update state with simulation results
+				let t0 = performance.now();
 				commit('SET_FREQUENCY_RESPONSE', simulationResults.frequencyResponse);
 				commit('SET_IMPEDANCE_RESPONSE', simulationResults.impedanceResponse);
+				console.log(`[SIM-PERF] commit results to store: ${(performance.now() - t0).toFixed(1)}ms`);
 
 				// Broadcast results to graph windows via IPC
 				// Deep clone via JSON to ensure all data is serializable for IPC
 				// (strips -Infinity, NaN, Complex instances etc.)
-				const ipcPayload = JSON.parse(JSON.stringify({
-					frequencyResponse: simulationResults.frequencyResponse,
-					impedanceResponse: simulationResults.impedanceResponse,
+				t0 = performance.now();
+				const ipcData = {
 					timestamp: new Date().toISOString(),
-				}));
-
-				if (!validateSimulationResults(ipcPayload)) {
-					console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
-				} else {
-					const { ipcRenderer } = require('electron');
-					ipcRenderer.send('simulation-results', ipcPayload);
-					console.log('[SIM] results sent via IPC');
+				};
+				if (simulationResults.frequencyResponse) {
+					ipcData.frequencyResponse = simulationResults.frequencyResponse;
 				}
+				if (simulationResults.impedanceResponse) {
+					ipcData.impedanceResponse = simulationResults.impedanceResponse;
+				}
+
+				const ipcPayload = JSON.parse(JSON.stringify(ipcData));
+				console.log(`[SIM-PERF] JSON deep clone: ${(performance.now() - t0).toFixed(1)}ms`);
+
+				// Only validate if both responses are present (schema requires both)
+				t0 = performance.now();
+				if (ipcPayload.frequencyResponse && ipcPayload.impedanceResponse) {
+					if (!validateSimulationResults(ipcPayload)) {
+						console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
+					}
+				}
+				console.log(`[SIM-PERF] schema validation: ${(performance.now() - t0).toFixed(1)}ms`);
+
+				t0 = performance.now();
+				const { ipcRenderer } = require('electron');
+				ipcRenderer.send('simulation-results', ipcPayload);
+				console.log(`[SIM-PERF] IPC send: ${(performance.now() - t0).toFixed(1)}ms`);
 			} catch (error) {
+				console.error('Simulation error:', error.message);
 				commit('SET_SIMULATION_ERROR', error.message);
 
 				// Clear results on error

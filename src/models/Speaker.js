@@ -239,11 +239,11 @@ export class Speaker extends Component {
 
 	/**
 	 * Serialize the speaker to JSON format
-	 * Note: Only parameters are serialized, not the parsed data (frdData, zmaData, offAxisData)
+	 * Includes embedded frdData and zmaData so they survive save/load round-trips.
 	 * @returns {Object} JSON representation of the speaker
 	 */
 	toJSON() {
-		return {
+		const json = {
 			id: this.id,
 			type: this.type,
 			label: this.label,
@@ -262,6 +262,19 @@ export class Speaker extends Component {
 				offAxisFiles: this.parameters.offAxisFiles,
 			},
 		};
+
+		// Embed parsed data so it survives save/load
+		if (this.frdData) {
+			json.frdData = this.frdData;
+		}
+		if (this.zmaData) {
+			json.zmaData = this.zmaData;
+		}
+		if (this.offAxisData && this.offAxisData.length > 0) {
+			json.offAxisData = this.offAxisData;
+		}
+
+		return json;
 	}
 
 	/**
@@ -286,6 +299,18 @@ export class Speaker extends Component {
 			offAxisFiles: json.parameters.offAxisFiles || [],
 		};
 		speaker.terminals = json.terminals || speaker.terminals;
+
+		// Restore embedded data if present
+		if (json.frdData) {
+			speaker.frdData = json.frdData;
+		}
+		if (json.zmaData) {
+			speaker.zmaData = json.zmaData;
+		}
+		if (json.offAxisData) {
+			speaker.offAxisData = json.offAxisData;
+		}
+
 		return speaker;
 	}
 }

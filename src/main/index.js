@@ -1,5 +1,5 @@
 const {
-	app, BrowserWindow, ipcMain, Menu, shell,
+	app, BrowserWindow, ipcMain, Menu, shell, screen,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -321,6 +321,60 @@ ipcMain.on('request-simulation-results', () => {
 });
 
 /**
+ * Get current window layout (bounds of all windows)
+ */
+ipcMain.handle('get-window-layout', () => {
+	const layout = {};
+
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		layout.main = mainWindow.getBounds();
+	}
+	if (frequencyResponseWindow && !frequencyResponseWindow.isDestroyed()) {
+		layout.frequencyResponse = frequencyResponseWindow.getBounds();
+	}
+	if (impedanceWindow && !impedanceWindow.isDestroyed()) {
+		layout.impedance = impedanceWindow.getBounds();
+	}
+
+	return layout;
+});
+
+/**
+ * Restore window layout from saved bounds.
+ * Validates that positions are visible on a connected display.
+ */
+ipcMain.on('restore-window-layout', (event, layout) => {
+	const displays = screen.getAllDisplays();
+
+	function isVisibleOnAnyDisplay(bounds) {
+		return displays.some((display) => {
+			const { x, y, width, height } = display.workArea;
+			// Check that at least part of the window is visible
+			return bounds.x < x + width
+				&& bounds.x + bounds.width > x
+				&& bounds.y < y + height
+				&& bounds.y + bounds.height > y;
+		});
+	}
+
+	if (layout.main && mainWindow && !mainWindow.isDestroyed()) {
+		if (isVisibleOnAnyDisplay(layout.main)) {
+			mainWindow.setBounds(layout.main);
+		}
+	}
+	if (layout.frequencyResponse && frequencyResponseWindow && !frequencyResponseWindow.isDestroyed()) {
+		if (isVisibleOnAnyDisplay(layout.frequencyResponse)) {
+			frequencyResponseWindow.setBounds(layout.frequencyResponse);
+		}
+	}
+	if (layout.impedance && impedanceWindow && !impedanceWindow.isDestroyed()) {
+		if (isVisibleOnAnyDisplay(layout.impedance)) {
+			impedanceWindow.setBounds(layout.impedance);
+		}
+	}
+});
+
+/**
  * Handle show-open-dialog request from renderer
  */
 ipcMain.handle('show-open-dialog', async () => {
@@ -547,6 +601,12 @@ app.whenReady().then(() => {
 	logger.info('Application starting');
 
 	createWindow();
+
+	// Open graph windows after the main window's content has loaded
+	mainWindow.webContents.on('did-finish-load', () => {
+		createFrequencyResponseWindow();
+		createImpedanceWindow();
+	});
 
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) {

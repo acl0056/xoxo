@@ -88,7 +88,8 @@ export default {
 
 <style scoped>
 .component-palette {
-	width: 200px;
+	width: 100px;
+	flex-shrink: 0;
 	height: 100%;
 	background-color: #f0f0f0;
 	border-right: 1px solid #ccc;
@@ -99,48 +100,45 @@ export default {
 
 .palette-title {
 	margin: 0;
-	padding: 12px;
+	padding: 8px;
 	background-color: #e0e0e0;
 	border-bottom: 1px solid #ccc;
-	font-size: 14px;
+	font-size: 12px;
 	font-weight: bold;
 	color: #333;
+	text-align: center;
 }
 
 .palette-items {
 	display: flex;
 	flex-direction: column;
-	padding: 8px;
-	gap: 8px;
+	padding: 4px;
+	gap: 4px;
 }
 
 .palette-item {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 8px;
-	padding: 12px;
+	gap: 2px;
+	padding: 4px;
 	background-color: white;
 	border: 1px solid #ccc;
 	border-radius: 4px;
 }
 
 .palette-icon {
-	width: 64px;
-	height: 64px;
+	width: 48px;
+	height: 48px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: #fafafa;
-	border: 1px solid #ddd;
-	border-radius: 3px;
 	cursor: grab;
 	transition: background-color 0.2s, transform 0.1s;
 }
 
 .palette-icon:hover {
 	background-color: #f0f0f0;
-	border-color: #999;
 }
 
 .palette-icon:active {
@@ -149,19 +147,19 @@ export default {
 }
 
 .palette-icon img {
-	max-width: 56px;
-	max-height: 56px;
+	max-width: 40px;
+	max-height: 40px;
 	object-fit: contain;
 }
 
 .icon-placeholder {
-	font-size: 32px;
+	font-size: 24px;
 	font-weight: bold;
 	color: #666;
 }
 
 .palette-label {
-	font-size: 13px;
+	font-size: 11px;
 	color: #333;
 	user-select: none;
 	text-align: center;

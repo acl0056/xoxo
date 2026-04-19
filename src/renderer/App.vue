@@ -119,6 +119,12 @@ export default {
 				if (result.success) {
 					try {
 						const circuitData = JSON.parse(result.data);
+
+						// Restore window layout if present
+						if (circuitData.windowLayout) {
+							ipcRenderer.send('restore-window-layout', circuitData.windowLayout);
+						}
+
 						const loadResult = await this.$store.dispatch('circuit/loadFile', {
 							filePath: lastOpenedFile,
 							circuitData,
@@ -242,6 +248,12 @@ export default {
 			// Parse and load circuit
 			try {
 				const circuitData = JSON.parse(result.data);
+
+				// Restore window layout if present
+				if (circuitData.windowLayout) {
+					ipcRenderer.send('restore-window-layout', circuitData.windowLayout);
+				}
+
 				const loadResult = await this.$store.dispatch('circuit/loadFile', { filePath, circuitData });
 
 				if (!loadResult.success) {
@@ -331,6 +343,12 @@ export default {
 			if (!result.success) {
 				await ipcRenderer.invoke('show-error-dialog', 'Error Saving Circuit', 'Failed to save circuit', result.error);
 				return false;
+			}
+
+			// Get window layout from main process
+			const windowLayout = await ipcRenderer.invoke('get-window-layout');
+			if (windowLayout) {
+				result.data.windowLayout = windowLayout;
 			}
 
 			// Write to file

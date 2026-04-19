@@ -55,6 +55,18 @@ class FrequencyAnalyzer {
 			throw new Error(`Speaker ${speakerComponent.label} has no FRD data loaded`);
 		}
 
+		// Find the voltage source to normalize SPL by source voltage
+		const voltageSource = this.circuit.components.find(
+			(component) => component.type === 'source',
+		);
+		let sourceVoltage;
+		if (voltageSource) {
+			sourceVoltage = voltageSource.getVoltage();
+		} else {
+			console.warn('No voltage source found in circuit — falling back to sourceVoltage = 1.0');
+			sourceVoltage = 1.0;
+		}
+
 		// Get simulation frequencies
 		const { frequencies = [], componentVoltages = {} } = this.solverResults;
 		const spl = [];
@@ -83,11 +95,11 @@ class FrequencyAnalyzer {
 			const voltageMagnitude = voltage.abs();
 			const voltagePhase = voltage.arg() * (180 / Math.PI); // Convert radians to degrees
 
-			// Calculate SPL: speaker's SPL response + voltage contribution
-			// SPL = FRD_magnitude + 20*log10(voltage_magnitude)
+			// Calculate SPL: speaker's SPL response + voltage contribution (normalized by source voltage)
+			// SPL = FRD_magnitude + 20*log10(V_speaker / V_source)
 			let calculatedSPL = frdMagnitude;
 			if (voltageMagnitude > 0) {
-				calculatedSPL += 20 * Math.log10(voltageMagnitude);
+				calculatedSPL += 20 * Math.log10(voltageMagnitude / sourceVoltage);
 			} else {
 				calculatedSPL = -Infinity;
 			}
@@ -139,9 +151,11 @@ class FrequencyAnalyzer {
 	/**
 	 * Calculate combined system response from all speakers
 	 * @param {number} currentAngle - Current off-axis angle (0 for on-axis)
+	 * @param {SimulationProfiler} [profiler] - Optional profiler for timing instrumentation
 	 * @returns {Object} - {frequencies: number[], spl: number[], phase: number[], speakerResponses: Object}
 	 */
-	calculateSystemResponse(currentAngle = 0) {
+	calculateSystemResponse(currentAngle = 0, profiler) {
+		if (profiler) profiler.startStage('calculateSystemResponse');
 		// Get all speaker components
 		const speakers = this.circuit.components.filter(
 			(component) => component.type === 'speaker',
@@ -237,14 +251,17 @@ class FrequencyAnalyzer {
 			console.warn('System frequency response data validation warning:', validation.errors);
 		}
 
+		if (profiler) profiler.endStage('calculateSystemResponse');
 		return result;
 	}
 
 	/**
 	 * Calculate input impedance at all frequencies
+	 * @param {SimulationProfiler} [profiler] - Optional profiler for timing instrumentation
 	 * @returns {Object} - {frequencies: number[], impedances: number[], phases: number[]}
 	 */
-	calculateImpedance() {
+	calculateImpedance(profiler) {
+		if (profiler) profiler.startStage('calculateImpedance');
 		const frequencies = this.solverResults.frequencies || [];
 		const impedances = [];
 		const phases = [];
@@ -266,9 +283,12 @@ class FrequencyAnalyzer {
 			const voltage = voltageSource.getVoltage();
 
 			// Calculate impedance: Z = V / I
+			// The MNA solver defines current flowing into the source's positive terminal,
+			// which is the opposite of current flowing into the network.
+			// Negate the current to get the correct impedance phase.
 			let impedance;
 			if (current.abs() > 1e-12) {
-				impedance = new Complex(voltage, 0).div(current);
+				impedance = new Complex(voltage, 0).div(current.neg());
 			} else {
 				// Open circuit or very high impedance
 				impedance = new Complex(1e12, 0);
@@ -278,6 +298,7 @@ class FrequencyAnalyzer {
 			phases.push(impedance.arg() * (180 / Math.PI));
 		}
 
+		if (profiler) profiler.endStage('calculateImpedance');
 		return {
 			frequencies,
 			impedances,

@@ -47,28 +47,28 @@ describe('Feature: crossover-network-simulator, Property 14: Simulation frequenc
 					const results = solver.solveAllFrequencies(1, 100000, pointsPerDecade);
 
 					// Property: Results should cover the full frequency range
-					expect(results.length).toBeGreaterThan(0);
+					expect(results.frequencies.length).toBeGreaterThan(0);
 					
 					// First frequency should be close to 1 Hz
-					expect(results[0].frequency).toBeGreaterThanOrEqual(1);
-					expect(results[0].frequency).toBeLessThanOrEqual(10);
+					expect(results.frequencies[0]).toBeGreaterThanOrEqual(1);
+					expect(results.frequencies[0]).toBeLessThanOrEqual(10);
 					
 					// Last frequency should be close to 100 kHz
-					const lastFreq = results[results.length - 1].frequency;
+					const lastFreq = results.frequencies[results.frequencies.length - 1];
 					expect(lastFreq).toBeGreaterThanOrEqual(10000);
 					expect(lastFreq).toBeLessThanOrEqual(100000);
 
 					// Frequencies should be monotonically increasing
-					for (let i = 1; i < results.length; i++) {
-						expect(results[i].frequency).toBeGreaterThan(results[i - 1].frequency);
+					for (let i = 1; i < results.frequencies.length; i++) {
+						expect(results.frequencies[i]).toBeGreaterThan(results.frequencies[i - 1]);
 					}
 
 					// Frequencies should be logarithmically spaced
 					// Check that the ratio between consecutive frequencies is roughly constant
-					if (results.length > 2) {
+					if (results.frequencies.length > 2) {
 						const ratios = [];
-						for (let i = 1; i < Math.min(results.length, 10); i++) {
-							const ratio = results[i].frequency / results[i - 1].frequency;
+						for (let i = 1; i < Math.min(results.frequencies.length, 10); i++) {
+							const ratio = results.frequencies[i] / results.frequencies[i - 1];
 							ratios.push(ratio);
 						}
 						
@@ -124,13 +124,18 @@ describe('Feature: crossover-network-simulator, Property 14: Simulation frequenc
 					const solver = new CircuitSolver(circuit);
 					const results = solver.solveAllFrequencies(1, 100000, 10);
 
-					// Property: Every result should have frequency response data
-					for (const result of results) {
-						expect(result.frequency).toBeDefined();
-						expect(result.frequency).toBeGreaterThanOrEqual(1);
-						expect(result.frequency).toBeLessThanOrEqual(100000);
-						expect(result.nodeVoltages).toBeDefined();
-						expect(result.nodeVoltages.size).toBeGreaterThan(0);
+					// Property: Every frequency should have response data
+					expect(results.frequencies.length).toBeGreaterThan(0);
+					for (const freq of results.frequencies) {
+						expect(freq).toBeDefined();
+						expect(freq).toBeGreaterThanOrEqual(1);
+						expect(freq).toBeLessThanOrEqual(100000);
+					}
+					// Should have component voltage data
+					expect(Object.keys(results.componentVoltages).length).toBeGreaterThan(0);
+					// Each component's voltage array should match frequency count
+					for (const voltages of Object.values(results.componentVoltages)) {
+						expect(voltages.length).toBe(results.frequencies.length);
 					}
 				}
 			),
@@ -170,9 +175,9 @@ describe('Feature: crossover-network-simulator, Property 14: Simulation frequenc
 					const results = solver.solveAllFrequencies(startFrequency, endFrequency, 10);
 
 					// Property: Results should respect custom frequency range
-					expect(results.length).toBeGreaterThan(0);
-					expect(results[0].frequency).toBeGreaterThanOrEqual(startFrequency * 0.9);
-					expect(results[results.length - 1].frequency).toBeLessThanOrEqual(endFrequency * 1.1);
+					expect(results.frequencies.length).toBeGreaterThan(0);
+					expect(results.frequencies[0]).toBeGreaterThanOrEqual(startFrequency * 0.9);
+					expect(results.frequencies[results.frequencies.length - 1]).toBeLessThanOrEqual(endFrequency * 1.1);
 				}
 			),
 			{ numRuns: 100 }

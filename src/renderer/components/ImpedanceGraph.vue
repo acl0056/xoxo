@@ -290,14 +290,7 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
 import AngleControl from './AngleControl.vue';
-
-const ajv = new Ajv();
-addFormats(ajv);
-const validateSimulationResults = ajv.compile(simulationResultsSchema);
 
 export default {
 	name: 'ImpedanceGraph',
@@ -371,11 +364,9 @@ export default {
 		// Listen for simulation results broadcast from main window
 		const { ipcRenderer } = require('electron');
 		ipcRenderer.on('simulation-results', (event, results) => {
-			if (!validateSimulationResults(results)) {
-				console.error('Received invalid simulation results:', validateSimulationResults.errors);
-				return;
+			if (results.impedanceResponse) {
+				this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse);
 			}
-			this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse);
 		});
 
 		// Request current results in case simulation already ran
@@ -441,9 +432,10 @@ export default {
 			if (!this.context) return;
 
 			const { width, height } = this.canvas;
+			const hasPhase = this.showPhase && this.impedanceResponse && this.impedanceResponse.phases;
 			const margin = {
 				top: 20,
-				right: 20,
+				right: hasPhase ? 60 : 20,
 				bottom: 40,
 				left: 60,
 			};
@@ -460,6 +452,11 @@ export default {
 			// Draw grid and axes
 			this.drawGrid(margin, graphWidth, graphHeight);
 			this.drawAxes(margin, graphWidth, graphHeight);
+
+			// Draw phase axis if enabled
+			if (hasPhase) {
+				this.drawPhaseAxis(margin, graphWidth, graphHeight);
+			}
 
 			// Draw angle indicator
 			this.drawAngleIndicator(width, margin);
@@ -540,7 +537,53 @@ export default {
 			this.context.fillText('Impedance (Ω)', -50, 0);
 			this.context.restore();
 		},
+		drawPhaseAxis(margin, graphWidth, graphHeight) {
+			const rightX = margin.left + graphWidth;
+
+			// Draw right axis line
+			this.context.strokeStyle = this.curveColors.phase;
+			this.context.lineWidth = 2;
+			this.context.beginPath();
+			this.context.moveTo(rightX, margin.top);
+			this.context.lineTo(rightX, margin.top + graphHeight);
+			this.context.stroke();
+
+			// Phase axis labels (-90° to +90° in 30° steps)
+			this.context.font = '12px sans-serif';
+			this.context.fillStyle = this.curveColors.phase;
+			this.context.textAlign = 'left';
+
+			for (let phase = -90; phase <= 90; phase += 30) {
+				const y = this.phaseToY(phase, margin.top, graphHeight);
+				this.context.fillText(`${phase}°`, rightX + 5, y + 4);
+
+				// Small tick mark
+				this.context.beginPath();
+				this.context.moveTo(rightX, y);
+				this.context.lineTo(rightX + 4, y);
+				this.context.stroke();
+			}
+
+			// Phase axis title
+			this.context.font = '14px sans-serif';
+			this.context.save();
+			this.context.translate(rightX + 50, margin.top + graphHeight / 2);
+			this.context.rotate(-Math.PI / 2);
+			this.context.textAlign = 'center';
+			this.context.fillText('Phase (°)', 0, 0);
+			this.context.restore();
+
+			// Reset text alignment
+			this.context.textAlign = 'left';
+			this.context.fillStyle = '#000000';
+		},
 		drawCurves(curves, margin, graphWidth, graphHeight, isHeld) {
+			// Clip curves to graph area
+			this.context.save();
+			this.context.beginPath();
+			this.context.rect(margin.left, margin.top, graphWidth, graphHeight);
+			this.context.clip();
+
 			curves.forEach((curve) => {
 				if (!curve.visible || curve.frequencies.length === 0) return;
 
@@ -559,11 +602,14 @@ export default {
 
 					// Skip infinite values
 					if (!Number.isFinite(value)) {
+						firstPoint = true;
 						continue;
 					}
 
 					const x = this.frequencyToX(freq, margin.left, graphWidth);
-					const y = this.valueToY(value, margin.top, graphHeight);
+					const y = curve.isPhase
+						? this.phaseToY(value, margin.top, graphHeight)
+						: this.valueToY(value, margin.top, graphHeight);
 
 					if (firstPoint) {
 						this.context.moveTo(x, y);
@@ -575,6 +621,8 @@ export default {
 
 				this.context.stroke();
 			});
+
+			this.context.restore(); // Remove clip region
 		},
 		drawAngleIndicator(width, margin) {
 			// Draw angle indicator in top-right corner
@@ -600,6 +648,12 @@ export default {
 			const minValue = this.scaleSettings.centerValue - range / 2;
 			const maxValue = this.scaleSettings.centerValue + range / 2;
 			const normalized = (maxValue - value) / (maxValue - minValue);
+			return marginTop + normalized * graphHeight;
+		},
+		phaseToY(phase, marginTop, graphHeight) {
+			const minPhase = -90;
+			const maxPhase = 90;
+			const normalized = (maxPhase - phase) / (maxPhase - minPhase);
 			return marginTop + normalized * graphHeight;
 		},
 		xToFrequency(x, marginLeft, graphWidth) {

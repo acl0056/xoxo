@@ -8,6 +8,19 @@ import { Ground } from '@/models/Ground';
 import { Wire } from '@/models/Wire';
 
 /**
+ * Helper: allocate typed array buffers and call solver.solve() with the new signature.
+ * Requires buildNodeMap() to have been called first.
+ */
+function solveWithBuffers(solver, frequency) {
+	const n = solver.matrixSize;
+	const Are = new Float64Array(n * n);
+	const Aim = new Float64Array(n * n);
+	const bre = new Float64Array(n);
+	const bim = new Float64Array(n);
+	return solver.solve(frequency, Are, Aim, bre, bim);
+}
+
+/**
  * Property 12: ESR Simulation Impact
  * 
  * For any circuit containing capacitors or inductors with non-zero ESR,
@@ -58,12 +71,12 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 					solver.buildNodeMap();
 
 					// Solve with ESR
-					const resultWithESR = solver.solve(frequency);
+					const resultWithESR = solveWithBuffers(solver, frequency);
 
 					// Now solve with zero ESR
 					capacitor.parameters.esr = 0;
 					solver.buildNodeMap();
-					const resultWithoutESR = solver.solve(frequency);
+					const resultWithoutESR = solveWithBuffers(solver, frequency);
 
 					// Both should succeed
 					expect(resultWithESR).toBeDefined();
@@ -71,8 +84,8 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 
 					// Get node voltages for comparison
 					const nodeIdWithESR = `${capacitor.id}_0`;
-					const voltageWithESR = resultWithESR.nodeVoltages.get(nodeIdWithESR);
-					const voltageWithoutESR = resultWithoutESR.nodeVoltages.get(nodeIdWithESR);
+					const voltageWithESR = resultWithESR.nodeVoltages[nodeIdWithESR];
+					const voltageWithoutESR = resultWithoutESR.nodeVoltages[nodeIdWithESR];
 
 					// If both voltages exist, they should be different
 					if (voltageWithESR && voltageWithoutESR) {
@@ -130,12 +143,12 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 					solver.buildNodeMap();
 
 					// Solve with ESR
-					const resultWithESR = solver.solve(frequency);
+					const resultWithESR = solveWithBuffers(solver, frequency);
 
 					// Now solve with zero ESR
 					inductor.parameters.esr = 0;
 					solver.buildNodeMap();
-					const resultWithoutESR = solver.solve(frequency);
+					const resultWithoutESR = solveWithBuffers(solver, frequency);
 
 					// Both should succeed
 					expect(resultWithESR).toBeDefined();
@@ -143,8 +156,8 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 
 					// Get node voltages for comparison
 					const nodeIdWithESR = `${inductor.id}_0`;
-					const voltageWithESR = resultWithESR.nodeVoltages.get(nodeIdWithESR);
-					const voltageWithoutESR = resultWithoutESR.nodeVoltages.get(nodeIdWithESR);
+					const voltageWithESR = resultWithESR.nodeVoltages[nodeIdWithESR];
+					const voltageWithoutESR = resultWithoutESR.nodeVoltages[nodeIdWithESR];
 
 					// If both voltages exist, they should be different
 					if (voltageWithESR && voltageWithoutESR) {
@@ -203,17 +216,17 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 					// Solve with zero ESR
 					capacitor.parameters.esr = 0;
 					solver.buildNodeMap();
-					const resultZeroESR = solver.solve(frequency);
+					const resultZeroESR = solveWithBuffers(solver, frequency);
 
 					// Solve with low ESR
 					capacitor.parameters.esr = lowESR;
 					solver.buildNodeMap();
-					const resultLowESR = solver.solve(frequency);
+					const resultLowESR = solveWithBuffers(solver, frequency);
 
 					// Solve with high ESR
 					capacitor.parameters.esr = highESR;
 					solver.buildNodeMap();
-					const resultHighESR = solver.solve(frequency);
+					const resultHighESR = solveWithBuffers(solver, frequency);
 
 					// All should succeed
 					expect(resultZeroESR).toBeDefined();
@@ -222,9 +235,9 @@ describe('Feature: crossover-network-simulator, Property 12: ESR simulation impa
 
 					// Get node voltages
 					const nodeId = `${capacitor.id}_0`;
-					const voltageZero = resultZeroESR.nodeVoltages.get(nodeId);
-					const voltageLow = resultLowESR.nodeVoltages.get(nodeId);
-					const voltageHigh = resultHighESR.nodeVoltages.get(nodeId);
+					const voltageZero = resultZeroESR.nodeVoltages[nodeId];
+					const voltageLow = resultLowESR.nodeVoltages[nodeId];
+					const voltageHigh = resultHighESR.nodeVoltages[nodeId];
 
 					if (voltageZero && voltageLow && voltageHigh) {
 						const magnitudeZero = Math.sqrt(voltageZero.re ** 2 + voltageZero.im ** 2);

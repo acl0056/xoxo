@@ -9,6 +9,19 @@ import { Ground } from '@/models/Ground';
 import { Wire } from '@/models/Wire';
 
 /**
+ * Helper: allocate typed array buffers and call solver.solve() with the new signature.
+ * Requires buildNodeMap() to have been called first.
+ */
+function solveWithBuffers(solver, frequency) {
+	const n = solver.matrixSize;
+	const Are = new Float64Array(n * n);
+	const Aim = new Float64Array(n * n);
+	const bre = new Float64Array(n);
+	const bim = new Float64Array(n);
+	return solver.solve(frequency, Are, Aim, bre, bim);
+}
+
+/**
  * Property 15: Simulation Completeness
  * For any circuit with valid connections, simulation results should include
  * voltage, current, and impedance data for all nodes in the circuit.
@@ -64,26 +77,23 @@ describe('Feature: crossover-network-simulator, Property 15: Simulation complete
 					solver.buildNodeMap();
 
 					// Solve at a test frequency
-					const result = solver.solve(1000);
+					const result = solveWithBuffers(solver, 1000);
 
 					// Property: Result should have voltage data for all non-ground nodes
 					expect(result.nodeVoltages).toBeDefined();
-					expect(result.nodeVoltages.size).toBeGreaterThan(0);
+					const nodeVoltageKeys = Object.keys(result.nodeVoltages);
+					expect(nodeVoltageKeys.length).toBeGreaterThan(0);
 
 					// All node voltages should be complex numbers
-					for (const [nodeId, voltage] of result.nodeVoltages.entries()) {
+					for (const nodeId of nodeVoltageKeys) {
+						const voltage = result.nodeVoltages[nodeId];
 						expect(nodeId).toBeDefined();
 						expect(voltage).toBeDefined();
-						// Complex numbers from mathjs have re and im properties
-						// Handle both mathjs Complex objects and plain numbers
-						if (typeof voltage === 'number') {
-							expect(Number.isFinite(voltage)).toBe(true);
-						} else {
-							expect(voltage.re).toBeDefined();
-							expect(voltage.im).toBeDefined();
-							expect(Number.isFinite(voltage.re)).toBe(true);
-							expect(Number.isFinite(voltage.im)).toBe(true);
-						}
+						// Refactored solver returns plain {re, im} objects
+						expect(voltage.re).toBeDefined();
+						expect(voltage.im).toBeDefined();
+						expect(Number.isFinite(voltage.re)).toBe(true);
+						expect(Number.isFinite(voltage.im)).toBe(true);
 					}
 				}
 			),
@@ -126,23 +136,20 @@ describe('Feature: crossover-network-simulator, Property 15: Simulation complete
 					const solver = new CircuitSolver(circuit);
 					solver.buildNodeMap();
 
-					const result = solver.solve(1000);
+					const result = solveWithBuffers(solver, 1000);
 
 					// Property: Result should have current data for voltage sources
 					expect(result.sourceCurrents).toBeDefined();
-					expect(result.sourceCurrents.size).toBe(1);
+					const sourceCurrentKeys = Object.keys(result.sourceCurrents);
+					expect(sourceCurrentKeys.length).toBe(1);
 
 					// Current should be a complex number
-					const current = result.sourceCurrents.get(source.id);
+					const current = result.sourceCurrents[source.id];
 					expect(current).toBeDefined();
-					if (typeof current === 'number') {
-						expect(Number.isFinite(current)).toBe(true);
-					} else {
-						expect(current.re).toBeDefined();
-						expect(current.im).toBeDefined();
-						expect(Number.isFinite(current.re)).toBe(true);
-						expect(Number.isFinite(current.im)).toBe(true);
-					}
+					expect(current.re).toBeDefined();
+					expect(current.im).toBeDefined();
+					expect(Number.isFinite(current.re)).toBe(true);
+					expect(Number.isFinite(current.im)).toBe(true);
 				}
 			),
 			{ numRuns: 100 }
@@ -189,37 +196,31 @@ describe('Feature: crossover-network-simulator, Property 15: Simulation complete
 					const results = solver.solveAllFrequencies(100, 10000, 5);
 
 					// Property: Every frequency point should have complete data
-					expect(results.length).toBeGreaterThan(0);
+					expect(results.frequencies.length).toBeGreaterThan(0);
 
-					for (const result of results) {
-						expect(result.frequency).toBeDefined();
-						expect(result.nodeVoltages).toBeDefined();
-						expect(result.sourceCurrents).toBeDefined();
-						
-						// Should have voltage data for nodes
-						expect(result.nodeVoltages.size).toBeGreaterThan(0);
-						
-						// Should have current data for voltage source
-						expect(result.sourceCurrents.size).toBe(1);
+					// Should have voltage data for components
+					expect(Object.keys(results.componentVoltages).length).toBeGreaterThan(0);
+					
+					// Should have current data for voltage source
+					expect(Object.keys(results.sourceCurrents).length).toBe(1);
 
-						// All voltages should be valid complex numbers
-						for (const voltage of result.nodeVoltages.values()) {
-							if (typeof voltage === 'number') {
-								expect(Number.isFinite(voltage)).toBe(true);
-							} else {
-								expect(Number.isFinite(voltage.re)).toBe(true);
-								expect(Number.isFinite(voltage.im)).toBe(true);
-							}
+					// All component voltages should be valid complex numbers with correct length
+					for (const componentId of Object.keys(results.componentVoltages)) {
+						const voltages = results.componentVoltages[componentId];
+						expect(voltages.length).toBe(results.frequencies.length);
+						for (const voltage of voltages) {
+							expect(Number.isFinite(voltage.re)).toBe(true);
+							expect(Number.isFinite(voltage.im)).toBe(true);
 						}
+					}
 
-						// All currents should be valid complex numbers
-						for (const current of result.sourceCurrents.values()) {
-							if (typeof current === 'number') {
-								expect(Number.isFinite(current)).toBe(true);
-							} else {
-								expect(Number.isFinite(current.re)).toBe(true);
-								expect(Number.isFinite(current.im)).toBe(true);
-							}
+					// All source currents should be valid complex numbers with correct length
+					for (const sourceId of Object.keys(results.sourceCurrents)) {
+						const currents = results.sourceCurrents[sourceId];
+						expect(currents.length).toBe(results.frequencies.length);
+						for (const current of currents) {
+							expect(Number.isFinite(current.re)).toBe(true);
+							expect(Number.isFinite(current.im)).toBe(true);
 						}
 					}
 				}
@@ -273,22 +274,21 @@ describe('Feature: crossover-network-simulator, Property 15: Simulation complete
 					const solver = new CircuitSolver(circuit);
 					solver.buildNodeMap();
 
-					const result = solver.solve(1000);
+					const result = solveWithBuffers(solver, 1000);
 
 					// Property: Should have complete data for parallel circuit
 					expect(result.nodeVoltages).toBeDefined();
-					expect(result.nodeVoltages.size).toBeGreaterThan(0);
+					const nodeVoltageKeys = Object.keys(result.nodeVoltages);
+					expect(nodeVoltageKeys.length).toBeGreaterThan(0);
 					expect(result.sourceCurrents).toBeDefined();
-					expect(result.sourceCurrents.size).toBe(1);
+					const sourceCurrentKeys = Object.keys(result.sourceCurrents);
+					expect(sourceCurrentKeys.length).toBe(1);
 
 					// All data should be valid
-					for (const voltage of result.nodeVoltages.values()) {
-						if (typeof voltage === 'number') {
-							expect(Number.isFinite(voltage)).toBe(true);
-						} else {
-							expect(Number.isFinite(voltage.re)).toBe(true);
-							expect(Number.isFinite(voltage.im)).toBe(true);
-						}
+					for (const nodeId of nodeVoltageKeys) {
+						const voltage = result.nodeVoltages[nodeId];
+						expect(Number.isFinite(voltage.re)).toBe(true);
+						expect(Number.isFinite(voltage.im)).toBe(true);
 					}
 				}
 			),
@@ -348,32 +348,27 @@ describe('Feature: crossover-network-simulator, Property 15: Simulation complete
 					const solver = new CircuitSolver(circuit);
 					solver.buildNodeMap();
 
-					const result = solver.solve(1000);
+					const result = solveWithBuffers(solver, 1000);
 
 					// Property: Should have complete data for mixed component circuit
 					expect(result.nodeVoltages).toBeDefined();
 					expect(result.sourceCurrents).toBeDefined();
 					
 					// Should have data for all nodes
-					expect(result.nodeVoltages.size).toBeGreaterThan(0);
+					const nodeVoltageKeys = Object.keys(result.nodeVoltages);
+					expect(nodeVoltageKeys.length).toBeGreaterThan(0);
 					
 					// All voltages and currents should be valid
-					for (const voltage of result.nodeVoltages.values()) {
-						if (typeof voltage === 'number') {
-							expect(Number.isFinite(voltage)).toBe(true);
-						} else {
-							expect(Number.isFinite(voltage.re)).toBe(true);
-							expect(Number.isFinite(voltage.im)).toBe(true);
-						}
+					for (const nodeId of nodeVoltageKeys) {
+						const voltage = result.nodeVoltages[nodeId];
+						expect(Number.isFinite(voltage.re)).toBe(true);
+						expect(Number.isFinite(voltage.im)).toBe(true);
 					}
 
-					for (const current of result.sourceCurrents.values()) {
-						if (typeof current === 'number') {
-							expect(Number.isFinite(current)).toBe(true);
-						} else {
-							expect(Number.isFinite(current.re)).toBe(true);
-							expect(Number.isFinite(current.im)).toBe(true);
-						}
+					for (const sourceId of Object.keys(result.sourceCurrents)) {
+						const current = result.sourceCurrents[sourceId];
+						expect(Number.isFinite(current.re)).toBe(true);
+						expect(Number.isFinite(current.im)).toBe(true);
 					}
 				}
 			),

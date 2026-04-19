@@ -241,30 +241,31 @@ class CircuitSolver {
 
 	/**
 	 * Calculate the complex admittance (Y = 1/Z) for a passive component.
+	 * Returns { re, im } as plain numbers instead of Complex objects for performance.
 	 */
 	calculateAdmittance(component, omega) {
 		const { type, parameters } = component;
 
 		// Handle 'short' state as zero resistance
 		if (parameters?.state === 'short') {
-			return new Complex(1e12, 0); // Very high conductance (near short circuit)
+			return { re: 1e12, im: 0 };
 		}
 
 		switch (type) {
 			case 'resistor': {
 				const resistance = parameters.resistance || 1.0;
-				return new Complex(1.0 / resistance, 0);
+				return { re: 1.0 / resistance, im: 0 };
 			}
 
 			case 'capacitor': {
 				const capacitance = parameters.capacitance || 1e-6;
 				const esr = parameters.esr || 0;
 
-				// Z = ESR + 1/(jωC)
-				// Y = 1/Z = 1/(ESR + 1/(jωC))
-				const capacitiveReactance = -1.0 / (omega * capacitance);
-				const impedance = new Complex(esr, capacitiveReactance);
-				return new Complex(1, 0).div(impedance);
+				// Z = ESR + 1/(jωC) = ESR - j/(ωC)
+				// Y = 1/Z = conj(Z) / |Z|²
+				const reactance = -1.0 / (omega * capacitance);
+				const denominator = esr * esr + reactance * reactance;
+				return { re: esr / denominator, im: -reactance / denominator };
 			}
 
 			case 'inductor': {
@@ -272,10 +273,10 @@ class CircuitSolver {
 				const esr = parameters.esr || 0;
 
 				// Z = ESR + jωL
-				// Y = 1/Z
-				const inductiveReactance = omega * inductance;
-				const impedance = new Complex(esr, inductiveReactance);
-				return new Complex(1, 0).div(impedance);
+				// Y = 1/Z = conj(Z) / |Z|²
+				const reactance = omega * inductance;
+				const denominator = esr * esr + reactance * reactance;
+				return { re: esr / denominator, im: -reactance / denominator };
 			}
 
 			case 'speaker': {
@@ -284,23 +285,109 @@ class CircuitSolver {
 					const frequency = omega / (2 * Math.PI);
 					const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency);
 					const phaseRad = phaseDeg * Math.PI / 180;
-					const impedance = new Complex(
-						magnitude * Math.cos(phaseRad),
-						magnitude * Math.sin(phaseRad),
-					);
-					return new Complex(1, 0).div(impedance);
+					const zRe = magnitude * Math.cos(phaseRad);
+					const zIm = magnitude * Math.sin(phaseRad);
+					const denominator = zRe * zRe + zIm * zIm;
+					return { re: zRe / denominator, im: -zIm / denominator };
 				}
 				// Fallback: 8 ohms nominal when no ZMA data
-				return new Complex(0.125, 0);
+				return { re: 0.125, im: 0 };
 			}
 
 			case 'wire-segment': {
-				// Wire segment modeled as 1 milliohm resistance (~3 inches of 18 AWG copper)
-				return new Complex(1000, 0); // Y = 1/0.001 = 1000 siemens
+				return { re: 1000, im: 0 };
 			}
 
 			default:
-				return new Complex(0, 0); // Unknown component type
+				return { re: 0, im: 0 };
+		}
+	}
+
+	/**
+	 * Calculate admittance and stamp directly into the MNA matrix in one step.
+	 * Avoids creating intermediate objects for performance.
+	 *
+	 * @param {Float64Array} Are - Real part of matrix buffer
+	 * @param {Float64Array} Aim - Imaginary part of matrix buffer
+	 * @param {Object} component - Circuit component
+	 * @param {number} omega - Angular frequency (2πf)
+	 * @param {number|null} n1 - Node 1 index (null if ground)
+	 * @param {number|null} n2 - Node 2 index (null if ground)
+	 * @param {number} n - Matrix dimension
+	 */
+	stampComponentAdmittance(Are, Aim, component, omega, n1, n2, n) {
+		const { type, parameters } = component;
+		let admittanceRe;
+		let admittanceIm;
+
+		if (parameters?.state === 'short') {
+			admittanceRe = 1e12;
+			admittanceIm = 0;
+		} else {
+			switch (type) {
+				case 'resistor': {
+					admittanceRe = 1.0 / (parameters.resistance || 1.0);
+					admittanceIm = 0;
+					break;
+				}
+				case 'capacitor': {
+					const capacitance = parameters.capacitance || 1e-6;
+					const esr = parameters.esr || 0;
+					const reactance = -1.0 / (omega * capacitance);
+					const denominator = esr * esr + reactance * reactance;
+					admittanceRe = esr / denominator;
+					admittanceIm = -reactance / denominator;
+					break;
+				}
+				case 'inductor': {
+					const inductance = parameters.inductance || 1e-3;
+					const esr = parameters.esr || 0;
+					const reactance = omega * inductance;
+					const denominator = esr * esr + reactance * reactance;
+					admittanceRe = esr / denominator;
+					admittanceIm = -reactance / denominator;
+					break;
+				}
+				case 'speaker': {
+					if (component.zmaData && component.zmaData.frequencies && component.zmaData.frequencies.length > 0) {
+						const frequency = omega / (2 * Math.PI);
+						const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency);
+						const phaseRad = phaseDeg * Math.PI / 180;
+						const zRe = magnitude * Math.cos(phaseRad);
+						const zIm = magnitude * Math.sin(phaseRad);
+						const denominator = zRe * zRe + zIm * zIm;
+						admittanceRe = zRe / denominator;
+						admittanceIm = -zIm / denominator;
+					} else {
+						admittanceRe = 0.125;
+						admittanceIm = 0;
+					}
+					break;
+				}
+				case 'wire-segment': {
+					admittanceRe = 1000;
+					admittanceIm = 0;
+					break;
+				}
+				default:
+					return; // Zero admittance — nothing to stamp
+			}
+		}
+
+		// Stamp directly into matrix
+		if (n1 !== null) {
+			Are[n1 * n + n1] += admittanceRe;
+			Aim[n1 * n + n1] += admittanceIm;
+		}
+		if (n2 !== null) {
+			Are[n2 * n + n2] += admittanceRe;
+			Aim[n2 * n + n2] += admittanceIm;
+		}
+		if (n1 !== null && n2 !== null) {
+			Are[n1 * n + n2] -= admittanceRe;
+			Aim[n1 * n + n2] -= admittanceIm;
+			Are[n2 * n + n1] -= admittanceRe;
+			Aim[n2 * n + n1] -= admittanceIm;
 		}
 	}
 
@@ -464,11 +551,9 @@ class CircuitSolver {
 	 */
 	solveAllFrequencies(startFrequency = 1, endFrequency = 100000, pointsPerDecade = 10, profiler) {
 		// Build node map first
-		let t0 = performance.now();
 		if (profiler) profiler.startStage('buildNodeMap');
 		this.buildNodeMap();
 		if (profiler) profiler.endStage('buildNodeMap');
-		console.log(`[SOLVER-PERF] buildNodeMap: ${(performance.now() - t0).toFixed(1)}ms, matrixSize: ${this.matrixSize}`);
 
 		const n = this.matrixSize;
 
@@ -480,7 +565,6 @@ class CircuitSolver {
 
 		// Generate frequency points
 		this.frequencyPoints = this.generateFrequencyPoints(startFrequency, endFrequency, pointsPerDecade);
-		console.log(`[SOLVER-PERF] frequency points: ${this.frequencyPoints.length}`);
 
 		// Pre-compute component terminal info ONCE (topology doesn't change with frequency)
 		const componentTerminalCache = [];
@@ -513,42 +597,27 @@ class CircuitSolver {
 				const omega = 2 * Math.PI * frequency;
 
 				// Zero the buffers
-				t0 = performance.now();
 				Are.fill(0);
 				Aim.fill(0);
 				bre.fill(0);
 				bim.fill(0);
-				totalZeroBuffers += performance.now() - t0;
 
 				// Stamp components using cached terminal info
 				for (const { component, n1, n2 } of componentTerminalCache) {
 					if (component.type === 'source') {
-						t0 = performance.now();
 						this.addVoltageSource(Are, Aim, bre, bim, component, n1, n2, n);
-						totalStamping += performance.now() - t0;
 					} else {
-						t0 = performance.now();
-						const admittance = this.calculateAdmittance(component, omega);
-						totalCalcAdmittance += performance.now() - t0;
-
-						t0 = performance.now();
-						this.addPassiveComponent(Are, Aim, admittance.re, admittance.im, n1, n2, n);
-						totalStamping += performance.now() - t0;
+						this.stampComponentAdmittance(Are, Aim, component, omega, n1, n2, n);
 					}
 				}
 
-				t0 = performance.now();
 				const solveAre = new Float64Array(Are);
 				const solveAim = new Float64Array(Aim);
 				const solveBre = new Float64Array(bre);
 				const solveBim = new Float64Array(bim);
-				totalClone += performance.now() - t0;
 
-				t0 = performance.now();
 				const { xre, xim } = complexLUSolve(n, solveAre, solveAim, solveBre, solveBim);
-				totalLUSolve += performance.now() - t0;
 
-				t0 = performance.now();
 				const nodeVoltages = {};
 				for (const [nodeId, index] of this.nodeMap.entries()) {
 					nodeVoltages[nodeId] = { re: xre[index], im: xim[index] };
@@ -557,21 +626,12 @@ class CircuitSolver {
 				for (const [sourceId, index] of this.voltageSourceMap.entries()) {
 					sourceCurrents[sourceId] = { re: xre[index], im: xim[index] };
 				}
-				totalExtract += performance.now() - t0;
 
 				perFrequencyResults.push({ frequency, nodeVoltages, sourceCurrents });
 			} catch (error) {
 				console.error(`Error solving at ${frequency} Hz:`, error.message);
 			}
 		}
-
-		console.log(`[SOLVER-PERF] --- per-frequency breakdown ---`);
-		console.log(`[SOLVER-PERF]   zero buffers: ${totalZeroBuffers.toFixed(1)}ms`);
-		console.log(`[SOLVER-PERF]   calculateAdmittance: ${totalCalcAdmittance.toFixed(1)}ms`);
-		console.log(`[SOLVER-PERF]   stamping (addPassive+addVoltage): ${totalStamping.toFixed(1)}ms`);
-		console.log(`[SOLVER-PERF]   buffer clone: ${totalClone.toFixed(1)}ms`);
-		console.log(`[SOLVER-PERF]   complexLUSolve: ${totalLUSolve.toFixed(1)}ms`);
-		console.log(`[SOLVER-PERF]   extract results: ${totalExtract.toFixed(1)}ms`);
 
 		// Transpose results into format expected by FrequencyAnalyzer:
 		// { frequencies: [], componentVoltages: { componentId: [Complex, ...] }, sourceCurrents: { sourceId: [Complex, ...] } }

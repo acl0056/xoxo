@@ -90,10 +90,12 @@ class FrequencyAnalyzer {
 				frequency,
 			);
 
-			// Get voltage magnitude and phase from solver
-			const voltage = speakerVoltages[i] || new Complex(0, 0);
-			const voltageMagnitude = voltage.abs();
-			const voltagePhase = voltage.arg() * (180 / Math.PI); // Convert radians to degrees
+			// Get voltage magnitude and phase from solver (inline scalar math)
+			const voltage = speakerVoltages[i] || { re: 0, im: 0 };
+			const voltageRe = voltage.re;
+			const voltageIm = voltage.im;
+			const voltageMagnitude = Math.sqrt(voltageRe * voltageRe + voltageIm * voltageIm);
+			const voltagePhase = Math.atan2(voltageIm, voltageRe) * (180 / Math.PI);
 
 			// Calculate SPL: speaker's SPL response + voltage contribution (normalized by source voltage)
 			// SPL = FRD_magnitude + 20*log10(V_speaker / V_source)
@@ -194,17 +196,17 @@ class FrequencyAnalyzer {
 		// Get frequencies from first response (all should have same frequencies)
 		const { frequencies } = individualResponses[0];
 
-		// Combine responses using complex addition
+		// Combine responses using complex addition (scalar math, no Complex objects)
 		const combinedSPL = [];
 		const combinedPhase = [];
 
 		for (let i = 0; i < frequencies.length; i++) {
-			// Convert each speaker's SPL and phase to complex pressure
-			let totalPressure = new Complex(0, 0);
+			let totalRe = 0;
+			let totalIm = 0;
 
 			for (const response of individualResponses) {
 				const spl = response.spl[i];
-				const phase = response.phase[i];
+				const phaseDeg = response.phase[i];
 
 				// Skip if SPL is -Infinity (muted or no signal)
 				if (!Number.isFinite(spl)) {
@@ -212,20 +214,17 @@ class FrequencyAnalyzer {
 				}
 
 				// Convert SPL to pressure magnitude (arbitrary reference)
-				// Pressure = 10^(SPL/20)
 				const pressureMagnitude = 10 ** (spl / 20);
 
-				// Convert to complex number with phase
-				const phaseRadians = (phase * Math.PI) / 180;
-				const pressure = new Complex({ abs: pressureMagnitude, arg: phaseRadians });
-
-				// Add to total
-				totalPressure = totalPressure.add(pressure);
+				// Convert to real/imaginary components
+				const phaseRadians = (phaseDeg * Math.PI) / 180;
+				totalRe += pressureMagnitude * Math.cos(phaseRadians);
+				totalIm += pressureMagnitude * Math.sin(phaseRadians);
 			}
 
 			// Convert back to SPL and phase
-			const totalMagnitude = totalPressure.abs();
-			const totalPhase = totalPressure.arg() * (180 / Math.PI);
+			const totalMagnitude = Math.sqrt(totalRe * totalRe + totalIm * totalIm);
+			const totalPhase = Math.atan2(totalIm, totalRe) * (180 / Math.PI);
 
 			let totalSPL;
 			if (totalMagnitude > 0) {
@@ -282,20 +281,28 @@ class FrequencyAnalyzer {
 			const current = sourceCurrent[i] || new Complex(0, 0);
 			const voltage = voltageSource.getVoltage();
 
-			// Calculate impedance: Z = V / I
-			// The MNA solver defines current flowing into the source's positive terminal,
-			// which is the opposite of current flowing into the network.
-			// Negate the current to get the correct impedance phase.
-			let impedance;
-			if (current.abs() > 1e-12) {
-				impedance = new Complex(voltage, 0).div(current.neg());
+			// Calculate impedance: Z = V / (-I) using scalar math
+			// Negate current: the MNA solver defines current flowing into the source's
+			// positive terminal, opposite of current flowing into the network.
+			const negCurrentRe = -current.re;
+			const negCurrentIm = -current.im;
+			const currentMagnitudeSquared = negCurrentRe * negCurrentRe + negCurrentIm * negCurrentIm;
+
+			let impedanceMagnitude;
+			let impedancePhase;
+			if (currentMagnitudeSquared > 1e-24) {
+				// Z = V / (-I) where V is real: Z_re = V * (-I_re) / |I|², Z_im = V * (-(-I_im)) / |I|²
+				const zRe = (voltage * negCurrentRe) / currentMagnitudeSquared;
+				const zIm = -(voltage * negCurrentIm) / currentMagnitudeSquared;
+				impedanceMagnitude = Math.sqrt(zRe * zRe + zIm * zIm);
+				impedancePhase = Math.atan2(zIm, zRe) * (180 / Math.PI);
 			} else {
-				// Open circuit or very high impedance
-				impedance = new Complex(1e12, 0);
+				impedanceMagnitude = 1e12;
+				impedancePhase = 0;
 			}
 
-			impedances.push(impedance.abs());
-			phases.push(impedance.arg() * (180 / Math.PI));
+			impedances.push(impedanceMagnitude);
+			phases.push(impedancePhase);
 		}
 
 		if (profiler) profiler.endStage('calculateImpedance');
@@ -427,8 +434,8 @@ class FrequencyAnalyzer {
 	}
 
 	/**
-	 * Linear interpolation helper
-	 * @param {number[]} xArray - X values (must be sorted)
+	 * Linear interpolation helper using binary search.
+	 * @param {number[]} xArray - X values (must be sorted ascending)
 	 * @param {number[]} yArray - Y values
 	 * @param {number} x - X value to interpolate at
 	 * @returns {number} - Interpolated Y value
@@ -438,24 +445,28 @@ class FrequencyAnalyzer {
 		if (x <= xArray[0]) {
 			return yArray[0];
 		}
-		if (x >= xArray[xArray.length - 1]) {
-			return yArray[yArray.length - 1];
+		const lastIndex = xArray.length - 1;
+		if (x >= xArray[lastIndex]) {
+			return yArray[lastIndex];
 		}
 
-		// Find surrounding points
-		let i = 0;
-		while (i < xArray.length - 1 && xArray[i + 1] < x) {
-			i++;
+		// Binary search for the bracket
+		let low = 0;
+		let high = lastIndex;
+		while (high - low > 1) {
+			const mid = (low + high) >> 1;
+			if (xArray[mid] <= x) {
+				low = mid;
+			} else {
+				high = mid;
+			}
 		}
 
 		// Linear interpolation
-		const x0 = xArray[i];
-		const x1 = xArray[i + 1];
-		const y0 = yArray[i];
-		const y1 = yArray[i + 1];
-
+		const x0 = xArray[low];
+		const x1 = xArray[high];
 		const t = (x - x0) / (x1 - x0);
-		return y0 + t * (y1 - y0);
+		return yArray[low] + t * (yArray[high] - yArray[low]);
 	}
 }
 

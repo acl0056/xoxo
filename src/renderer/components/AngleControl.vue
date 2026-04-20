@@ -116,7 +116,7 @@ export default {
 .angle-control {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
 }
 
 .angle-control label {
@@ -125,7 +125,7 @@ export default {
 }
 
 .angle-control select {
-	padding: 6px 10px;
+	padding: 2px 4px;
 	border: 1px solid #cccccc;
 	border-radius: 4px;
 	font-size: 14px;
@@ -136,20 +136,18 @@ export default {
 .angle-control select:focus {
 	outline: none;
 	border-color: #0066cc;
-	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
 }
 
 .custom-angle-input {
-	padding: 6px 10px;
+	padding: 2px 4px;
 	border: 1px solid #cccccc;
 	border-radius: 4px;
 	font-size: 14px;
-	width: 100px;
+	width: 80px;
 }
 
 .custom-angle-input:focus {
 	outline: none;
 	border-color: #0066cc;
-	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
 }
 </style>

@@ -1,6 +1,9 @@
 <template>
 	<div class="frequency-response-graph">
-		<div class="graph-menu">
+		<div
+			ref="graphMenu"
+			class="graph-menu"
+		>
 			<button @click="toggleCurvesMenu">
 				Curves
 			</button>
@@ -23,7 +26,15 @@
 			@click.self="closeScaleMenu"
 		>
 			<div class="modal-content scale-menu">
-				<h3>Scale Settings</h3>
+				<div class="modal-header">
+					<h3>Scale Settings</h3>
+					<button
+						class="close-button"
+						@click="closeScaleMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="scale-controls">
 					<div class="control-group">
 						<label>Min Frequency (Hz):</label>
@@ -70,9 +81,6 @@
 					<button @click="resetScaleSettings">
 						Reset to Default
 					</button>
-					<button @click="closeScaleMenu">
-						Close
-					</button>
 				</div>
 			</div>
 		</div>
@@ -84,7 +92,15 @@
 			@click.self="closeFileMenu"
 		>
 			<div class="modal-content file-menu">
-				<h3>File</h3>
+				<div class="modal-header">
+					<h3>File</h3>
+					<button
+						class="close-button"
+						@click="closeFileMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="file-menu-options">
 					<button
 						class="menu-option"
@@ -105,11 +121,6 @@
 						Copy Snapshot to Clipboard
 					</button>
 				</div>
-				<div class="modal-actions">
-					<button @click="closeFileMenu">
-						Close
-					</button>
-				</div>
 			</div>
 		</div>
 
@@ -120,7 +131,15 @@
 			@click.self="closeCurvesMenu"
 		>
 			<div class="modal-content curves-menu">
-				<h3>Curves</h3>
+				<div class="modal-header">
+					<h3>Curves</h3>
+					<button
+						class="close-button"
+						@click="closeCurvesMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="curves-list">
 					<div
 						v-for="curve in curves"
@@ -271,9 +290,6 @@
 					<button @click="loadExternalFile">
 						Get File...
 					</button>
-					<button @click="closeCurvesMenu">
-						Close
-					</button>
 				</div>
 			</div>
 		</div>
@@ -379,8 +395,9 @@ export default {
 	methods: {
 		resizeCanvas() {
 			const container = this.canvas.parentElement;
+			const menuHeight = this.$refs.graphMenu ? this.$refs.graphMenu.offsetHeight : 0;
 			this.canvas.width = container.clientWidth;
-			this.canvas.height = container.clientHeight - 40; // Account for menu bar
+			this.canvas.height = container.clientHeight - menuHeight;
 			this.renderGraph();
 		},
 		updateCurves() {
@@ -439,7 +456,7 @@ export default {
 			const { width, height } = this.canvas;
 			const hasPhase = this.curves.some((c) => c.visible && c.showPhase && c.phases && c.phases.length > 0);
 			const margin = {
-				top: 20,
+				top: 7,
 				right: hasPhase ? 60 : 20,
 				bottom: 55,
 				left: 60,
@@ -768,7 +785,7 @@ export default {
 			const y = event.clientY - rect.top;
 
 			const margin = {
-				top: 20,
+				top: 7,
 				right: 20,
 				bottom: 55,
 				left: 60,
@@ -1073,14 +1090,14 @@ export default {
 
 .graph-menu {
 	display: flex;
-	gap: 8px;
-	padding: 8px;
+	gap: 4px;
+	align-items: center;
 	background-color: #ffffff;
 	border-bottom: 1px solid #cccccc;
 }
 
 .graph-menu button {
-	padding: 6px 12px;
+	padding: 2px 8px;
 	background-color: #ffffff;
 	border: 1px solid #cccccc;
 	border-radius: 4px;
@@ -1133,11 +1150,34 @@ canvas {
 	max-height: 80vh;
 	overflow-y: auto;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	position: relative;
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.close-button {
+	background: none;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	color: #666666;
+	padding: 0 4px;
+}
+
+.close-button:hover {
+	color: #000000;
+	background-color: #f0f0f0;
 }
 
 .modal-content h3 {
-	margin-top: 0;
-	margin-bottom: 16px;
+	margin: 0;
 	font-size: 18px;
 	font-weight: 600;
 }

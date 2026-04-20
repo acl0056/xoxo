@@ -5,7 +5,15 @@
 		@click.self="close"
 	>
 		<div class="annotation-dialog">
-			<h3>Edit Annotation</h3>
+			<div class="dialog-header">
+				<h3>Edit Annotation</h3>
+				<button
+					class="close-x-button"
+					@click="close"
+				>
+					×
+				</button>
+			</div>
 
 			<div class="form-group">
 				<label for="annotation-text">Text:</label>
@@ -36,12 +44,6 @@
 					@click="save"
 				>
 					Save
-				</button>
-				<button
-					class="secondary-button"
-					@click="close"
-				>
-					Cancel
 				</button>
 			</div>
 		</div>
@@ -134,10 +136,33 @@ export default {
 }
 
 .annotation-dialog h3 {
-	margin: 0 0 20px 0;
+	margin: 0;
 	font-size: 18px;
 	font-weight: 600;
 	color: #333;
+}
+
+.dialog-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.close-x-button {
+	background: none;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	color: #666666;
+	padding: 0 4px;
+}
+
+.close-x-button:hover {
+	color: #000000;
+	background-color: #f0f0f0;
 }
 
 .form-group {
@@ -191,8 +216,7 @@ export default {
 	margin-top: 24px;
 }
 
-.primary-button,
-.secondary-button {
+.primary-button {
 	padding: 8px 20px;
 	border: none;
 	border-radius: 4px;
@@ -200,23 +224,11 @@ export default {
 	font-weight: 500;
 	cursor: pointer;
 	transition: background-color 0.2s;
-}
-
-.primary-button {
 	background-color: #0066cc;
 	color: white;
 }
 
 .primary-button:hover {
 	background-color: #0052a3;
-}
-
-.secondary-button {
-	background-color: #e0e0e0;
-	color: #333;
-}
-
-.secondary-button:hover {
-	background-color: #d0d0d0;
 }
 </style>

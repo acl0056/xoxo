@@ -5,7 +5,15 @@
 		@click.self="close"
 	>
 		<div class="about-dialog">
-			<h2>Crossover Network Simulator</h2>
+			<div class="dialog-header">
+				<h2>Crossover Network Simulator</h2>
+				<button
+					class="close-x-button"
+					@click="close"
+				>
+					×
+				</button>
+			</div>
 			<div class="about-content">
 				<p class="version">
 					Version {{ version }}
@@ -38,12 +46,6 @@
 					</button>
 				</div>
 			</div>
-			<button
-				class="close-button"
-				@click="close"
-			>
-				Close
-			</button>
 		</div>
 	</div>
 </template>
@@ -137,10 +139,32 @@ export default {
 }
 
 .about-dialog h2 {
-	margin: 0 0 16px 0;
+	margin: 0;
 	font-size: 24px;
 	color: #333;
-	text-align: center;
+}
+
+.dialog-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.close-x-button {
+	background: none;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	color: #666666;
+	padding: 0 4px;
+}
+
+.close-x-button:hover {
+	color: #000000;
+	background-color: #f0f0f0;
 }
 
 .about-content {
@@ -212,21 +236,5 @@ export default {
 
 .links button:hover {
 	background-color: #0056b3;
-}
-
-.close-button {
-	width: 100%;
-	padding: 10px;
-	background-color: #6c757d;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 16px;
-	margin-top: 16px;
-}
-
-.close-button:hover {
-	background-color: #5a6268;
 }
 </style>

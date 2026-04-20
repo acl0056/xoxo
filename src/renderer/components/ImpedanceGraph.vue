@@ -1,6 +1,9 @@
 <template>
 	<div class="impedance-graph">
-		<div class="graph-menu">
+		<div
+			ref="graphMenu"
+			class="graph-menu"
+		>
 			<button @click="toggleCurvesMenu">
 				Curves
 			</button>
@@ -13,7 +16,6 @@
 			<button @click="toggleHold">
 				{{ holdActive ? 'Release' : 'Hold' }}
 			</button>
-			<AngleControl />
 		</div>
 
 		<!-- Scale Menu Modal -->
@@ -23,7 +25,15 @@
 			@click.self="closeScaleMenu"
 		>
 			<div class="modal-content scale-menu">
-				<h3>Scale Settings</h3>
+				<div class="modal-header">
+					<h3>Scale Settings</h3>
+					<button
+						class="close-button"
+						@click="closeScaleMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="scale-controls">
 					<div class="control-group">
 						<label>Min Frequency (Hz):</label>
@@ -70,9 +80,6 @@
 					<button @click="resetScaleSettings">
 						Reset to Default
 					</button>
-					<button @click="closeScaleMenu">
-						Close
-					</button>
 				</div>
 			</div>
 		</div>
@@ -84,7 +91,15 @@
 			@click.self="closeFileMenu"
 		>
 			<div class="modal-content file-menu">
-				<h3>File</h3>
+				<div class="modal-header">
+					<h3>File</h3>
+					<button
+						class="close-button"
+						@click="closeFileMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="file-menu-options">
 					<button
 						class="menu-option"
@@ -105,11 +120,6 @@
 						Copy Snapshot to Clipboard
 					</button>
 				</div>
-				<div class="modal-actions">
-					<button @click="closeFileMenu">
-						Close
-					</button>
-				</div>
 			</div>
 		</div>
 
@@ -120,7 +130,15 @@
 			@click.self="closeCurvesMenu"
 		>
 			<div class="modal-content curves-menu">
-				<h3>Curves</h3>
+				<div class="modal-header">
+					<h3>Curves</h3>
+					<button
+						class="close-button"
+						@click="closeCurvesMenu"
+					>
+						×
+					</button>
+				</div>
 				<div class="curves-list">
 					<div class="curve-item">
 						<div class="curve-header">
@@ -261,9 +279,6 @@
 					<button @click="loadExternalFile">
 						Get File...
 					</button>
-					<button @click="closeCurvesMenu">
-						Close
-					</button>
 				</div>
 			</div>
 		</div>
@@ -290,13 +305,9 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
-import AngleControl from './AngleControl.vue';
 
 export default {
 	name: 'ImpedanceGraph',
-	components: {
-		AngleControl,
-	},
 	setup() {
 		const toast = useToast();
 		return { toast };
@@ -337,7 +348,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState('simulation', ['impedanceResponse', 'currentAngle']),
+		...mapState('simulation', ['impedanceResponse']),
 		tooltipStyle() {
 			return {
 				left: `${this.tooltip.x + 10}px`,
@@ -380,8 +391,9 @@ export default {
 	methods: {
 		resizeCanvas() {
 			const container = this.canvas.parentElement;
+			const menuHeight = this.$refs.graphMenu ? this.$refs.graphMenu.offsetHeight : 0;
 			this.canvas.width = container.clientWidth;
-			this.canvas.height = container.clientHeight - 40; // Account for menu bar
+			this.canvas.height = container.clientHeight - menuHeight;
 			this.renderGraph();
 		},
 		updateCurves() {
@@ -434,7 +446,7 @@ export default {
 			const { width, height } = this.canvas;
 			const hasPhase = this.showPhase && this.impedanceResponse && this.impedanceResponse.phases;
 			const margin = {
-				top: 20,
+				top: 7,
 				right: hasPhase ? 60 : 20,
 				bottom: 40,
 				left: 60,
@@ -457,9 +469,6 @@ export default {
 			if (hasPhase) {
 				this.drawPhaseAxis(margin, graphWidth, graphHeight);
 			}
-
-			// Draw angle indicator
-			this.drawAngleIndicator(width, margin);
 
 			// Draw held curves if active
 			if (this.holdActive && this.heldCurves) {
@@ -624,18 +633,6 @@ export default {
 
 			this.context.restore(); // Remove clip region
 		},
-		drawAngleIndicator(width, margin) {
-			// Draw angle indicator in top-right corner
-			const angleText = this.currentAngle === 0
-				? 'Angle: 0° (On-Axis)'
-				: `Angle: ${this.currentAngle}°`;
-
-			this.context.font = '14px sans-serif';
-			this.context.fillStyle = '#333333';
-			this.context.textAlign = 'right';
-			this.context.fillText(angleText, width - margin.right - 10, margin.top + 15);
-			this.context.textAlign = 'left'; // Reset text alignment
-		},
 		frequencyToX(freq, marginLeft, graphWidth) {
 			const logMin = Math.log10(this.scaleSettings.minFreq);
 			const logMax = Math.log10(this.scaleSettings.maxFreq);
@@ -706,7 +703,7 @@ export default {
 			const y = event.clientY - rect.top;
 
 			const margin = {
-				top: 20,
+				top: 7,
 				right: 20,
 				bottom: 40,
 				left: 60,
@@ -1069,14 +1066,14 @@ export default {
 
 .graph-menu {
 	display: flex;
-	gap: 8px;
-	padding: 8px;
+	gap: 4px;
+	align-items: center;
 	background-color: #ffffff;
 	border-bottom: 1px solid #cccccc;
 }
 
 .graph-menu button {
-	padding: 6px 12px;
+	padding: 2px 8px;
 	background-color: #ffffff;
 	border: 1px solid #cccccc;
 	border-radius: 4px;
@@ -1129,11 +1126,34 @@ canvas {
 	max-height: 80vh;
 	overflow-y: auto;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	position: relative;
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.close-button {
+	background: none;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	color: #666666;
+	padding: 0 4px;
+}
+
+.close-button:hover {
+	color: #000000;
+	background-color: #f0f0f0;
 }
 
 .modal-content h3 {
-	margin-top: 0;
-	margin-bottom: 16px;
+	margin: 0;
 	font-size: 18px;
 	font-weight: 600;
 }

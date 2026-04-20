@@ -60,9 +60,6 @@
 
 <script>
 import { mapState, mapMutations, mapActions } from 'vuex';
-import ContextMenu from './ContextMenu.vue';
-import TuneDialog from './TuneDialog.vue';
-import AnnotationDialog from './AnnotationDialog.vue';
 import { Wire } from '@/models/Wire';
 import { Resistor } from '@/models/Resistor';
 import { Capacitor } from '@/models/Capacitor';
@@ -70,6 +67,10 @@ import { Inductor } from '@/models/Inductor';
 import { Speaker } from '@/models/Speaker';
 import { Ground } from '@/models/Ground';
 import { TextAnnotation } from '@/models/TextAnnotation';
+import { formatEngineering } from '@/utils/engineeringNotation';
+import ContextMenu from './ContextMenu.vue';
+import TuneDialog from './TuneDialog.vue';
+import AnnotationDialog from './AnnotationDialog.vue';
 
 export default {
 	name: 'CircuitEditor',
@@ -397,13 +398,20 @@ export default {
 				this.context.stroke();
 			}
 
-			// Draw label
+			// Draw label and value
 			if (component.label) {
 				this.context.fillStyle = '#000000';
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -gridSize);
+				this.context.fillText(component.label, 0, -1.8 * gridSize);
+			}
+			if (component.parameters.resistance != null) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '11px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText(formatEngineering(component.parameters.resistance), 0, -1.8 * gridSize);
 			}
 		},
 
@@ -489,13 +497,20 @@ export default {
 				this.context.stroke();
 			}
 
-			// Draw label
+			// Draw label and value
 			if (component.label) {
 				this.context.fillStyle = '#000000';
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -1.5 * gridSize);
+				this.context.fillText(component.label, 0, -2.3 * gridSize);
+			}
+			if (component.parameters.capacitance != null) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '11px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText(`${formatEngineering(component.parameters.capacitance)}F`, 0, -2.3 * gridSize);
 			}
 		},
 
@@ -601,13 +616,20 @@ export default {
 				this.context.stroke();
 			}
 
-			// Draw label
+			// Draw label and value
 			if (component.label) {
 				this.context.fillStyle = '#000000';
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -gridSize);
+				this.context.fillText(component.label, 0, -2.3 * gridSize);
+			}
+			if (component.parameters.inductance != null) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '11px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'top';
+				this.context.fillText(`${formatEngineering(component.parameters.inductance)}H`, 0, -2.3 * gridSize);
 			}
 		},
 
@@ -754,7 +776,6 @@ export default {
 			const bottomLabel = component.parameters.inverted ? '+' : '-';
 
 			// Draw terminal connection dots (black, larger than grid dots)
-			// Positioned 3 grid units to the right
 			this.context.fillStyle = '#000000';
 			const terminalRadius = 3;
 
@@ -768,17 +789,15 @@ export default {
 			this.context.arc(3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Rectangle
-			const rectWidth = 5 * gridSize;
-			const rectHeight = 6 * gridSize;
-			const rectX = -rectWidth - gridSize * 3;
-			const rectY = -rectHeight;
-			const rectActualWidth = rectWidth * 2;
-			const rectActualHeight = rectHeight * 2;
-			this.context.strokeRect(rectX, rectY, rectActualWidth, rectActualHeight);
+			// Rectangle: 5 wide x 6 tall grid spaces, right edge 1 grid from terminals
+			const rectX = -3 * gridSize;
+			const rectY = -3 * gridSize;
+			const rectW = 5 * gridSize;
+			const rectH = 6 * gridSize;
+			this.context.strokeRect(rectX, rectY, rectW, rectH);
 
 			// Draw connection lines from rectangle right edge to terminals
-			const rightEdgeX = rectX + rectActualWidth;
+			const rightEdgeX = rectX + rectW;
 
 			// Top connection line
 			this.context.beginPath();
@@ -792,30 +811,41 @@ export default {
 			this.context.lineTo(3 * gridSize, 2 * gridSize);
 			this.context.stroke();
 
-			// Draw +/- signs inside rectangle
+			// Draw +/- signs inside rectangle near the right edge
 			this.context.fillStyle = '#000000';
-			this.context.font = '24px Arial';
+			this.context.font = '18px Arial';
 			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
 			this.context.fillText(topLabel, gridSize, -1.5 * gridSize);
 			this.context.fillText(bottomLabel, gridSize, 1.5 * gridSize);
 
-			// Draw "Power Amp" text in the center of the rectangle
-			this.context.font = '22px Arial';
+			// Draw "Power Amp." text left of center
+			const textCenterX = rectX + rectW * 0.4;
+			const rectCenterY = rectY + rectH / 2;
+			this.context.font = '12px Arial';
 			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			const rectCenterX = rectX + rectActualWidth / 2;
-			const rectCenterY = rectY + rectActualHeight / 2;
-			this.context.fillText('Power', rectCenterX, rectCenterY - 12);
-			this.context.fillText('Amp', rectCenterX, rectCenterY + 12);
+			this.context.fillText('Power', textCenterX, rectCenterY - 8);
+			this.context.fillText('Amp.', textCenterX, rectCenterY + 8);
 
-			// Draw component label (voltage sources typically don't have labels)
+			// Draw component label
 			if (component.label) {
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
 				this.context.fillText(component.label, 0, -2 * gridSize);
 			}
+
+			// Draw voltage value above the box
+			const voltage = Math.sqrt(component.parameters.power * component.parameters.impedance);
+			this.context.font = '11px Arial';
+			this.context.textAlign = 'left';
+			this.context.textBaseline = 'bottom';
+			this.context.fillText(`${voltage.toFixed(3)}Vrms`, rectX, rectY - 2);
+
+			// Draw power/impedance below the box
+			this.context.textBaseline = 'top';
+			this.context.fillText(`${component.parameters.power}W (${component.parameters.impedance} ohm)`, rectX, rectY + rectH + 2);
 		},
 
 		renderGround() {
@@ -1898,11 +1928,9 @@ export default {
 				height = 8 * gridSize;
 				offsetX = 2 * gridSize; // Visual center is 2 grid units right of origin
 			} else if (component.type === 'source') {
-				// VS: rectangle left edge at -8*gridSize, terminals at +3*gridSize
-				// Total span ~11 gridSize, visual center at -2.5*gridSize
-				width = 11 * gridSize;
-				height = 12 * gridSize;
-				offsetX = -2.5 * gridSize;
+				// VS: rectangle from x=-3 to x=2, terminals at x=3
+				width = 6 * gridSize;
+				height = 6 * gridSize;
 			} else if (component.type === 'wire-segment') {
 				// Wire segments have length-based bounds
 				const length = component.parameters.length * gridSize;
@@ -2218,14 +2246,13 @@ canvas {
 .toolbar {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 8px;
+	gap: 4px;
 	background-color: #e0e0e0;
 	border-top: 1px solid #ccc;
 }
 
 .toolbar button {
-	padding: 4px 12px;
+	padding: 2px 8px;
 	background-color: #fff;
 	border: 1px solid #999;
 	border-radius: 3px;
@@ -2237,8 +2264,8 @@ canvas {
 }
 
 .toolbar input[type="number"] {
-	width: 60px;
-	padding: 4px;
+	width: 50px;
+	padding: 2px 4px;
 	border: 1px solid #999;
 	border-radius: 3px;
 }

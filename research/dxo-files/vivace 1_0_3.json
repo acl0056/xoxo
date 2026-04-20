@@ -9819,21 +9819,21 @@
   "windowLayout": {
     "main": {
       "x": 0,
-      "y": 25,
-      "width": 1019,
-      "height": 1049
+      "y": 38,
+      "width": 778,
+      "height": 944
     },
     "frequencyResponse": {
-      "x": 1019,
-      "y": 25,
-      "width": 901,
-      "height": 601
+      "x": 779,
+      "y": 38,
+      "width": 733,
+      "height": 548
     },
     "impedance": {
-      "x": 1020,
-      "y": 627,
-      "width": 900,
-      "height": 449
+      "x": 779,
+      "y": 587,
+      "width": 733,
+      "height": 395
     }
   }
 }

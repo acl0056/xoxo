@@ -5,7 +5,15 @@
 		@click.self="close"
 	>
 		<div class="tune-dialog">
-			<h3>Tune {{ component ? component.label : '' }}</h3>
+			<div class="dialog-header">
+				<h3>Tune {{ component ? component.label : '' }}</h3>
+				<button
+					class="close-x-button"
+					@click="close"
+				>
+					×
+				</button>
+			</div>
 
 			<!-- Passive component parameters (Resistor, Capacitor, Inductor) -->
 			<div
@@ -254,15 +262,6 @@
 					</label>
 				</div>
 			</div>
-
-			<div class="dialog-actions">
-				<button
-					class="close-button"
-					@click="close"
-				>
-					Close
-				</button>
-			</div>
 		</div>
 	</div>
 </template>
@@ -503,10 +502,32 @@ export default {
 }
 
 .tune-dialog h3 {
-	margin-top: 0;
-	margin-bottom: 20px;
+	margin: 0;
 	font-size: 18px;
 	font-weight: 600;
+}
+
+.dialog-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.close-x-button {
+	background: none;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	color: #666666;
+	padding: 0 4px;
+}
+
+.close-x-button:hover {
+	color: #000000;
+	background-color: #f0f0f0;
 }
 
 .parameter-section {
@@ -650,28 +671,5 @@ export default {
 
 .remove-button:hover {
 	background-color: #ffcccc;
-}
-
-.dialog-actions {
-	margin-top: 20px;
-	padding-top: 20px;
-	border-top: 1px solid #e0e0e0;
-	display: flex;
-	justify-content: flex-end;
-}
-
-.close-button {
-	padding: 8px 24px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	background-color: #007bff;
-	color: white;
-	cursor: pointer;
-	font-size: 14px;
-	font-weight: 500;
-}
-
-.close-button:hover {
-	background-color: #0056b3;
 }
 </style>

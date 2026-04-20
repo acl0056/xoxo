@@ -1,6 +1,6 @@
 {
 	"name": "xoxo",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"description": "loudspeaker crossover modeller",
 	"main": "dist/main/index.js",
 	"scripts": {
@@ -57,9 +57,10 @@
 	},
 	"build": {
 		"appId": "com.xoxo.crossover-simulator",
-		"productName": "Crossover Network Simulator",
+		"productName": "xoxo",
 		"directories": {
-			"output": "release"
+			"output": "release",
+			"buildResources": "assets"
 		},
 		"files": [
 			"dist/**/*",

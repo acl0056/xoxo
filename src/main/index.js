@@ -321,6 +321,13 @@ ipcMain.on('request-simulation-results', () => {
 });
 
 /**
+ * Forward curve color updates from graph windows to the main window
+ */
+ipcMain.on('update-curve-color', (event, data) => {
+	mainWindow.webContents.send('update-curve-color', data);
+});
+
+/**
  * Get current window layout (bounds of all windows)
  */
 ipcMain.handle('get-window-layout', () => {

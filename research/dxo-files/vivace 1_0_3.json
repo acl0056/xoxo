@@ -9816,6 +9816,15 @@
     }
   ],
   "annotations": [],
+  "curveColors": {
+    "frequencyResponse": {
+      "mo4olaro-0xgw2l7": "#49bb0c",
+      "mo4olarm-o4orq3z": "#ff0000"
+    },
+    "impedance": {
+      "impedance": "#000000"
+    }
+  },
   "windowLayout": {
     "main": {
       "x": 0,

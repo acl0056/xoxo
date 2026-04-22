@@ -4,17 +4,14 @@
 			ref="graphMenu"
 			class="graph-menu"
 		>
-			<button @click="toggleCurvesMenu">
-				Curves
+			<button @click="toggleFileMenu">
+				File
 			</button>
 			<button @click="toggleScaleMenu">
 				Scale
 			</button>
-			<button @click="toggleFileMenu">
-				File
-			</button>
-			<button @click="toggleHold">
-				{{ holdActive ? 'Release' : 'Hold' }}
+			<button @click="toggleCurvesMenu">
+				Curves
 			</button>
 			<AngleControl />
 		</div>
@@ -168,7 +165,7 @@
 								<input
 									v-model="curve.color"
 									type="color"
-									@change="renderGraph"
+									@change="saveCurveColor(curve)"
 								>
 							</div>
 							<div class="control-group">
@@ -307,6 +304,12 @@
 			<div>Frequency: {{ tooltip.frequency }} Hz</div>
 			<div>Magnitude: {{ tooltip.magnitude }} dB</div>
 		</div>
+		<button
+			class="hold-button"
+			@click="toggleHold"
+		>
+			{{ holdActive ? 'Release' : 'Hold' }}
+		</button>
 	</div>
 </template>
 
@@ -349,6 +352,7 @@ export default {
 				x: 0,
 				y: 0,
 			},
+			savedCurveColors: {},
 		};
 	},
 	computed: {
@@ -379,6 +383,9 @@ export default {
 		// Listen for simulation results broadcast from main window
 		const { ipcRenderer } = require('electron');
 		ipcRenderer.on('simulation-results', (event, results) => {
+			if (results.curveColors && results.curveColors.frequencyResponse) {
+				this.savedCurveColors = results.curveColors.frequencyResponse;
+			}
 			if (results.frequencyResponse) {
 				this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
 			}
@@ -406,6 +413,8 @@ export default {
 				return;
 			}
 
+			const saved = this.savedCurveColors || {};
+
 			this.curves = [
 				{
 					id: 'system',
@@ -414,16 +423,22 @@ export default {
 					magnitudes: this.frequencyResponse.spl || [],
 					originalMagnitudes: [...(this.frequencyResponse.spl || [])],
 					phases: this.frequencyResponse.phase || [],
-					color: this.curveColors.system || '#0066cc',
+					color: saved.system || this.curveColors.system || '#0066cc',
 					visible: true,
 					showPhase: false,
 					smoothing: 'none',
 				},
 			];
 
+			// Apply saved color back to local tracking
+			if (saved.system) {
+				this.curveColors.system = saved.system;
+			}
+
 			// Add individual speaker curves if available
 			if (this.frequencyResponse.speakerResponses) {
 				Object.entries(this.frequencyResponse.speakerResponses).forEach(([id, response]) => {
+					const color = saved[id] || this.curveColors[id] || this.generateColor(id);
 					this.curves.push({
 						id,
 						label: response.label || `Speaker ${id}`,
@@ -431,11 +446,15 @@ export default {
 						magnitudes: response.spl || [],
 						originalMagnitudes: [...(response.spl || [])],
 						phases: response.phase || [],
-						color: this.curveColors[id] || this.generateColor(id),
+						color,
 						visible: true,
 						showPhase: false,
 						smoothing: 'none',
 					});
+
+					if (saved[id]) {
+						this.curveColors[id] = saved[id];
+					}
 				});
 			}
 		},
@@ -449,6 +468,17 @@ export default {
 			];
 			const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 			return colors[hash % colors.length];
+		},
+		saveCurveColor(curve) {
+			this.curveColors[curve.id] = curve.color;
+			this.savedCurveColors[curve.id] = curve.color;
+			const { ipcRenderer } = require('electron');
+			ipcRenderer.send('update-curve-color', {
+				graphType: 'frequencyResponse',
+				curveId: curve.id,
+				color: curve.color,
+			});
+			this.renderGraph();
 		},
 		renderGraph() {
 			if (!this.context) return;
@@ -1106,6 +1136,23 @@ export default {
 }
 
 .graph-menu button:hover {
+	background-color: #f0f0f0;
+}
+
+.hold-button {
+	position: absolute;
+	bottom: 4px;
+	right: 4px;
+	padding: 2px 8px;
+	background-color: #ffffff;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	z-index: 10;
+}
+
+.hold-button:hover {
 	background-color: #f0f0f0;
 }
 

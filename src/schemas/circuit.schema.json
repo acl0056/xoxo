@@ -47,6 +47,10 @@
 				"$ref": "#/definitions/annotation"
 			},
 			"default": []
+		},
+		"curveColors": {
+			"$ref": "#/definitions/curveColors",
+			"description": "User-assigned curve colors for the frequency response and impedance graphs"
 		}
 	},
 	"definitions": {
@@ -419,6 +423,30 @@
 					"description": "Font size in points"
 				}
 			}
+		},
+		"curveColors": {
+			"type": "object",
+			"properties": {
+				"frequencyResponse": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string",
+						"pattern": "^#[0-9a-fA-F]{6}$",
+						"description": "Hex color value"
+					},
+					"description": "Map of curve ID to hex color for the frequency response graph"
+				},
+				"impedance": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string",
+						"pattern": "^#[0-9a-fA-F]{6}$",
+						"description": "Hex color value"
+					},
+					"description": "Map of curve ID to hex color for the impedance graph"
+				}
+			},
+			"default": {}
 		}
 	}
 }

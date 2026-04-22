@@ -119,6 +119,18 @@ export default {
 				state.recentFiles = state.recentFiles.slice(0, 10);
 			}
 		},
+		SET_CURVE_COLORS(state, { graphType, curveId, color }) {
+			if (state.circuit) {
+				if (!state.circuit.curveColors) {
+					state.circuit.curveColors = { frequencyResponse: {}, impedance: {} };
+				}
+				if (!state.circuit.curveColors[graphType]) {
+					state.circuit.curveColors[graphType] = {};
+				}
+				state.circuit.curveColors[graphType][curveId] = color;
+				state.isDirty = true;
+			}
+		},
 	},
 	actions: {
 		// Initialize a new circuit
@@ -584,5 +596,9 @@ export default {
 		getRecentFiles: (state) => state.recentFiles,
 		canUndo: (state) => state.undoStack.length > 0,
 		canRedo: (state) => state.redoStack.length > 0,
+		getCurveColors: (state) => (graphType) => {
+			if (!state.circuit || !state.circuit.curveColors) return {};
+			return state.circuit.curveColors[graphType] || {};
+		},
 	},
 };

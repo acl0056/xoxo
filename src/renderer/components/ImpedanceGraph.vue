@@ -4,17 +4,14 @@
 			ref="graphMenu"
 			class="graph-menu"
 		>
-			<button @click="toggleCurvesMenu">
-				Curves
+			<button @click="toggleFileMenu">
+				File
 			</button>
 			<button @click="toggleScaleMenu">
 				Scale
 			</button>
-			<button @click="toggleFileMenu">
-				File
-			</button>
-			<button @click="toggleHold">
-				{{ holdActive ? 'Release' : 'Hold' }}
+			<button @click="toggleCurvesMenu">
+				Curves
 			</button>
 		</div>
 
@@ -157,7 +154,7 @@
 								<input
 									v-model="curveColors.impedance"
 									type="color"
-									@change="renderGraph"
+									@change="saveImpedanceCurveColor('impedance', curveColors.impedance)"
 								>
 							</div>
 							<div class="control-group">
@@ -299,6 +296,12 @@
 				Phase: {{ tooltip.phase }}°
 			</div>
 		</div>
+		<button
+			class="hold-button"
+			@click="toggleHold"
+		>
+			{{ holdActive ? 'Release' : 'Hold' }}
+		</button>
 	</div>
 </template>
 
@@ -337,6 +340,7 @@ export default {
 				phase: '#ff6b6b',
 			},
 			originalImpedanceData: null,
+			savedCurveColors: {},
 			tooltip: {
 				visible: false,
 				frequency: 0,
@@ -375,6 +379,9 @@ export default {
 		// Listen for simulation results broadcast from main window
 		const { ipcRenderer } = require('electron');
 		ipcRenderer.on('simulation-results', (event, results) => {
+			if (results.curveColors && results.curveColors.impedance) {
+				this.savedCurveColors = results.curveColors.impedance;
+			}
 			if (results.impedanceResponse) {
 				this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse);
 			}
@@ -400,6 +407,16 @@ export default {
 			if (!this.impedanceResponse) {
 				this.curves = [];
 				return;
+			}
+
+			const saved = this.savedCurveColors || {};
+
+			// Apply saved colors to local tracking
+			if (saved.impedance) {
+				this.curveColors.impedance = saved.impedance;
+			}
+			if (saved.phase) {
+				this.curveColors.phase = saved.phase;
 			}
 
 			// Store original data for smoothing
@@ -771,6 +788,16 @@ export default {
 			const hash = id.split('').reduce((accumulator, character) => accumulator + character.charCodeAt(0), 0);
 			return colors[hash % colors.length];
 		},
+		saveImpedanceCurveColor(curveId, color) {
+			this.savedCurveColors[curveId] = color;
+			const { ipcRenderer } = require('electron');
+			ipcRenderer.send('update-curve-color', {
+				graphType: 'impedance',
+				curveId,
+				color,
+			});
+			this.updateCurves();
+		},
 		removeExternalCurve(curveId) {
 			const index = this.externalCurves.findIndex((c) => c.id === curveId);
 			if (index !== -1) {
@@ -1082,6 +1109,23 @@ export default {
 }
 
 .graph-menu button:hover {
+	background-color: #f0f0f0;
+}
+
+.hold-button {
+	position: absolute;
+	bottom: 4px;
+	right: 4px;
+	padding: 2px 8px;
+	background-color: #ffffff;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	z-index: 10;
+}
+
+.hold-button:hover {
 	background-color: #f0f0f0;
 }
 

@@ -148,11 +148,18 @@ export default {
 					ipcData.impedanceResponse = simulationResults.impedanceResponse;
 				}
 
+				// Include curve colors from the circuit so graph windows can use them
+				if (circuit.curveColors) {
+					ipcData.curveColors = circuit.curveColors;
+				}
+
 				const ipcPayload = JSON.parse(JSON.stringify(ipcData));
 
 				// Only validate if both responses are present (schema requires both)
+				// Validate without curveColors since it's not part of the simulation results schema
 				if (ipcPayload.frequencyResponse && ipcPayload.impedanceResponse) {
-					if (!validateSimulationResults(ipcPayload)) {
+					const { curveColors: _, ...simulationOnly } = ipcPayload;
+					if (!validateSimulationResults(simulationOnly)) {
 						console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
 					}
 				}

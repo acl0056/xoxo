@@ -94,15 +94,25 @@ export default {
 		ipcRenderer.on('send-simulation-results', () => {
 			const frequencyResponse = this.$store.getters['simulation/getFrequencyResponse'];
 			const impedanceResponse = this.$store.getters['simulation/getImpedanceResponse'];
+			const circuit = this.$store.getters['circuit/getCircuit'];
 			if (frequencyResponse || impedanceResponse) {
 				// Deep clone via JSON to ensure all data is serializable for IPC
-				const payload = JSON.parse(JSON.stringify({
+				const data = {
 					frequencyResponse,
 					impedanceResponse,
 					timestamp: new Date().toISOString(),
-				}));
+				};
+				if (circuit && circuit.curveColors) {
+					data.curveColors = circuit.curveColors;
+				}
+				const payload = JSON.parse(JSON.stringify(data));
 				ipcRenderer.send('simulation-results', payload);
 			}
+		});
+
+		// Listen for curve color updates from graph windows
+		ipcRenderer.on('update-curve-color', (event, { graphType, curveId, color }) => {
+			this.$store.commit('circuit/SET_CURVE_COLORS', { graphType, curveId, color });
 		});
 	},
 	methods: {

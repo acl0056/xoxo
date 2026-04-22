@@ -18,6 +18,10 @@ export class Circuit {
 		this.wires = []; // Array of Wire instances
 		this.nodes = []; // Array of Node instances (derived from wires)
 		this.annotations = []; // Array of TextAnnotation instances
+		this.curveColors = {
+			frequencyResponse: {},
+			impedance: {},
+		};
 		this.metadata = {
 			name: '',
 			created: new Date().toISOString(),
@@ -338,7 +342,7 @@ export class Circuit {
 	 * @returns {Object} JSON representation of the circuit
 	 */
 	toJSON() {
-		return {
+		const json = {
 			version: this.metadata.version,
 			metadata: {
 				name: this.metadata.name,
@@ -349,6 +353,18 @@ export class Circuit {
 			wires: this.wires.map((w) => (w.toJSON ? w.toJSON() : w)),
 			annotations: this.annotations.map((a) => (a.toJSON ? a.toJSON() : a)),
 		};
+
+		// Only include curveColors if there are any saved colors
+		const hasFrequencyResponseColors = Object.keys(this.curveColors.frequencyResponse || {}).length > 0;
+		const hasImpedanceColors = Object.keys(this.curveColors.impedance || {}).length > 0;
+		if (hasFrequencyResponseColors || hasImpedanceColors) {
+			json.curveColors = {
+				frequencyResponse: this.curveColors.frequencyResponse || {},
+				impedance: this.curveColors.impedance || {},
+			};
+		}
+
+		return json;
 	}
 
 	/**
@@ -392,6 +408,14 @@ export class Circuit {
 
 		// Deserialize annotations using TextAnnotation.fromJSON
 		circuit.annotations = (json.annotations || []).map((annotationData) => TextAnnotation.fromJSON(annotationData));
+
+		// Deserialize curve colors
+		if (json.curveColors) {
+			circuit.curveColors = {
+				frequencyResponse: json.curveColors.frequencyResponse || {},
+				impedance: json.curveColors.impedance || {},
+			};
+		}
 
 		return circuit;
 	}

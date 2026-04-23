@@ -92,7 +92,7 @@ export default {
 				this.customAngle = this.currentAngle;
 			} else {
 				this.showCustomInput = false;
-				this.$store.dispatch('simulation/switchAngle', this.selectedAngle);
+				this.dispatchAngleChange(this.selectedAngle);
 			}
 		},
 		applyCustomAngle() {
@@ -106,7 +106,12 @@ export default {
 				return;
 			}
 
-			this.$store.dispatch('simulation/switchAngle', this.customAngle);
+			this.dispatchAngleChange(this.customAngle);
+		},
+		dispatchAngleChange(angle) {
+			// Send angle change via IPC so the main window runs the simulation
+			const { ipcRenderer } = require('electron');
+			ipcRenderer.send('switch-angle', angle);
 		},
 	},
 };

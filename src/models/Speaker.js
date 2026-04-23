@@ -153,7 +153,7 @@ export class Speaker extends Component {
 					phases: data.phases,
 				});
 			} catch (error) {
-				console.error(`Failed to load off-axis file at ${offAxisFile.angle}°:`, error);
+				console.error(`Failed to load off-axis file at ${offAxisFile.angle}°:`, error.message);
 				// Continue loading other files even if one fails
 			}
 		}

@@ -328,6 +328,13 @@ ipcMain.on('update-curve-color', (event, data) => {
 });
 
 /**
+ * Forward angle changes from graph windows to the main window
+ */
+ipcMain.on('switch-angle', (event, angle) => {
+	mainWindow.webContents.send('switch-angle', angle);
+});
+
+/**
  * Get current window layout (bounds of all windows)
  */
 ipcMain.handle('get-window-layout', () => {

@@ -140,6 +140,7 @@ export default {
 				// (strips -Infinity, NaN, Complex instances etc.)
 				const ipcData = {
 					timestamp: new Date().toISOString(),
+					currentAngle: state.currentAngle,
 				};
 				if (simulationResults.frequencyResponse) {
 					ipcData.frequencyResponse = simulationResults.frequencyResponse;
@@ -158,7 +159,7 @@ export default {
 				// Only validate if both responses are present (schema requires both)
 				// Validate without curveColors since it's not part of the simulation results schema
 				if (ipcPayload.frequencyResponse && ipcPayload.impedanceResponse) {
-					const { curveColors: _, ...simulationOnly } = ipcPayload;
+					const { curveColors: _, currentAngle: __, ...simulationOnly } = ipcPayload;
 					if (!validateSimulationResults(simulationOnly)) {
 						console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
 					}

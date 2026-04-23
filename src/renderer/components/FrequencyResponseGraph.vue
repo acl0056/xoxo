@@ -386,6 +386,9 @@ export default {
 			if (results.curveColors && results.curveColors.frequencyResponse) {
 				this.savedCurveColors = results.curveColors.frequencyResponse;
 			}
+			if (results.currentAngle !== undefined) {
+				this.$store.commit('simulation/SET_CURRENT_ANGLE', results.currentAngle);
+			}
 			if (results.frequencyResponse) {
 				this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
 			}

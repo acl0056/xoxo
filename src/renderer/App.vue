@@ -114,6 +114,11 @@ export default {
 		ipcRenderer.on('update-curve-color', (event, { graphType, curveId, color }) => {
 			this.$store.commit('circuit/SET_CURVE_COLORS', { graphType, curveId, color });
 		});
+
+		// Listen for angle changes from graph windows
+		ipcRenderer.on('switch-angle', (event, angle) => {
+			this.$store.dispatch('simulation/switchAngle', angle);
+		});
 	},
 	methods: {
 		/**

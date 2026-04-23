@@ -1568,6 +1568,11 @@ export default {
 				if (loadPromises.length > 0) {
 					await Promise.all(loadPromises);
 				}
+
+				// Reload off-axis FRD data whenever offAxisFiles are present
+				if (parameters.offAxisFiles && parameters.offAxisFiles.length > 0) {
+					await component.loadOffAxisData();
+				}
 			}
 
 			this.renderCircuit();

@@ -29,22 +29,24 @@
 						@input="handleValueInput"
 						@blur="parseValueInput"
 					>
-					<button
-						class="increment-button"
-						@mousedown="startIncrement(1)"
-						@mouseup="stopIncrement"
-						@mouseleave="stopIncrement"
-					>
-						▲
-					</button>
-					<button
-						class="increment-button"
-						@mousedown="startIncrement(-1)"
-						@mouseup="stopIncrement"
-						@mouseleave="stopIncrement"
-					>
-						▼
-					</button>
+					<div class="increment-buttons">
+						<button
+							class="increment-button"
+							@mousedown="startIncrement(1)"
+							@mouseup="stopIncrement"
+							@mouseleave="stopIncrement"
+						>
+							▲
+						</button>
+						<button
+							class="increment-button"
+							@mousedown="startIncrement(-1)"
+							@mouseup="stopIncrement"
+							@mouseleave="stopIncrement"
+						>
+							▼
+						</button>
+					</div>
 				</div>
 
 				<div class="parameter-row">
@@ -565,13 +567,27 @@ export default {
 }
 
 .increment-button {
-	padding: 4px 12px;
+	padding: 2px 12px;
 	border: 1px solid #ccc;
-	border-radius: 4px;
 	background-color: #f5f5f5;
 	cursor: pointer;
-	font-size: 12px;
+	font-size: 10px;
 	user-select: none;
+	line-height: 1;
+}
+
+.increment-button:first-child {
+	border-radius: 4px 4px 0 0;
+	border-bottom: none;
+}
+
+.increment-button:last-child {
+	border-radius: 0 0 4px 4px;
+}
+
+.increment-buttons {
+	display: flex;
+	flex-direction: column;
 }
 
 .increment-button:hover {

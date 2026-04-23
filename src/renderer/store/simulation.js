@@ -13,6 +13,7 @@ export default {
 	state: {
 		autoSimulate: true,
 		currentAngle: 0,
+		availableAngles: [],
 		frequencyResponse: null,
 		impedanceResponse: null,
 		isSimulating: false,
@@ -26,6 +27,9 @@ export default {
 		},
 		SET_CURRENT_ANGLE(state, angle) {
 			state.currentAngle = angle;
+		},
+		SET_AVAILABLE_ANGLES(state, angles) {
+			state.availableAngles = angles;
 		},
 		SET_FREQUENCY_RESPONSE(state, response) {
 			state.frequencyResponse = response;
@@ -125,6 +129,20 @@ export default {
 					console.warn('[SIM] frequency response calculation failed:', freqError.message);
 				}
 
+				// Compute available off-axis angles (intersection across all speakers with FRD data)
+				const speakers = circuit.components.filter((c) => c.type === 'speaker' && c.frdData);
+				let availableAngles = [];
+				if (speakers.length > 0) {
+					const angleSets = speakers.map(
+						(s) => new Set((s.offAxisData || []).map((d) => d.angle)),
+					);
+					// Intersect: only angles present on every speaker
+					availableAngles = [...angleSets[0]].filter(
+						(angle) => angleSets.every((set) => set.has(angle)),
+					).sort((a, b) => a - b);
+				}
+				commit('SET_AVAILABLE_ANGLES', availableAngles);
+
 				if (!impedanceResponse && !frequencyResponse) {
 					throw new Error('Both impedance and frequency response calculations failed');
 				}
@@ -141,6 +159,7 @@ export default {
 				const ipcData = {
 					timestamp: new Date().toISOString(),
 					currentAngle: state.currentAngle,
+					availableAngles,
 				};
 				if (simulationResults.frequencyResponse) {
 					ipcData.frequencyResponse = simulationResults.frequencyResponse;
@@ -159,7 +178,7 @@ export default {
 				// Only validate if both responses are present (schema requires both)
 				// Validate without curveColors since it's not part of the simulation results schema
 				if (ipcPayload.frequencyResponse && ipcPayload.impedanceResponse) {
-					const { curveColors: _, currentAngle: __, ...simulationOnly } = ipcPayload;
+					const { curveColors: _, currentAngle: __, availableAngles: ___, ...simulationOnly } = ipcPayload;
 					if (!validateSimulationResults(simulationOnly)) {
 						console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
 					}

@@ -389,6 +389,9 @@ export default {
 			if (results.currentAngle !== undefined) {
 				this.$store.commit('simulation/SET_CURRENT_ANGLE', results.currentAngle);
 			}
+			if (results.availableAngles) {
+				this.$store.commit('simulation/SET_AVAILABLE_ANGLES', results.availableAngles);
+			}
 			if (results.frequencyResponse) {
 				this.$store.commit('simulation/SET_FREQUENCY_RESPONSE', results.frequencyResponse);
 			}

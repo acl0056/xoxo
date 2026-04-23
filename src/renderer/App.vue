@@ -100,6 +100,8 @@ export default {
 				const data = {
 					frequencyResponse,
 					impedanceResponse,
+					currentAngle: this.$store.state.simulation.currentAngle,
+					availableAngles: this.$store.state.simulation.availableAngles,
 					timestamp: new Date().toISOString(),
 				};
 				if (circuit && circuit.curveColors) {

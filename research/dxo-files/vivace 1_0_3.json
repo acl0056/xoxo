@@ -26746,8 +26746,20 @@
     "main": {
       "x": 0,
       "y": 38,
-      "width": 778,
+      "width": 930,
       "height": 944
+    },
+    "frequencyResponse": {
+      "x": 931,
+      "y": 25,
+      "width": 900,
+      "height": 600
+    },
+    "impedance": {
+      "x": 931,
+      "y": 626,
+      "width": 900,
+      "height": 390
     }
   }
 }

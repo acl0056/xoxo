@@ -45,7 +45,11 @@ class FrequencyAnalyzer {
 				(entry) => entry.angle === currentAngle,
 			);
 			if (offAxisEntry) {
-				frdData = offAxisEntry.data;
+				frdData = {
+					frequencies: offAxisEntry.frequencies,
+					magnitudes: offAxisEntry.magnitudes,
+					phases: offAxisEntry.phases,
+				};
 			}
 			// If requested angle not available, fall back to on-axis data
 		}

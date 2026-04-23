@@ -175,11 +175,9 @@ describe('FrequencyAnalyzer', () => {
 			speaker.offAxisData = [
 				{
 					angle: 30,
-					data: {
-						frequencies: [1000],
-						magnitudes: [85], // 5 dB lower off-axis
-						phases: [-10],
-					},
+					frequencies: [1000],
+					magnitudes: [85], // 5 dB lower off-axis
+					phases: [-10],
 				},
 			];
 

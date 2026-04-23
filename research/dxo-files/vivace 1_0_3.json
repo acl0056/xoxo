@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T18:39:15.391Z",
-    "modified": "2026-04-19T15:33:46.639Z"
+    "modified": "2026-04-23T02:52:18.061Z"
   },
   "components": [
     {
@@ -261,7 +261,20 @@
         "frdFile": "tweeter.frd",
         "zmaFile": "coax tweeter.zma",
         "phaseSource": "measured",
-        "offAxisFiles": []
+        "offAxisFiles": [
+          {
+            "angle": 15,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 0 deg/tweeter.frd"
+          },
+          {
+            "angle": 30,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 30 deg/tweeter.frd"
+          },
+          {
+            "angle": 60,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 60 deg/tweeter.frd"
+          }
+        ]
       },
       "frdData": {
         "frequencies": [
@@ -3200,7 +3213,20 @@
         "frdFile": "mid.frd",
         "zmaFile": "coax 4 inch woofer.zma",
         "phaseSource": "measured",
-        "offAxisFiles": []
+        "offAxisFiles": [
+          {
+            "angle": 60,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 60 deg/mid.frd"
+          },
+          {
+            "angle": 30,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 30 deg/mid.frd"
+          },
+          {
+            "angle": 15,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 15 deg/mid.frd"
+          }
+        ]
       },
       "frdData": {
         "frequencies": [
@@ -6139,7 +6165,20 @@
         "frdFile": "woofers.frd",
         "zmaFile": "dual 6 inch ceramic woofers.zma",
         "phaseSource": "measured",
-        "offAxisFiles": []
+        "offAxisFiles": [
+          {
+            "angle": 30,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 30 deg/woofers.frd"
+          },
+          {
+            "angle": 15,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 15 deg/woofers.frd"
+          },
+          {
+            "angle": 60,
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/vivace/19 in 60 deg/woofers.frd"
+          }
+        ]
       },
       "frdData": {
         "frequencies": [
@@ -9431,30 +9470,6 @@
       "segments": []
     },
     {
-      "id": "mo4olarq-qn3viph",
-      "startNode": {
-        "componentId": "mo4olark-1b7b9gg",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4olark-2e1m5z5",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4olarq-bib3ofh",
-      "startNode": {
-        "componentId": "mo4olark-xb57xap",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4olark-2e1m5z5",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
       "id": "mo4olarq-and7pix",
       "startNode": {
         "componentId": "mo4olark-xb57xap",
@@ -9462,18 +9477,6 @@
       },
       "endNode": {
         "componentId": "mo4olarp-ys1ja3u",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4olarq-egbtvjx",
-      "startNode": {
-        "componentId": "mo4olark-2e1m5z5",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4olark-2x87pkq",
         "terminal": 0
       },
       "segments": []
@@ -9810,6 +9813,42 @@
       },
       "endNode": {
         "componentId": "mo4olark-6p130hc",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moavwe28-ygsdihe",
+      "startNode": {
+        "componentId": "mo4olark-2e1m5z5",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4olark-1b7b9gg",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moavwe7s-bqpnja4",
+      "startNode": {
+        "componentId": "mo4olark-2e1m5z5",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4olark-xb57xap",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moavwedf-5bl0jnz",
+      "startNode": {
+        "componentId": "mo4olark-2e1m5z5",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4olark-2x87pkq",
         "terminal": 0
       },
       "segments": []

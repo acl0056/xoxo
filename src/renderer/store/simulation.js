@@ -193,6 +193,17 @@ export default {
 				// Clear results on error
 				commit('SET_FREQUENCY_RESPONSE', null);
 				commit('SET_IMPEDANCE_RESPONSE', null);
+				commit('SET_AVAILABLE_ANGLES', []);
+
+				// Broadcast cleared results to graph windows so they don't show stale data
+				const { ipcRenderer } = require('electron');
+				ipcRenderer.send('simulation-results', {
+					timestamp: new Date().toISOString(),
+					frequencyResponse: null,
+					impedanceResponse: null,
+					currentAngle: state.currentAngle,
+					availableAngles: [],
+				});
 			} finally {
 				commit('SET_SIMULATING', false);
 				console.log('[SIM] simulation complete', `${(performance.now() - simStart).toFixed(0)}ms`);

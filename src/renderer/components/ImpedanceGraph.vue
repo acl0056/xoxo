@@ -382,9 +382,8 @@ export default {
 			if (results.curveColors && results.curveColors.impedance) {
 				this.savedCurveColors = results.curveColors.impedance;
 			}
-			if (results.impedanceResponse) {
-				this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse);
-			}
+			// Always commit impedance response (including null to clear stale data)
+			this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse || null);
 		});
 
 		// Request current results in case simulation already ran

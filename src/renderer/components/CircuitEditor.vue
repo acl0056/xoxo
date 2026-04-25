@@ -1244,8 +1244,9 @@ export default {
 						// Add to circuit
 						this.$store.dispatch('circuit/addComponent', wireSegment);
 						
-						// Render the updated circuit
+						// Create Wire objects for any terminal overlaps
 						this.$nextTick(() => {
+							this.createWireConnectionsForComponent(wireSegment.id);
 							this.renderCircuit();
 						});
 					});
@@ -1572,6 +1573,12 @@ export default {
 				// Reload off-axis FRD data whenever offAxisFiles are present
 				if (parameters.offAxisFiles && parameters.offAxisFiles.length > 0) {
 					await component.loadOffAxisData();
+				}
+
+				// Re-trigger simulation after FRD/ZMA data is loaded
+				// (the earlier updateComponent may have triggered simulation before data was ready)
+				if (loadPromises.length > 0 || (parameters.offAxisFiles && parameters.offAxisFiles.length > 0)) {
+					this.$store.dispatch('simulation/runSimulation', null, { root: true });
 				}
 			}
 
@@ -1951,17 +1958,39 @@ export default {
 			const rotatedWidth = width * cos + height * sin;
 			const rotatedHeight = width * sin + height * cos;
 
-			return {
+			let bounds = {
 				left: centerX + offsetX - rotatedWidth / 2,
 				right: centerX + offsetX + rotatedWidth / 2,
 				top: centerY + offsetY - rotatedHeight / 2,
 				bottom: centerY + offsetY + rotatedHeight / 2,
 			};
+
+			// Expand bounds to include terminal positions so they are always clickable
+			if (component.terminals && component.terminals.length > 0) {
+				const terminalHitRadius = gridSize * 1.0;
+				const radians = (component.rotation * Math.PI) / 180;
+				const cos = Math.cos(radians);
+				const sin = Math.sin(radians);
+
+				component.terminals.forEach((terminal) => {
+					const rotatedX = terminal.x * cos - terminal.y * sin;
+					const rotatedY = terminal.x * sin + terminal.y * cos;
+					const tx = (component.x + rotatedX) * gridSize;
+					const ty = (component.y + rotatedY) * gridSize;
+
+					bounds.left = Math.min(bounds.left, tx - terminalHitRadius);
+					bounds.right = Math.max(bounds.right, tx + terminalHitRadius);
+					bounds.top = Math.min(bounds.top, ty - terminalHitRadius);
+					bounds.bottom = Math.max(bounds.bottom, ty + terminalHitRadius);
+				});
+			}
+
+			return bounds;
 		},
 
 		getTerminalAtPosition(component, worldX, worldY) {
 			const { gridSize } = this;
-			const hitRadius = gridSize * 0.5; // Half a grid unit
+			const hitRadius = gridSize * 1.0; // One grid unit
 
 			// Get terminal positions for this component
 			const terminals = this.getComponentTerminals(component);
@@ -2094,6 +2123,60 @@ export default {
 								import('@/models/Wire').then(({ Wire }) => {
 									const newWire = new Wire(
 										{ componentId: movedComponentId, terminal: ti },
+										{ componentId: otherComponent.id, terminal: oi },
+									);
+									this.$store.dispatch('circuit/addWire', newWire);
+								});
+							}
+						}
+					}
+				}
+			}
+		},
+
+		/**
+		 * After a new component is added (especially wire-segments), check all its
+		 * terminal positions against all other component terminals and create Wire
+		 * objects for any overlapping connections.
+		 */
+		createWireConnectionsForComponent(componentId) {
+			const circuit = this.$store.state.circuit?.circuit;
+			if (!circuit) return;
+
+			const component = circuit.getComponent(componentId);
+			if (!component) return;
+
+			const componentTerminals = this.getComponentTerminals(component);
+			const allOtherComponents = circuit.components.filter((c) => c.id !== componentId);
+
+			for (let ti = 0; ti < componentTerminals.length; ti++) {
+				const termPos = componentTerminals[ti];
+
+				for (const otherComponent of allOtherComponents) {
+					const otherTerminals = this.getComponentTerminals(otherComponent);
+
+					for (let oi = 0; oi < otherTerminals.length; oi++) {
+						const otherPos = otherTerminals[oi];
+
+						const distance = Math.sqrt(
+							(termPos.x - otherPos.x) ** 2 + (termPos.y - otherPos.y) ** 2,
+						);
+
+						if (distance <= 0.1) {
+							// Check if this connection already exists
+							const alreadyConnected = circuit.wires.some((w) => (w.startNode.componentId === componentId
+									&& w.startNode.terminal === ti
+									&& w.endNode.componentId === otherComponent.id
+									&& w.endNode.terminal === oi)
+								|| (w.startNode.componentId === otherComponent.id
+									&& w.startNode.terminal === oi
+									&& w.endNode.componentId === componentId
+									&& w.endNode.terminal === ti));
+
+							if (!alreadyConnected) {
+								import('@/models/Wire').then(({ Wire }) => {
+									const newWire = new Wire(
+										{ componentId, terminal: ti },
 										{ componentId: otherComponent.id, terminal: oi },
 									);
 									this.$store.dispatch('circuit/addWire', newWire);

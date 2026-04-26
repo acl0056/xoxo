@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-04-18T17:59:37.432Z"
+    "modified": "2026-04-25T17:46:32.264Z"
   },
   "components": [
     {
@@ -265,8 +265,8 @@
         "delay": 0,
         "inverted": false,
         "muted": false,
-        "frdFile": "tweeter 0.frd",
-        "zmaFile": "tweeter.zma",
+        "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 0.frd",
+        "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/tweeter.zma",
         "phaseSource": "measured",
         "offAxisFiles": []
       },
@@ -3204,8 +3204,8 @@
         "delay": 0.0000804827191049731,
         "inverted": false,
         "muted": false,
-        "frdFile": "woofer 0.frd",
-        "zmaFile": "woofer.zma",
+        "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 0.frd",
+        "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/woofer.zma",
         "phaseSource": "measured",
         "offAxisFiles": []
       },

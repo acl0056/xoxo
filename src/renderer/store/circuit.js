@@ -131,6 +131,15 @@ export default {
 				state.isDirty = true;
 			}
 		},
+		SET_GRAPH_SETTINGS(state, { graphType, settings }) {
+			if (state.circuit) {
+				if (!state.circuit.graphSettings) {
+					state.circuit.graphSettings = { frequencyResponse: {}, impedance: {} };
+				}
+				state.circuit.graphSettings[graphType] = settings;
+				state.isDirty = true;
+			}
+		},
 	},
 	actions: {
 		// Initialize a new circuit

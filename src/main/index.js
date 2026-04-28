@@ -335,6 +335,13 @@ ipcMain.on('switch-angle', (event, angle) => {
 });
 
 /**
+ * Forward graph settings changes from graph windows to the main window
+ */
+ipcMain.on('update-graph-settings', (event, data) => {
+	mainWindow.webContents.send('update-graph-settings', data);
+});
+
+/**
  * Get current window layout (bounds of all windows)
  */
 ipcMain.handle('get-window-layout', () => {

@@ -22,6 +22,10 @@ export class Circuit {
 			frequencyResponse: {},
 			impedance: {},
 		};
+		this.graphSettings = {
+			frequencyResponse: {},
+			impedance: {},
+		};
 		this.metadata = {
 			name: '',
 			created: new Date().toISOString(),
@@ -364,6 +368,16 @@ export class Circuit {
 			};
 		}
 
+		// Only include graphSettings if any non-default settings exist
+		const hasFreqSettings = Object.keys(this.graphSettings.frequencyResponse || {}).length > 0;
+		const hasImpedanceSettings = Object.keys(this.graphSettings.impedance || {}).length > 0;
+		if (hasFreqSettings || hasImpedanceSettings) {
+			json.graphSettings = {
+				frequencyResponse: this.graphSettings.frequencyResponse || {},
+				impedance: this.graphSettings.impedance || {},
+			};
+		}
+
 		return json;
 	}
 
@@ -414,6 +428,14 @@ export class Circuit {
 			circuit.curveColors = {
 				frequencyResponse: json.curveColors.frequencyResponse || {},
 				impedance: json.curveColors.impedance || {},
+			};
+		}
+
+		// Deserialize graph settings
+		if (json.graphSettings) {
+			circuit.graphSettings = {
+				frequencyResponse: json.graphSettings.frequencyResponse || {},
+				impedance: json.graphSettings.impedance || {},
 			};
 		}
 

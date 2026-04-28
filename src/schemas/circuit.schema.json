@@ -51,6 +51,10 @@
 		"curveColors": {
 			"$ref": "#/definitions/curveColors",
 			"description": "User-assigned curve colors for the frequency response and impedance graphs"
+		},
+		"graphSettings": {
+			"$ref": "#/definitions/graphSettings",
+			"description": "Scale settings for the frequency response and impedance graphs"
 		}
 	},
 	"definitions": {
@@ -444,6 +448,44 @@
 						"description": "Hex color value"
 					},
 					"description": "Map of curve ID to hex color for the impedance graph"
+				}
+			},
+			"default": {}
+		},
+		"graphScaleSettings": {
+			"type": "object",
+			"properties": {
+				"minFreq": {
+					"type": "number",
+					"minimum": 1,
+					"description": "Minimum frequency in Hz"
+				},
+				"maxFreq": {
+					"type": "number",
+					"minimum": 1,
+					"description": "Maximum frequency in Hz"
+				},
+				"centerValue": {
+					"type": "number",
+					"description": "Vertical axis center value (dB for frequency response, Ω for impedance)"
+				},
+				"stepSize": {
+					"type": "number",
+					"minimum": 1,
+					"description": "Vertical axis step size"
+				}
+			}
+		},
+		"graphSettings": {
+			"type": "object",
+			"properties": {
+				"frequencyResponse": {
+					"$ref": "#/definitions/graphScaleSettings",
+					"description": "Scale settings for the frequency response graph"
+				},
+				"impedance": {
+					"$ref": "#/definitions/graphScaleSettings",
+					"description": "Scale settings for the impedance graph"
 				}
 			},
 			"default": {}

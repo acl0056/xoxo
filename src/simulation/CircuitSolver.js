@@ -133,16 +133,87 @@ class CircuitSolver {
 			allNodeIds.add(endNodeId);
 		}
 
-		// Assign matrix indices to unique representative nodes
+		// Identify nodes connected to ground (reachable from GROUND via union-find)
+		// A node is connected to ground if any terminal in its union-find group
+		// shares a group with GROUND. We detect disconnected islands by checking
+		// if a node's representative can reach GROUND through the component graph.
+		const connectedToGround = new Set();
+		for (const nodeId of allNodeIds) {
+			const rep = find(nodeId);
+			if (rep === 'GROUND' || find(rep) === 'GROUND') {
+				connectedToGround.add(nodeId);
+				continue;
+			}
+			// Check if this node's component has any terminal connected to ground
+			// by walking through all nodes in the same representative group
+			// that share a component with a grounded terminal
+		}
+
+		// Build a set of representatives that are connected to ground via components
+		// A component bridges two nodes; if one side is grounded, the other is reachable
+		const groundedReps = new Set();
+		// Iteratively propagate: if a component has one terminal in a grounded group,
+		// the other terminal's group is also reachable from ground
+		let changed = true;
+		while (changed) {
+			changed = false;
+			for (const component of this.circuit.components) {
+				if (component.type === 'ground') continue;
+				if (component.parameters?.state === 'open') continue;
+
+				const terminals = this.getComponentTerminals(component);
+				if (terminals.length < 2) continue;
+
+				const reps = terminals.map((t) => find(t));
+				const anyGrounded = reps.some((r) => r === 'GROUND' || find(r) === 'GROUND' || groundedReps.has(r));
+
+				if (anyGrounded) {
+					for (const r of reps) {
+						if (r !== 'GROUND' && find(r) !== 'GROUND' && !groundedReps.has(r)) {
+							groundedReps.add(r);
+							changed = true;
+						}
+					}
+				}
+			}
+		}
+
+		// Track excluded components for logging
+		this.excludedComponents = new Set();
+
+		// Assign matrix indices to unique representative nodes, excluding disconnected islands
 		for (const nodeId of allNodeIds) {
 			const rep = find(nodeId);
 			if (rep === 'GROUND' || find(rep) === 'GROUND') continue;
+			if (!groundedReps.has(rep)) {
+				// This node is in a disconnected island — skip it
+				continue;
+			}
 			if (!representativeToIndex.has(rep)) {
 				representativeToIndex.set(rep, nodeIndex);
 				nodeIndex++;
 			}
 			// Map this nodeId to the same index as its representative
 			this.nodeMap.set(nodeId, representativeToIndex.get(rep));
+		}
+
+		// Identify excluded components (all terminals unmapped)
+		for (const component of this.circuit.components) {
+			if (component.type === 'ground') continue;
+			const terminals = this.getComponentTerminals(component);
+			if (terminals.length < 2) continue;
+			const allUnmapped = terminals.every((t) => !this.nodeMap.has(t) && find(t) !== 'GROUND' && find(find(t)) !== 'GROUND');
+			if (allUnmapped) {
+				this.excludedComponents.add(component.id);
+			}
+		}
+
+		if (this.excludedComponents.size > 0) {
+			const excludedLabels = [...this.excludedComponents].map((id) => {
+				const comp = this.circuit.components.find((c) => c.id === id);
+				return comp ? `${comp.type} ${comp.label || comp.id.slice(-6)}` : id;
+			});
+			console.warn(`[SOLVER] Excluded ${this.excludedComponents.size} disconnected component(s): ${excludedLabels.join(', ')}`);
 		}
 
 		// Assign indices for voltage source currents

@@ -107,6 +107,9 @@ export default {
 				if (circuit && circuit.curveColors) {
 					data.curveColors = circuit.curveColors;
 				}
+				if (circuit && circuit.graphSettings) {
+					data.graphSettings = circuit.graphSettings;
+				}
 				const payload = JSON.parse(JSON.stringify(data));
 				ipcRenderer.send('simulation-results', payload);
 			}
@@ -120,6 +123,11 @@ export default {
 		// Listen for angle changes from graph windows
 		ipcRenderer.on('switch-angle', (event, angle) => {
 			this.$store.dispatch('simulation/switchAngle', angle);
+		});
+
+		// Listen for graph settings changes from graph windows
+		ipcRenderer.on('update-graph-settings', (event, { graphType, settings }) => {
+			this.$store.commit('circuit/SET_GRAPH_SETTINGS', { graphType, settings });
 		});
 	},
 	methods: {

@@ -39,7 +39,7 @@
 							type="number"
 							min="1"
 							:max="scaleSettings.maxFreq"
-							@change="renderGraph"
+							@change="onScaleChange"
 						>
 					</div>
 					<div class="control-group">
@@ -49,7 +49,7 @@
 							type="number"
 							:min="scaleSettings.minFreq"
 							max="100000"
-							@change="renderGraph"
+							@change="onScaleChange"
 						>
 					</div>
 					<div class="control-group">
@@ -58,7 +58,7 @@
 							v-model.number="scaleSettings.centerValue"
 							type="number"
 							step="1"
-							@change="renderGraph"
+							@change="onScaleChange"
 						>
 					</div>
 					<div class="control-group">
@@ -69,7 +69,7 @@
 							min="1"
 							max="20"
 							step="1"
-							@change="renderGraph"
+							@change="onScaleChange"
 						>
 					</div>
 				</div>
@@ -381,6 +381,13 @@ export default {
 		ipcRenderer.on('simulation-results', (event, results) => {
 			if (results.curveColors && results.curveColors.impedance) {
 				this.savedCurveColors = results.curveColors.impedance;
+			}
+			if (results.graphSettings && results.graphSettings.impedance) {
+				const saved = results.graphSettings.impedance;
+				if (saved.minFreq !== undefined) this.scaleSettings.minFreq = saved.minFreq;
+				if (saved.maxFreq !== undefined) this.scaleSettings.maxFreq = saved.maxFreq;
+				if (saved.centerValue !== undefined) this.scaleSettings.centerValue = saved.centerValue;
+				if (saved.stepSize !== undefined) this.scaleSettings.stepSize = saved.stepSize;
 			}
 			// Always commit impedance response (including null to clear stale data)
 			this.$store.commit('simulation/SET_IMPEDANCE_RESPONSE', results.impedanceResponse || null);
@@ -944,11 +951,23 @@ export default {
 		closeScaleMenu() {
 			this.scaleMenuVisible = false;
 		},
+		saveScaleSettings() {
+			const { ipcRenderer } = require('electron');
+			ipcRenderer.send('update-graph-settings', {
+				graphType: 'impedance',
+				settings: { ...this.scaleSettings },
+			});
+		},
+		onScaleChange() {
+			this.renderGraph();
+			this.saveScaleSettings();
+		},
 		resetScaleSettings() {
 			this.scaleSettings.minFreq = 20;
 			this.scaleSettings.maxFreq = 20000;
 			this.scaleSettings.centerValue = 8;
 			this.scaleSettings.stepSize = 2;
+			this.saveScaleSettings();
 			this.renderGraph();
 		},
 		toggleFileMenu() {

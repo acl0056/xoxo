@@ -1073,9 +1073,15 @@ export default {
 				const world = this.screenToWorld(screenX, screenY);
 				const snapped = this.snapToGrid(world.x - this.dragOffset.x, world.y - this.dragOffset.y);
 
-				// Convert back to grid coordinates
-				const gridX = Math.round(snapped.x / this.gridSize);
-				const gridY = Math.round(snapped.y / this.gridSize);
+				// Convert back to grid coordinates, preserving fractional offsets.
+				// Wire-segments with odd lengths have half-grid centers (e.g. 24.5)
+				// so their terminals land on integer grid positions. Snapping to
+				// whole integers would break that alignment.
+				const component = this.$store.state.circuit.circuit?.getComponent(this.selectedComponentId);
+				const fracX = component ? component.x % 1 : 0;
+				const fracY = component ? component.y % 1 : 0;
+				const gridX = Math.round(snapped.x / this.gridSize - fracX) + fracX;
+				const gridY = Math.round(snapped.y / this.gridSize - fracY) + fracY;
 
 				this.$store.commit('circuit/UPDATE_COMPONENT', {
 					componentId: this.selectedComponentId,

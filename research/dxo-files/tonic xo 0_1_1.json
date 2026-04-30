@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-04-29T21:14:36.180Z"
+    "modified": "2026-04-30T15:19:22.391Z"
   },
   "components": [
     {
@@ -135,7 +135,7 @@
       "y": 41,
       "rotation": 90,
       "parameters": {
-        "inductance": 0.00039,
+        "inductance": 0.00047,
         "tolerance": 10,
         "esr": 0.2,
         "state": "normal"
@@ -14122,7 +14122,7 @@
       "x": 1020,
       "y": 25,
       "width": 900,
-      "height": 600
+      "height": 601
     },
     "impedance": {
       "x": 1020,

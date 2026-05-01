@@ -399,14 +399,15 @@ describe('Preservation: Sensitivity, Delay, and Polarity Adjustments (Property 4
 	 * **Validates: Requirements 3.7**
 	 *
 	 * Delay adds phase shift: -360 × f × delay_seconds.
-	 * The phase difference between delay=D and delay=0 should be -360 × f × D/1000.
+	 * The phase difference between delay=D and delay=0 should be -360 × f × D.
+	 * The delay parameter is stored in seconds.
 	 */
 	test('Delay adjustment: phase difference equals -360 * f * delay_seconds', () => {
 		fc.assert(
 			fc.property(
-				fc.double({ min: 0.01, max: 5, noNaN: true }),   // delay in ms
+				fc.double({ min: 0.00001, max: 0.005, noNaN: true }),   // delay in seconds
 				fc.double({ min: 100, max: 5000, noNaN: true }), // frequency
-				(delayMs, frequency) => {
+				(delaySeconds, frequency) => {
 					const frequencies = [frequency];
 					const flatSPL = 90;
 					const speakerVoltage = 1.0;
@@ -419,16 +420,15 @@ describe('Preservation: Sensitivity, Delay, and Polarity Adjustments (Property 4
 					const analyzer0 = new FrequencyAnalyzer(circuit0, { frequencies, componentVoltages: componentVoltages0 });
 					const result0 = analyzer0.calculateSPL(speaker0);
 
-					// With delay
-					const { circuit: circuit1, speaker: speaker1 } = buildSimpleCircuit({ delay: delayMs });
+					// With delay (parameter is in seconds)
+					const { circuit: circuit1, speaker: speaker1 } = buildSimpleCircuit({ delay: delaySeconds });
 					speaker1.frdData = createFlatFrdData(frequencies, flatSPL);
 					const componentVoltages1 = {};
 					componentVoltages1[speaker1.id] = [new Complex(speakerVoltage, 0)];
 					const analyzer1 = new FrequencyAnalyzer(circuit1, { frequencies, componentVoltages: componentVoltages1 });
 					const result1 = analyzer1.calculateSPL(speaker1);
 
-					// Expected phase shift from delay
-					const delaySeconds = delayMs / 1000;
+					// Expected phase shift from delay (delay is already in seconds)
 					const expectedPhaseShift = -360 * frequency * delaySeconds;
 
 					// Compute raw phase difference (before normalization)

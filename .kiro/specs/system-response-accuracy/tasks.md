@@ -1,0 +1,109 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration tests (BEFORE implementing fix)
+  - **Property 1: Bug Condition** — Delay Units Mismatch & Terminal Ordering
+  - **CRITICAL**: This test MUST FAIL on unfixed code — failure confirms the bugs exist
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior — it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate both bugs exist
+  - **Scoped PBT Approach**: Scope properties to concrete failing cases for reproducibility
+  - Test file: `tests/unit/system-response-accuracy.exploration.property.spec.js`
+  - **C1 — Delay Units Mismatch (PRIMARY — causes 2.4 dB crossover dip)**:
+    - Load the tonic two-way crossover project from `research/dxo-files/tonic xo 0_1_1.json` using `Circuit.fromJSON()`
+    - Load speaker FRD data from `tests/fixtures/projects/tonic/woofer 0.frd` and `tests/fixtures/projects/tonic/tweeter 0.frd` using `FrdParser.parse()`
+    - Load speaker ZMA data from `tests/fixtures/projects/tonic/woofer.zma` and `tests/fixtures/projects/tonic/tweeter.zma` using `ZmaParser.parse()`
+    - Attach FRD and ZMA data to the speaker components in the circuit
+    - Run `CircuitSolver.solveAllFrequencies()` then `FrequencyAnalyzer.calculateSystemResponse()`
+    - Load xSim reference data from `research/dxo-files/tonic 0_1_1 system.FRD` (note: uses `"` comment prefix, write a helper to parse)
+    - Compare system SPL at crossover frequencies (1000–3000 Hz) against xSim reference
+    - Assert system SPL is within 1 dB of xSim reference across the crossover region
+    - On UNFIXED code: the delay phase shift is ~1000x too small (e.g., -0.029° instead of -28.97° at 1000 Hz for the woofer with delay=0.0000804827s), causing partial cancellation and a 2.4 dB dip → test FAILS
+    - Property-based: for random frequencies in [1000, 3000] Hz, verify the delay phase shift for the woofer equals `-360 × frequency × 0.0000804827` (not `-360 × frequency × 0.0000000000805`)
+  - **C2 — Terminal Ordering (causes 180° absolute phase offset)**:
+    - Using the same tonic circuit, call `CircuitSolver.getComponentTerminals(speaker)` for each speaker
+    - Assert terminals are in sorted order: `terminal_0` before `terminal_1` (i.e., `terminals[0]` ends with `_0`)
+    - On UNFIXED code: terminals are returned as `[componentId_1, componentId_0]` (reversed) → test FAILS
+    - Also verify: after solving, compare speaker voltage phase at a low frequency (e.g., 1 Hz) against expected ~0° phase. On UNFIXED code, phase is offset by ~180° due to reversed terminal ordering
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests FAIL (this is correct — it proves the bugs exist)
+  - Document counterexamples found to understand root cause
+  - Mark task complete when tests are written, run, and failures are documented
+  - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** — Single-Driver SPL & Impedance Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - Test file: `tests/unit/system-response-accuracy.preservation.property.spec.js`
+  - **Single-driver SPL preservation (orbs)**:
+    - Load the orbs single-driver project from `research/dxo-files/orbs.json` using `Circuit.fromJSON()`
+    - Load speaker FRD data from `tests/fixtures/projects/tonic/woofer 0.frd` (or use the orbs speaker's embedded FRD data from the JSON)
+    - Load speaker ZMA data (orbs speaker has ZMA data embedded in the JSON)
+    - Run `CircuitSolver.solveAllFrequencies()` then `FrequencyAnalyzer.calculateSystemResponse()`
+    - Load xSim reference data from `research/dxo-files/orbs system.FRD` (helper to parse `"` comment prefix)
+    - Observe: on UNFIXED code, orbs single-driver SPL already matches xSim within 0.5 dB (the delay bug has no effect since orbs delay=0, and the terminal flip doesn't affect SPL magnitude)
+    - Write property-based test: for random frequency subsets from the simulation range, verify orbs SPL matches xSim reference within 0.5 dB
+    - Verify test PASSES on UNFIXED code
+  - **Impedance preservation (tonic)**:
+    - Load the tonic project, run simulation, compute impedance via `FrequencyAnalyzer.calculateImpedance()`
+    - Load xSim impedance reference from `research/dxo-files/tonic system.ZMA`
+    - Observe: impedance calculation uses source current (not component voltages), so it is unaffected by both bugs
+    - Write property-based test: for random frequency subsets, verify tonic impedance matches xSim reference within tolerance
+    - Verify test PASSES on UNFIXED code
+  - **Muted speaker preservation**:
+    - Build a simple circuit with a muted speaker, verify `calculateSPL()` returns `-Infinity` SPL for all frequencies
+    - Property-based: for random frequency counts, muted speaker always returns `-Infinity`
+  - **Sensitivity/polarity preservation**:
+    - Verify sensitivity adjustment still adds dB offset to SPL
+    - Verify polarity inversion still adds 180° to phase
+    - These adjustments are independent of the delay and terminal ordering bugs
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
+
+- [x] 3. Fix delay units and terminal ordering
+
+  - [x] 3.1 Remove `/1000` from delay calculation in `FrequencyAnalyzer.calculateSPL()`
+    - In `src/simulation/FrequencyAnalyzer.js`, line ~122:
+    - Change `const delaySeconds = speakerComponent.parameters.delay / 1000;`
+    - To: `const delaySeconds = speakerComponent.parameters.delay;`
+    - The delay parameter is already stored in seconds (e.g., `0.0000804827191049731` for the tonic woofer)
+    - This single-line change restores the correct delay phase shift: at 1000 Hz, the woofer phase shift goes from -0.029° (wrong) to -28.97° (correct)
+    - _Bug_Condition: isBugCondition(input) where speaker.parameters.delay != 0 AND calculateSPL divides delay by 1000_
+    - _Expected_Behavior: delayPhaseShift = -360 × frequency × speaker.parameters.delay (no /1000 divisor)_
+    - _Preservation: Speakers with delay=0 are unaffected; sensitivity, polarity, muted behavior unchanged_
+    - _Requirements: 1.1, 1.2, 2.1, 2.2, 3.3, 3.4, 3.6_
+
+  - [x] 3.2 Add `terminals.sort()` in voltage extraction in `CircuitSolver.solveAllFrequencies()`
+    - In `src/simulation/CircuitSolver.js`, in the `solveAllFrequencies()` method, in the section that builds `componentVoltages`:
+    - After `const terminals = this.getComponentTerminals(component);` add `terminals.sort();`
+    - This ensures `terminal_0` comes before `terminal_1` via lexicographic sort
+    - Voltage is computed as `V(terminals[0]) - V(terminals[1])` = `V(_0) - V(_1)` = correct polarity
+    - Note: The MNA matrix stamping does NOT need to change — admittance stamps are symmetric, so terminal order doesn't affect the matrix. Only the voltage extraction needs the sort.
+    - _Bug_Condition: isBugCondition(input) where getComponentTerminals returns terminals in non-sorted order_
+    - _Expected_Behavior: terminals[0] < terminals[1] (sorted), voltage has correct polarity_
+    - _Preservation: MNA matrix construction unchanged; impedance calculation unchanged (uses source current)_
+    - _Requirements: 1.3, 2.3, 2.4, 3.2, 3.5_
+
+  - [x] 3.3 Verify bug condition exploration tests now pass
+    - **Property 1: Expected Behavior** — Delay Phase Shift & Terminal Ordering
+    - **IMPORTANT**: Re-run the SAME tests from task 1 — do NOT write new tests
+    - The tests from task 1 encode the expected behavior
+    - When these tests pass, it confirms the expected behavior is satisfied
+    - Run `npm test -- system-response-accuracy.exploration.property.spec.js`
+    - **EXPECTED OUTCOME**: Tests PASS (confirms bugs are fixed)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+  - [x] 3.4 Verify preservation tests still pass
+    - **Property 2: Preservation** — Single-Driver SPL & Impedance Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 — do NOT write new tests
+    - Run `npm test -- system-response-accuracy.preservation.property.spec.js`
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Confirm all preservation tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint — Ensure all tests pass
+  - Run full test suite: `npm test`
+  - Ensure all existing tests still pass (no regressions)
+  - Ensure exploration tests (task 1) now pass
+  - Ensure preservation tests (task 2) still pass
+  - Ask the user if questions arise

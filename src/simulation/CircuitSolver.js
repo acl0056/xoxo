@@ -307,7 +307,7 @@ class CircuitSolver {
 			}
 		}
 
-		return terminals;
+		return terminals.sort();
 	}
 
 	/**
@@ -714,6 +714,7 @@ class CircuitSolver {
 			if (component.type === 'wire-segment' || component.type === 'source') continue;
 
 			const terminals = this.getComponentTerminals(component);
+			terminals.sort(); // Ensure terminal_0 comes before terminal_1 for correct voltage polarity
 			const node1Id = terminals[0];
 			const node2Id = terminals[1];
 

@@ -117,9 +117,8 @@ class FrequencyAnalyzer {
 			let calculatedPhase = frdPhase + voltagePhase;
 
 			// Apply delay as phase shift
-			// Phase shift = -360 * frequency * delay (delay in seconds)
-			const delaySeconds = speakerComponent.parameters.delay / 1000;
-			const delayPhaseShift = -360 * frequency * delaySeconds;
+			// Phase shift = -360 * frequency * delay (delay is already in seconds)
+			const delayPhaseShift = -360 * frequency * speakerComponent.parameters.delay;
 			calculatedPhase += delayPhaseShift;
 
 			// Apply polarity inversion (180 degree phase shift)

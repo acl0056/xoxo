@@ -554,7 +554,7 @@ export default {
 			}
 
 			// Horizontal grid lines (magnitude)
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const numHorizontalLines = Math.ceil(range / this.scaleSettings.stepSize);
 
 			for (let i = 0; i <= numHorizontalLines; i++) {
@@ -712,7 +712,7 @@ export default {
 			return marginLeft + normalized * graphWidth;
 		},
 		magnitudeToY(mag, marginTop, graphHeight) {
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minMag = this.scaleSettings.centerValue - range / 2;
 			const maxMag = this.scaleSettings.centerValue + range / 2;
 			const normalized = (maxMag - mag) / (maxMag - minMag);
@@ -786,7 +786,7 @@ export default {
 		},
 		yToMagnitude(y, marginTop, graphHeight) {
 			const normalized = (y - marginTop) / graphHeight;
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minMag = this.scaleSettings.centerValue - range / 2;
 			const maxMag = this.scaleSettings.centerValue + range / 2;
 			return maxMag - normalized * (maxMag - minMag);
@@ -808,7 +808,7 @@ export default {
 		},
 		generateMagnitudeLabels() {
 			const labels = [];
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minMag = this.scaleSettings.centerValue - range / 2;
 			const maxMag = this.scaleSettings.centerValue + range / 2;
 

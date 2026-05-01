@@ -317,6 +317,7 @@
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
 import AngleControl from './AngleControl.vue';
+import FrdParser from '@/io/FrdParser';
 
 export default {
 	name: 'FrequencyResponseGraph',
@@ -876,25 +877,15 @@ export default {
 		},
 		async loadExternalFile() {
 			try {
-				// Use Electron's dialog to select FRD file
-				const { dialog } = window.require('electron').remote;
-				const { filePaths } = await dialog.showOpenDialog({
-					title: 'Load External FRD File',
-					filters: [
-						{ name: 'FRD Files', extensions: ['frd'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-					properties: ['openFile'],
-				});
+				// Use Electron's IPC to select FRD file
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-frd-file-dialog');
 
-				if (!filePaths || filePaths.length === 0) {
+				if (!filePath) {
 					return; // User cancelled
 				}
 
-				const filePath = filePaths[0];
-
-				// Import FrdParser
-				const { default: FrdParser } = window.require('@/io/FrdParser');
+				// Parse the FRD file using imported FrdParser
 				const path = window.require('path');
 
 				// Parse the FRD file
@@ -1014,23 +1005,15 @@ export default {
 			}
 
 			try {
-				// Use Electron's dialog to get save path
-				const { dialog } = window.require('electron').remote;
-				const { filePath } = await dialog.showSaveDialog({
-					title: 'Export Frequency Response as FRD',
-					defaultPath: 'frequency-response.frd',
-					filters: [
-						{ name: 'FRD Files', extensions: ['frd'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-				});
+				// Use Electron's IPC to get save path
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-save-dialog', 'frequency-response.frd');
 
 				if (!filePath) {
 					return; // User cancelled
 				}
 
-				// Import FrdParser
-				const { default: FrdParser } = window.require('@/io/FrdParser');
+				// Export using imported FrdParser
 
 				// Export system response
 				const { frequencies } = this.frequencyResponse;
@@ -1049,16 +1032,9 @@ export default {
 		},
 		async exportSnapshotToFile() {
 			try {
-				// Use Electron's dialog to get save path
-				const { dialog } = window.require('electron').remote;
-				const { filePath } = await dialog.showSaveDialog({
-					title: 'Save Graph Snapshot',
-					defaultPath: 'frequency-response.png',
-					filters: [
-						{ name: 'PNG Images', extensions: ['png'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-				});
+				// Use Electron's IPC to get save path
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-save-dialog', 'frequency-response.png');
 
 				if (!filePath) {
 					return; // User cancelled

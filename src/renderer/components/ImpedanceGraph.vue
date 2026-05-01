@@ -308,6 +308,7 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
+import ZmaParser from '@/io/ZmaParser';
 
 export default {
 	name: 'ImpedanceGraph',
@@ -813,25 +814,15 @@ export default {
 		},
 		async loadExternalFile() {
 			try {
-				// Use Electron's dialog to select ZMA file
-				const { dialog } = window.require('electron').remote;
-				const { filePaths } = await dialog.showOpenDialog({
-					title: 'Load External ZMA File',
-					filters: [
-						{ name: 'ZMA Files', extensions: ['zma'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-					properties: ['openFile'],
-				});
+				// Use Electron's IPC to select ZMA file
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-zma-file-dialog');
 
-				if (!filePaths || filePaths.length === 0) {
+				if (!filePath) {
 					return; // User cancelled
 				}
 
-				const filePath = filePaths[0];
-
-				// Import ZmaParser
-				const { default: ZmaParser } = window.require('@/io/ZmaParser');
+				// Parse the ZMA file using imported ZmaParser
 				const path = window.require('path');
 
 				// Parse the ZMA file
@@ -983,23 +974,15 @@ export default {
 			}
 
 			try {
-				// Use Electron's dialog to get save path
-				const { dialog } = window.require('electron').remote;
-				const { filePath } = await dialog.showSaveDialog({
-					title: 'Export Impedance as ZMA',
-					defaultPath: 'impedance.zma',
-					filters: [
-						{ name: 'ZMA Files', extensions: ['zma'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-				});
+				// Use Electron's IPC to get save path
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-save-dialog', 'impedance.zma');
 
 				if (!filePath) {
 					return; // User cancelled
 				}
 
-				// Import ZmaParser
-				const { default: ZmaParser } = window.require('@/io/ZmaParser');
+				// Export using imported ZmaParser
 
 				// Export impedance data
 				const { frequencies, impedances, phases } = this.impedanceResponse;
@@ -1016,16 +999,9 @@ export default {
 		},
 		async exportSnapshotToFile() {
 			try {
-				// Use Electron's dialog to get save path
-				const { dialog } = window.require('electron').remote;
-				const { filePath } = await dialog.showSaveDialog({
-					title: 'Save Graph Snapshot',
-					defaultPath: 'impedance-graph.png',
-					filters: [
-						{ name: 'PNG Images', extensions: ['png'] },
-						{ name: 'All Files', extensions: ['*'] },
-					],
-				});
+				// Use Electron's IPC to get save path
+				const { ipcRenderer } = window.require('electron');
+				const filePath = await ipcRenderer.invoke('show-save-dialog', 'impedance-graph.png');
 
 				if (!filePath) {
 					return; // User cancelled

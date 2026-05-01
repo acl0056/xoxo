@@ -399,19 +399,44 @@ export default {
 			}
 
 			// Draw label and value
-			if (component.label) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '12px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -1.8 * gridSize);
-			}
-			if (component.parameters.resistance != null) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '11px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'top';
-				this.context.fillText(formatEngineering(component.parameters.resistance), 0, -1.8 * gridSize);
+			// For vertical components (rotation 90/270), place labels on the left side
+			// by drawing on the opposite side in local coords and flipping 180°
+			const isVertical = component.rotation === 90 || component.rotation === 270;
+			const labelY = -1.8 * gridSize;
+			if (isVertical) {
+				this.context.save();
+				this.context.translate(0, -labelY);
+				this.context.rotate(Math.PI);
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, 0);
+				}
+				if (component.parameters.resistance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(formatEngineering(component.parameters.resistance), 0, 0);
+				}
+				this.context.restore();
+			} else {
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, labelY);
+				}
+				if (component.parameters.resistance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(formatEngineering(component.parameters.resistance), 0, labelY);
+				}
 			}
 		},
 
@@ -498,19 +523,44 @@ export default {
 			}
 
 			// Draw label and value
-			if (component.label) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '12px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -2.3 * gridSize);
-			}
-			if (component.parameters.capacitance != null) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '11px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'top';
-				this.context.fillText(`${formatEngineering(component.parameters.capacitance)}F`, 0, -2.3 * gridSize);
+			// For vertical components (rotation 90/270), place labels on the left side
+			// by drawing on the opposite side in local coords and flipping 180°
+			const isVertical = component.rotation === 90 || component.rotation === 270;
+			const labelY = -2.3 * gridSize;
+			if (isVertical) {
+				this.context.save();
+				this.context.translate(0, -labelY);
+				this.context.rotate(Math.PI);
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, 0);
+				}
+				if (component.parameters.capacitance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(`${formatEngineering(component.parameters.capacitance)}F`, 0, 0);
+				}
+				this.context.restore();
+			} else {
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, labelY);
+				}
+				if (component.parameters.capacitance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(`${formatEngineering(component.parameters.capacitance)}F`, 0, labelY);
+				}
 			}
 		},
 
@@ -617,19 +667,44 @@ export default {
 			}
 
 			// Draw label and value
-			if (component.label) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '12px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -2.3 * gridSize);
-			}
-			if (component.parameters.inductance != null) {
-				this.context.fillStyle = '#000000';
-				this.context.font = '11px Arial';
-				this.context.textAlign = 'center';
-				this.context.textBaseline = 'top';
-				this.context.fillText(`${formatEngineering(component.parameters.inductance)}H`, 0, -2.3 * gridSize);
+			// For vertical components (rotation 90/270), place labels on the left side
+			// by drawing on the opposite side in local coords and flipping 180°
+			const isVertical = component.rotation === 90 || component.rotation === 270;
+			const labelY = -2.3 * gridSize;
+			if (isVertical) {
+				this.context.save();
+				this.context.translate(0, -labelY);
+				this.context.rotate(Math.PI);
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, 0);
+				}
+				if (component.parameters.inductance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(`${formatEngineering(component.parameters.inductance)}H`, 0, 0);
+				}
+				this.context.restore();
+			} else {
+				if (component.label) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'bottom';
+					this.context.fillText(component.label, 0, labelY);
+				}
+				if (component.parameters.inductance != null) {
+					this.context.fillStyle = '#000000';
+					this.context.font = '11px Arial';
+					this.context.textAlign = 'center';
+					this.context.textBaseline = 'top';
+					this.context.fillText(`${formatEngineering(component.parameters.inductance)}H`, 0, labelY);
+				}
 			}
 		},
 

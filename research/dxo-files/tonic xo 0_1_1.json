@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-04-30T15:19:22.391Z"
+    "modified": "2026-05-01T03:12:25.900Z"
   },
   "components": [
     {
@@ -105,7 +105,7 @@
       "id": "mo4n6bx0-1vgokep",
       "type": "resistor",
       "label": "R4",
-      "x": 41,
+      "x": 47,
       "y": 61,
       "rotation": 0,
       "parameters": {
@@ -118,7 +118,7 @@
       "id": "mo4n6bx0-40yuzw8",
       "type": "resistor",
       "label": "R5",
-      "x": 41,
+      "x": 47,
       "y": 44,
       "rotation": 0,
       "parameters": {
@@ -181,7 +181,7 @@
       "id": "mo4n6bx0-cu1ocw9",
       "type": "ground",
       "label": "",
-      "x": 38,
+      "x": 50,
       "y": 44,
       "rotation": 0,
       "parameters": {}
@@ -190,7 +190,7 @@
       "id": "mo4n6bx0-jqwyq9j",
       "type": "ground",
       "label": "",
-      "x": 38,
+      "x": 50,
       "y": 61,
       "rotation": 0,
       "parameters": {}
@@ -14053,10 +14053,10 @@
       "segments": []
     },
     {
-      "id": "mokjsf9v-wynz4h8",
+      "id": "momc6ghk-p4if4il",
       "startNode": {
         "componentId": "mo4n6bx0-40yuzw8",
-        "terminal": 1
+        "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bx0-rehxu91",
@@ -14065,22 +14065,22 @@
       "segments": []
     },
     {
-      "id": "mokjsi3h-m4q46hz",
+      "id": "momc6snz-63agqv2",
       "startNode": {
         "componentId": "mo4n6bx0-cu1ocw9",
         "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bx0-40yuzw8",
-        "terminal": 0
+        "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mokjsptq-ng6yjmm",
+      "id": "momc7ary-oikvqhl",
       "startNode": {
         "componentId": "mo4n6bx0-1vgokep",
-        "terminal": 1
+        "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bwz-zrv81kx",
@@ -14089,14 +14089,14 @@
       "segments": []
     },
     {
-      "id": "mokjssex-lthpp93",
+      "id": "momc7gvg-1z860tt",
       "startNode": {
         "componentId": "mo4n6bx0-jqwyq9j",
         "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bx0-1vgokep",
-        "terminal": 0
+        "terminal": 1
       },
       "segments": []
     }
@@ -14122,13 +14122,13 @@
       "x": 1020,
       "y": 25,
       "width": 900,
-      "height": 601
+      "height": 532
     },
     "impedance": {
       "x": 1020,
-      "y": 627,
+      "y": 558,
       "width": 900,
-      "height": 453
+      "height": 522
     }
   }
 }

@@ -112,13 +112,22 @@
 				</div>
 
 				<div class="parameter-row">
-					<label>Delay (ms):</label>
+					<label>Delay:</label>
 					<input
-						v-model.number="localParameters.delay"
+						:value="delayDisplayValue"
 						type="number"
 						min="0"
 						step="0.01"
+						@input="setDelayFromDisplay($event.target.value)"
 					>
+					<select
+						v-model="localParameters.delayUnit"
+						class="delay-unit-select"
+					>
+						<option value="in">in</option>
+						<option value="cm">cm</option>
+						<option value="ms">ms</option>
+					</select>
 				</div>
 
 				<div class="parameter-row">
@@ -247,10 +256,11 @@
 				<div class="parameter-row">
 					<label>Delay (ms):</label>
 					<input
-						v-model.number="localParameters.delay"
+						:value="localParameters.delay * 1000"
 						type="number"
 						min="0"
 						step="0.01"
+						@input="localParameters.delay = $event.target.value / 1000"
 					>
 				</div>
 
@@ -316,6 +326,20 @@ export default {
 					return null;
 			}
 		},
+		delayDisplayValue() {
+			const delaySec = this.localParameters.delay || 0;
+			const unit = this.localParameters.delayUnit || 'in';
+			switch (unit) {
+				case 'in':
+					return +(delaySec * 13504).toFixed(4);
+				case 'cm':
+					return +(delaySec * 34300).toFixed(4);
+				case 'ms':
+					return +(delaySec * 1000).toFixed(4);
+				default:
+					return +(delaySec * 13504).toFixed(4);
+			}
+		},
 	},
 	watch: {
 		component: {
@@ -333,6 +357,23 @@ export default {
 		},
 	},
 	methods: {
+		setDelayFromDisplay(displayValue) {
+			const value = parseFloat(displayValue) || 0;
+			const unit = this.localParameters.delayUnit || 'in';
+			switch (unit) {
+				case 'in':
+					this.localParameters.delay = value / 13504;
+					break;
+				case 'cm':
+					this.localParameters.delay = value / 34300;
+					break;
+				case 'ms':
+					this.localParameters.delay = value / 1000;
+					break;
+				default:
+					this.localParameters.delay = value / 13504;
+			}
+		},
 		initializeParameters() {
 			if (!this.component) return;
 

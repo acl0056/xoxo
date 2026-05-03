@@ -18,6 +18,7 @@
 						v-if="componentType.icon"
 						:src="componentType.icon"
 						:alt="componentType.label"
+						draggable="false"
 					>
 					<span
 						v-else
@@ -71,6 +72,11 @@ export default {
 			],
 		};
 	},
+	created() {
+		// Pre-create transparent image for drag ghost (must be loaded before first drag)
+		this.transparentDragImage = new Image();
+		this.transparentDragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+	},
 	methods: {
 		startDrag(event, componentType) {
 			// Set drag data with component type information
@@ -78,6 +84,13 @@ export default {
 			event.dataTransfer.setData('application/json', JSON.stringify({
 				componentType: componentType.type,
 			}));
+
+			// Use pre-loaded transparent 1x1 pixel as drag image
+			event.dataTransfer.setDragImage(this.transparentDragImage, 0, 0);
+
+			// Store the component type globally so CircuitEditor can access it during dragover
+			// (dataTransfer.getData is not available in dragover due to browser security)
+			window.__pendingDragComponentType = componentType.type;
 
 			// Emit event to parent components if needed
 			this.$emit('drag-start', componentType);

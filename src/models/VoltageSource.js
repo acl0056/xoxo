@@ -19,7 +19,7 @@ export class VoltageSource extends Component {
 		this.parameters = {
 			power: 1.0, // Watts
 			impedance: 8.0, // Ohms (reference)
-			delay: 0.0, // Milliseconds
+			delay: 0.0, // Seconds
 			inverted: false, // Polarity inversion flag
 		};
 

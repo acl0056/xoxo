@@ -16,6 +16,8 @@
 			@wheel="handleWheel"
 			@contextmenu="handleContextMenu"
 			@dragover="handleDragOver"
+			@dragenter="handleDragEnter"
+			@dragleave="handleDragLeave"
 			@drop="handleDrop"
 		/>
 		<div class="toolbar">
@@ -107,6 +109,7 @@ export default {
 			tuneDialogComponent: null,
 			annotationDialogVisible: false,
 			annotationDialogAnnotation: null,
+			dragPreview: null, // { componentType, gridX, gridY } for rendering preview during drag
 		};
 	},
 	computed: {
@@ -187,6 +190,11 @@ export default {
 
 			// Render selection highlights
 			this.renderSelectionHighlights();
+
+			// Render drag preview (component being dragged from palette)
+			if (this.dragPreview) {
+				this.renderDragPreview();
+			}
 
 			// Restore context state
 			this.context.restore();
@@ -1041,6 +1049,48 @@ export default {
 			this.context.setLineDash([]);
 		},
 
+		renderDragPreview() {
+			if (!this.dragPreview) return;
+			const { componentType, gridX, gridY } = this.dragPreview;
+
+			// Create a temporary mock component for rendering
+			const mockComponent = {
+				type: componentType,
+				x: gridX,
+				y: gridY,
+				rotation: 0,
+				label: '',
+				parameters: {},
+			};
+
+			// Draw with transparency to indicate it's a preview
+			this.context.save();
+			this.context.globalAlpha = 0.5;
+			this.context.translate(gridX * this.gridSize, gridY * this.gridSize);
+
+			switch (componentType) {
+				case 'resistor':
+					this.renderResistor(mockComponent);
+					break;
+				case 'capacitor':
+					this.renderCapacitor(mockComponent);
+					break;
+				case 'inductor':
+					this.renderInductor(mockComponent);
+					break;
+				case 'speaker':
+					this.renderSpeaker(mockComponent);
+					break;
+				case 'ground':
+					this.renderGround(mockComponent);
+					break;
+				default:
+					break;
+			}
+
+			this.context.restore();
+		},
+
 		handleMouseDown(event) {
 			// Only handle left mouse button (0) to avoid interfering with context menu
 			if (event.button !== 0) return;
@@ -1859,6 +1909,44 @@ export default {
 			// Allow drop by preventing default behavior
 			event.preventDefault();
 			event.dataTransfer.dropEffect = 'copy';
+
+			// Calculate snapped grid position for preview
+			const rect = this.$refs.canvas.getBoundingClientRect();
+			const screenX = event.clientX - rect.left;
+			const screenY = event.clientY - rect.top;
+			const world = this.screenToWorld(screenX, screenY);
+			const snapped = this.snapToGrid(world.x, world.y);
+			const gridX = Math.round(snapped.x / this.gridSize);
+			const gridY = Math.round(snapped.y / this.gridSize);
+
+			// Get component type from global state (set by ComponentPalette on dragstart)
+			const componentType = window.__pendingDragComponentType;
+			if (componentType && (!this.dragPreview || this.dragPreview.gridX !== gridX || this.dragPreview.gridY !== gridY)) {
+				this.dragPreview = { componentType, gridX, gridY };
+				// Throttle rendering with requestAnimationFrame to avoid lag
+				if (!this._dragRafPending) {
+					this._dragRafPending = true;
+					requestAnimationFrame(() => {
+						this._dragRafPending = false;
+						this.renderCircuit();
+					});
+				}
+			}
+		},
+
+		handleDragEnter(event) {
+			event.preventDefault();
+		},
+
+		handleDragLeave(event) {
+			// Only clear if leaving the canvas entirely (not entering a child element)
+			const rect = this.$refs.canvas.getBoundingClientRect();
+			const x = event.clientX;
+			const y = event.clientY;
+			if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+				this.dragPreview = null;
+				this.renderCircuit();
+			}
 		},
 
 		handleDrop(event) {
@@ -1886,6 +1974,10 @@ export default {
 
 			// Create the component
 			this.createComponent(componentType, gridX, gridY);
+
+			// Clear drag preview and global state
+			this.dragPreview = null;
+			window.__pendingDragComponentType = null;
 		},
 
 		createComponent(componentType, gridX, gridY) {
@@ -1920,6 +2012,22 @@ export default {
 
 			// Create new component instance
 			const component = new ComponentClass(gridX, gridY);
+
+			// Auto-generate label (R1, R2, C1, L1, S1, etc.)
+			const circuit = this.$store.state.circuit?.circuit;
+			if (circuit && componentType !== 'ground') {
+				const prefix = { resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S' }[componentType] || '';
+				if (prefix) {
+					const existingNumbers = circuit.components
+						.filter((c) => c.type === componentType && c.label)
+						.map((c) => {
+							const match = c.label.match(new RegExp(`^${prefix}(\\d+)$`));
+							return match ? parseInt(match[1], 10) : 0;
+						});
+					const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+					component.label = `${prefix}${nextNumber}`;
+				}
+			}
 
 			// Add component to circuit using action (for undo/redo support)
 			this.$store.dispatch('circuit/addComponent', component);

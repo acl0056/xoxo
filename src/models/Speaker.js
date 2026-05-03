@@ -18,7 +18,8 @@ export class Speaker extends Component {
 		this.parameters = {
 			name: '', // Speaker name
 			sensitivity: 0.0, // dB adjustment
-			delay: 0.0, // Milliseconds
+			delay: 0.0, // Seconds (internal storage always in seconds)
+			delayUnit: 'in', // Display unit: 'in' (inches), 'cm', or 'ms'
 			inverted: false, // Polarity inversion flag
 			muted: false, // Mute flag
 			frdFile: null, // Primary on-axis FRD file path
@@ -254,6 +255,7 @@ export class Speaker extends Component {
 				name: this.parameters.name,
 				sensitivity: this.parameters.sensitivity,
 				delay: this.parameters.delay,
+				delayUnit: this.parameters.delayUnit,
 				inverted: this.parameters.inverted,
 				muted: this.parameters.muted,
 				frdFile: this.parameters.frdFile,
@@ -291,6 +293,7 @@ export class Speaker extends Component {
 			name: json.parameters.name || '',
 			sensitivity: json.parameters.sensitivity || 0.0,
 			delay: json.parameters.delay || 0.0,
+			delayUnit: json.parameters.delayUnit || 'in',
 			inverted: json.parameters.inverted || false,
 			muted: json.parameters.muted || false,
 			frdFile: json.parameters.frdFile || null,

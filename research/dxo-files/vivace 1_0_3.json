@@ -26745,21 +26745,21 @@
   "windowLayout": {
     "main": {
       "x": 0,
-      "y": 38,
-      "width": 930,
-      "height": 944
+      "y": 25,
+      "width": 1014,
+      "height": 1055
     },
     "frequencyResponse": {
-      "x": 931,
+      "x": 1015,
       "y": 25,
-      "width": 900,
-      "height": 600
+      "width": 904,
+      "height": 546
     },
     "impedance": {
-      "x": 931,
-      "y": 626,
-      "width": 900,
-      "height": 390
+      "x": 1015,
+      "y": 572,
+      "width": 904,
+      "height": 508
     }
   }
 }

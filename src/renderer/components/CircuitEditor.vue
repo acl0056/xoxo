@@ -260,7 +260,7 @@ export default {
 		},
 
 		renderComponents() {
-			const circuit = this.$store.state.circuit.circuit;
+			const { circuit } = this.$store.state.circuit;
 			if (!circuit || !circuit.components) return;
 
 			circuit.components.forEach((component) => {
@@ -391,7 +391,7 @@ export default {
 				// Path: left lead -> zigzag body -> right lead
 				// Zigzag spans from -2 to +2 gridSize with 6 diagonal segments
 				const h = 0.8 * gridSize;
-				const step = 4 * gridSize / 6; // 6 diagonal segments across 4 gridSize
+				const step = (4 * gridSize) / 6; // 6 diagonal segments across 4 gridSize
 
 				this.context.lineTo(-2 * gridSize + step * 0.5, -h / 2);
 				this.context.lineTo(-2 * gridSize + step * 1.5, h / 2);
@@ -1056,7 +1056,9 @@ export default {
 
 		renderDragPreview() {
 			if (!this.dragPreview) return;
-			const { componentType, gridX, gridY, rotation } = this.dragPreview;
+			const {
+				componentType, gridX, gridY, rotation,
+			} = this.dragPreview;
 
 			// Create a temporary mock component for rendering
 			const mockComponent = {
@@ -1129,12 +1131,12 @@ export default {
 				if (terminal !== null) {
 					// Prevent default drag behavior
 					event.preventDefault();
-					
+
 					// Start wire creation mode
 					this.dragMode = 'wire';
 					const terminals = this.getComponentTerminals(clickedComponent);
 					const terminalPos = terminals[terminal];
-					
+
 					this.wireStart = {
 						componentId: clickedComponent.id,
 						terminal,
@@ -1255,11 +1257,12 @@ export default {
 				this.context.scale(this.zoomLevel / 100, this.zoomLevel / 100);
 
 				// Determine if wire should be horizontal or vertical based on which distance is greater
-				const deltaX = Math.abs(snapped.x - this.wireStart.x);
-				const deltaY = Math.abs(snapped.y - this.wireStart.y);
+				const wireDeltaX = Math.abs(snapped.x - this.wireStart.x);
+				const wireDeltaY = Math.abs(snapped.y - this.wireStart.y);
 
-				let endX, endY;
-				if (deltaX > deltaY) {
+				let endX; let
+					endY;
+				if (wireDeltaX > wireDeltaY) {
 					// Horizontal wire
 					endX = snapped.x;
 					endY = this.wireStart.y;
@@ -1328,7 +1331,7 @@ export default {
 				}
 				this.dragStartPosition = null;
 			} else if (this.dragMode === 'move-annotation' && this.selectedAnnotation && this.dragStartPosition) {
-				const circuit = this.$store.state.circuit.circuit;
+				const { circuit } = this.$store.state.circuit;
 				const annotation = circuit?.annotations?.find((a) => a.id === this.selectedAnnotation);
 				if (annotation && (annotation.x !== this.dragStartPosition.x || annotation.y !== this.dragStartPosition.y)) {
 					this.$store.commit('circuit/PUSH_UNDO', {
@@ -1348,24 +1351,25 @@ export default {
 				// Complete wire segment creation
 				const world = this.screenToWorld(screenX, screenY);
 				const snapped = this.snapToGrid(world.x, world.y);
-				
+
 				// Convert to grid coordinates
 				const endGridX = Math.round(snapped.x / this.gridSize);
 				const endGridY = Math.round(snapped.y / this.gridSize);
-				
+
 				// Get start position in grid coordinates
 				const startGridX = Math.round(this.wireStart.x / this.gridSize);
 				const startGridY = Math.round(this.wireStart.y / this.gridSize);
-				
+
 				// Don't create wire if start and end are the same
 				if (startGridX !== endGridX || startGridY !== endGridY) {
 					// Calculate wire segment parameters
 					const deltaX = endGridX - startGridX;
 					const deltaY = endGridY - startGridY;
-					
+
 					// Determine if wire should be horizontal or vertical
-					let length, rotation, centerX, centerY;
-					
+					let length; let rotation; let centerX; let
+						centerY;
+
 					if (Math.abs(deltaX) > Math.abs(deltaY)) {
 						// Horizontal wire
 						length = Math.abs(deltaX);
@@ -1379,15 +1383,15 @@ export default {
 						centerX = startGridX;
 						centerY = startGridY + deltaY / 2;
 					}
-					
+
 					// Import WireSegment dynamically
 					import('@/models/WireSegment').then(({ WireSegment }) => {
 						// Create new wire segment
 						const wireSegment = new WireSegment(centerX, centerY, length, rotation);
-						
+
 						// Add to circuit
 						this.$store.dispatch('circuit/addComponent', wireSegment);
-						
+
 						// Create Wire objects for any terminal overlaps
 						this.$nextTick(() => {
 							this.createWireConnectionsForComponent(wireSegment.id);
@@ -1663,6 +1667,8 @@ export default {
 		},
 
 		closeTuneDialog() {
+			// Flush any pending debounced undo entry before closing
+			this.$store.dispatch('circuit/flushTuningUndo');
 			this.tuneDialogVisible = false;
 			this.tuneDialogComponent = null;
 			// Reset any drag state that may have been interrupted by the dialog opening
@@ -1673,12 +1679,12 @@ export default {
 
 		async handleTuneUpdate({ componentId, parameters }) {
 			console.log('[EDITOR] handleTuneUpdate received');
-			// Update component parameters in the store
-			await this.$store.dispatch('circuit/updateComponent', {
+			// Update component parameters in the store with debounced undo
+			await this.$store.dispatch('circuit/updateComponentTuning', {
 				componentId,
 				updates: { parameters },
 			});
-			console.log('[EDITOR] updateComponent dispatched');
+			console.log('[EDITOR] updateComponentTuning dispatched');
 
 			// If this is a speaker, reload FRD/ZMA data files whenever a path is set
 			const circuit = this.$store.state.circuit?.circuit;
@@ -1733,11 +1739,15 @@ export default {
 			this.wireSegments = [];
 		},
 
-		handleAnnotationUpdate({ annotationId, text, fontSize, textAlign, bold }) {
+		handleAnnotationUpdate({
+			annotationId, text, fontSize, textAlign, bold,
+		}) {
 			// Update annotation in the store
 			this.$store.dispatch('circuit/updateAnnotation', {
 				annotationId,
-				updates: { text, fontSize, textAlign, bold },
+				updates: {
+					text, fontSize, textAlign, bold,
+				},
 			});
 			this.renderCircuit();
 		},
@@ -1745,15 +1755,15 @@ export default {
 		rotateComponent(component) {
 			// Rotate component by 90 degrees clockwise
 			component.rotate(90);
-			
+
 			// For wire segments, also update terminals after rotation
 			if (component.type === 'wire-segment') {
 				component.updateTerminals();
 			}
-			
+
 			this.$store.dispatch('circuit/updateComponent', {
 				componentId: component.id,
-				updates: { 
+				updates: {
 					rotation: component.rotation,
 					terminals: component.terminals,
 				},
@@ -1947,7 +1957,9 @@ export default {
 			const componentType = window.__pendingDragComponentType;
 			if (componentType && (!this.dragPreview || this.dragPreview.gridX !== gridX || this.dragPreview.gridY !== gridY)) {
 				const currentRotation = this.dragPreview?.rotation || 0;
-				this.dragPreview = { componentType, gridX, gridY, rotation: currentRotation };
+				this.dragPreview = {
+					componentType, gridX, gridY, rotation: currentRotation,
+				};
 				// Throttle rendering with requestAnimationFrame to avoid lag
 				if (!this._dragRafPending) {
 					this._dragRafPending = true;
@@ -2047,7 +2059,9 @@ export default {
 			// Auto-generate label (R1, R2, C1, L1, S1, etc.)
 			const circuit = this.$store.state.circuit?.circuit;
 			if (circuit && componentType !== 'ground') {
-				const prefix = { resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S' }[componentType] || '';
+				const prefix = {
+					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S',
+				}[componentType] || '';
 				if (prefix) {
 					const existingNumbers = circuit.components
 						.filter((c) => c.type === componentType && c.label)
@@ -2119,7 +2133,7 @@ export default {
 
 		getComponentAtPosition(worldX, worldY) {
 			const circuit = this.$store.state.circuit?.circuit;
-			
+
 			if (!circuit || !circuit.components) {
 				return null;
 			}
@@ -2179,7 +2193,7 @@ export default {
 			const rotatedWidth = width * cos + height * sin;
 			const rotatedHeight = width * sin + height * cos;
 
-			let bounds = {
+			const bounds = {
 				left: centerX + offsetX - rotatedWidth / 2,
 				right: centerX + offsetX + rotatedWidth / 2,
 				top: centerY + offsetY - rotatedHeight / 2,
@@ -2189,13 +2203,13 @@ export default {
 			// Expand bounds to include terminal positions so they are always clickable
 			if (component.terminals && component.terminals.length > 0) {
 				const terminalHitRadius = gridSize * 1.0;
-				const radians = (component.rotation * Math.PI) / 180;
-				const cos = Math.cos(radians);
-				const sin = Math.sin(radians);
+				const terminalRadians = (component.rotation * Math.PI) / 180;
+				const terminalCos = Math.cos(terminalRadians);
+				const terminalSin = Math.sin(terminalRadians);
 
 				component.terminals.forEach((terminal) => {
-					const rotatedX = terminal.x * cos - terminal.y * sin;
-					const rotatedY = terminal.x * sin + terminal.y * cos;
+					const rotatedX = terminal.x * terminalCos - terminal.y * terminalSin;
+					const rotatedY = terminal.x * terminalSin + terminal.y * terminalCos;
 					const tx = (component.x + rotatedX) * gridSize;
 					const ty = (component.y + rotatedY) * gridSize;
 

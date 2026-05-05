@@ -5,6 +5,15 @@ import { Speaker } from '@/models/Speaker';
 import { VoltageSource } from '@/models/VoltageSource';
 import { Ground } from '@/models/Ground';
 
+// Mock electron
+jest.mock('electron', () => ({
+	ipcRenderer: {
+		on: jest.fn(),
+		send: jest.fn(),
+		invoke: jest.fn(),
+	},
+}), { virtual: true });
+
 // Mock the simulation modules
 jest.mock('@/simulation/CircuitSolver');
 jest.mock('@/simulation/FrequencyAnalyzer');

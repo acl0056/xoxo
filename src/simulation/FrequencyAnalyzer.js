@@ -491,7 +491,7 @@ class FrequencyAnalyzer {
 		let low = 0;
 		let high = lastIndex;
 		while (high - low > 1) {
-			const mid = (low + high) >> 1;
+			const mid = Math.floor((low + high) / 2);
 			if (xArray[mid] <= x) {
 				low = mid;
 			} else {

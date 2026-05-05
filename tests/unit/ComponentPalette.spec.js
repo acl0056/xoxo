@@ -25,7 +25,7 @@ describe('ComponentPalette', () => {
 
 		it('should render all component types', () => {
 			const items = wrapper.findAll('.palette-item');
-			expect(items.length).toBe(5); // resistor, capacitor, inductor, speaker, ground
+			expect(items.length).toBe(6); // resistor, capacitor, inductor, speaker, ground + text annotation
 		});
 
 		it('should render component labels correctly', () => {
@@ -41,27 +41,28 @@ describe('ComponentPalette', () => {
 
 		it('should render component icons', () => {
 			const icons = wrapper.findAll('.palette-icon');
-			expect(icons.length).toBe(5);
+			expect(icons.length).toBe(6);
 		});
 	});
 
 	describe('Drag and Drop', () => {
 		it('should make palette items draggable', () => {
-			const items = wrapper.findAll('.palette-item');
-			items.forEach((item) => {
-				expect(item.attributes('draggable')).toBe('true');
+			const icons = wrapper.findAll('.palette-icon');
+			icons.forEach((icon) => {
+				expect(icon.attributes('draggable')).toBe('true');
 			});
 		});
 
 		it('should call startDrag when drag starts on resistor', async () => {
 			const startDragSpy = jest.spyOn(wrapper.vm, 'startDrag');
-			const resistorItem = wrapper.findAll('.palette-item')[0];
+			const resistorIcon = wrapper.findAll('.palette-icon')[0];
 
 			// Trigger dragstart event
-			await resistorItem.trigger('dragstart', {
+			await resistorIcon.trigger('dragstart', {
 				dataTransfer: {
 					effectAllowed: '',
 					setData: jest.fn(),
+					setDragImage: jest.fn(),
 				},
 			});
 
@@ -72,6 +73,7 @@ describe('ComponentPalette', () => {
 			const mockDataTransfer = {
 				effectAllowed: '',
 				setData: jest.fn(),
+				setDragImage: jest.fn(),
 			};
 
 			const mockEvent = {
@@ -96,6 +98,7 @@ describe('ComponentPalette', () => {
 			const mockDataTransfer = {
 				effectAllowed: '',
 				setData: jest.fn(),
+				setDragImage: jest.fn(),
 			};
 
 			const mockEvent = {

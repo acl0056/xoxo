@@ -315,11 +315,11 @@ describe('TuneDialog', () => {
 			expect(wrapper.text()).toContain('Mute');
 			expect(wrapper.text()).toContain('FRD File:');
 			expect(wrapper.text()).toContain('ZMA File:');
-			expect(wrapper.text()).toContain('Phase Source:');
 		});
 
-		it('should display phase source radio buttons', () => {
+		it('should display phase source radio buttons when FRD file is set', () => {
 			const speaker = new Speaker(0, 0);
+			speaker.parameters.frdFile = '/path/to/test.frd';
 
 			const wrapper = mount(TuneDialog, {
 				props: {
@@ -328,8 +328,7 @@ describe('TuneDialog', () => {
 				},
 			});
 
-			const radioButtons = wrapper.findAll('input[type="radio"]');
-			expect(radioButtons).toHaveLength(2);
+			expect(wrapper.text()).toContain('FRD phase source:');
 			expect(wrapper.text()).toContain('As Measured');
 			expect(wrapper.text()).toContain('Derived (Minimum Phase)');
 		});
@@ -365,6 +364,7 @@ describe('TuneDialog', () => {
 			expect(wrapper.vm.localParameters.offAxisFiles[0]).toEqual({
 				angle: 0,
 				frdPath: '',
+				phaseSource: 'measured',
 			});
 		});
 
@@ -487,7 +487,7 @@ describe('TuneDialog', () => {
 				},
 			});
 
-			const closeButton = wrapper.find('.close-button');
+			const closeButton = wrapper.find('.close-x-button');
 			await closeButton.trigger('click');
 
 			expect(wrapper.emitted('close')).toBeTruthy();
@@ -509,7 +509,7 @@ describe('TuneDialog', () => {
 			wrapper.vm.localParameters.resistance = 4700;
 			wrapper.vm.valueInput = '4.7k';
 
-			const closeButton = wrapper.find('.close-button');
+			const closeButton = wrapper.find('.close-x-button');
 			await closeButton.trigger('click');
 
 			expect(wrapper.emitted('update')).toBeTruthy();

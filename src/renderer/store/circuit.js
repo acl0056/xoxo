@@ -14,6 +14,15 @@ function triggerSimulation(store) {
 	}
 }
 
+/**
+ * Debounced undo state for tuning operations.
+ * Coalesces rapid parameter changes into a single undo entry.
+ */
+let tuningUndoTimer = null;
+let tuningUndoSnapshot = null;
+let tuningUndoComponentId = null;
+const TUNING_UNDO_DEBOUNCE_MS = 600;
+
 export default {
 	namespaced: true,
 	state: {
@@ -267,6 +276,83 @@ export default {
 			triggerSimulation(this);
 		},
 
+		/**
+		 * Update a component from the tune dialog with debounced undo.
+		 * Applies the change immediately but coalesces rapid changes into
+		 * a single undo entry.
+		 */
+		updateComponentTuning({ commit, state }, { componentId, updates }) {
+			if (!state.circuit) return;
+
+			const component = state.circuit.getComponent(componentId);
+			if (!component) return;
+
+			// If switching to a different component, flush the pending undo first
+			if (tuningUndoSnapshot && tuningUndoComponentId !== componentId) {
+				commit('PUSH_UNDO', {
+					type: 'updateComponent',
+					payload: { componentId: tuningUndoComponentId, updates: tuningUndoSnapshot },
+				});
+				commit('CLEAR_REDO');
+				tuningUndoSnapshot = null;
+				tuningUndoComponentId = null;
+			}
+
+			// On the first change in a burst, capture the "before" snapshot
+			if (!tuningUndoSnapshot) {
+				const previousValues = {};
+				Object.keys(updates).forEach((key) => {
+					previousValues[key] = JSON.parse(JSON.stringify(component[key]));
+				});
+				tuningUndoSnapshot = previousValues;
+				tuningUndoComponentId = componentId;
+			}
+
+			// Apply the change immediately
+			commit('UPDATE_COMPONENT', { componentId, updates });
+
+			// Trigger simulation immediately
+			triggerSimulation(this);
+
+			// Reset the debounce timer
+			if (tuningUndoTimer) {
+				clearTimeout(tuningUndoTimer);
+			}
+			tuningUndoTimer = setTimeout(() => {
+				// Timer fired — push the coalesced undo entry
+				if (tuningUndoSnapshot) {
+					commit('PUSH_UNDO', {
+						type: 'updateComponent',
+						payload: { componentId: tuningUndoComponentId, updates: tuningUndoSnapshot },
+					});
+					commit('CLEAR_REDO');
+					tuningUndoSnapshot = null;
+					tuningUndoComponentId = null;
+				}
+				tuningUndoTimer = null;
+			}, TUNING_UNDO_DEBOUNCE_MS);
+		},
+
+		/**
+		 * Flush any pending debounced tuning undo entry immediately.
+		 * Call this when the tune dialog closes or before an undo operation.
+		 */
+		flushTuningUndo({ commit }) {
+			if (tuningUndoTimer) {
+				clearTimeout(tuningUndoTimer);
+				tuningUndoTimer = null;
+			}
+			if (tuningUndoSnapshot) {
+				commit('PUSH_UNDO', {
+					type: 'updateComponent',
+					payload: { componentId: tuningUndoComponentId, updates: tuningUndoSnapshot },
+				});
+				commit('CLEAR_REDO');
+				tuningUndoSnapshot = null;
+				tuningUndoComponentId = null;
+			}
+		},
+
 		addWire({ commit }, wire) {
 			const undoAction = {
 				type: 'removeWire',
@@ -340,7 +426,10 @@ export default {
 			commit('UPDATE_ANNOTATION', { annotationId, updates });
 		},
 		// Undo action
-		undo({ commit, state }) {
+		undo({ commit, state, dispatch }) {
+			// Flush any pending tuning undo so it's on the stack before we pop
+			dispatch('flushTuningUndo');
+
 			if (state.undoStack.length === 0 || !state.circuit) return;
 
 			const action = state.undoStack[state.undoStack.length - 1];

@@ -325,13 +325,13 @@ export class Speaker extends Component {
 		}
 
 		// Migrate off-axis entries: add phaseSource if missing
-		const offAxisFiles = (json.parameters.offAxisFiles || []).map((entry) => ({
-			angle: entry.angle,
-			frdPath: entry.frdPath,
-			phaseSource: entry.phaseSource !== undefined
-				? entry.phaseSource
-				: (legacyPhaseSource !== undefined ? legacyPhaseSource : 'measured'),
-		}));
+		const offAxisFiles = (json.parameters.offAxisFiles || []).map((entry) => {
+			if (entry.phaseSource !== undefined) {
+				return { angle: entry.angle, frdPath: entry.frdPath, phaseSource: entry.phaseSource };
+			}
+			const resolvedPhaseSource = legacyPhaseSource !== undefined ? legacyPhaseSource : 'measured';
+			return { angle: entry.angle, frdPath: entry.frdPath, phaseSource: resolvedPhaseSource };
+		});
 
 		speaker.parameters = {
 			name: json.parameters.name || '',

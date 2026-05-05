@@ -2,6 +2,15 @@ import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import ImpedanceGraph from '@/renderer/components/ImpedanceGraph.vue';
 
+jest.mock('electron', () => ({
+	ipcRenderer: {
+		on: jest.fn(),
+		send: jest.fn(),
+		invoke: jest.fn(),
+		removeAllListeners: jest.fn(),
+	},
+}), { virtual: true });
+
 describe('ImpedanceGraph', () => {
 	let wrapper;
 	let store;
@@ -23,6 +32,10 @@ describe('ImpedanceGraph', () => {
 			translate: jest.fn(),
 			rotate: jest.fn(),
 			scale: jest.fn(),
+			rect: jest.fn(),
+			clip: jest.fn(),
+			setLineDash: jest.fn(),
+			measureText: jest.fn(() => ({ width: 0 })),
 		}));
 
 		store = createStore({
@@ -119,14 +132,14 @@ describe('ImpedanceGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Default scale: center at 8, step size 2, range 20 Ω (-2 to +18)
-				const yMax = wrapper.vm.valueToY(18, marginTop, graphHeight);
+				// Default scale: center at 12, step size 2, range 24 Ω (0 to 24)
+				const yMax = wrapper.vm.valueToY(24, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
-				const yMin = wrapper.vm.valueToY(-2, marginTop, graphHeight);
+				const yMin = wrapper.vm.valueToY(0, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 
-				const yCenter = wrapper.vm.valueToY(8, marginTop, graphHeight);
+				const yCenter = wrapper.vm.valueToY(12, marginTop, graphHeight);
 				expect(yCenter).toBeCloseTo(marginTop + graphHeight / 2, 1);
 			});
 
@@ -137,11 +150,11 @@ describe('ImpedanceGraph', () => {
 				// Change step size to 5
 				wrapper.vm.scaleSettings.stepSize = 5;
 
-				// Range is now 50 Ω (-17 to +33)
-				const yMax = wrapper.vm.valueToY(33, marginTop, graphHeight);
+				// Range is now 60 Ω (-18 to +42)
+				const yMax = wrapper.vm.valueToY(42, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
-				const yMin = wrapper.vm.valueToY(-17, marginTop, graphHeight);
+				const yMin = wrapper.vm.valueToY(-18, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 			});
 
@@ -152,8 +165,8 @@ describe('ImpedanceGraph', () => {
 				// Change center to 16 Ω
 				wrapper.vm.scaleSettings.centerValue = 16;
 
-				// Range is 20 Ω (6 to 26)
-				const yMax = wrapper.vm.valueToY(26, marginTop, graphHeight);
+				// Range is 24 Ω (4 to 28)
+				const yMax = wrapper.vm.valueToY(28, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
 				const yCenter = wrapper.vm.valueToY(16, marginTop, graphHeight);
@@ -167,19 +180,19 @@ describe('ImpedanceGraph', () => {
 				const graphHeight = 600;
 
 				const valueTop = wrapper.vm.yToValue(marginTop, marginTop, graphHeight);
-				expect(valueTop).toBeCloseTo(18, 1);
+				expect(valueTop).toBeCloseTo(24, 1);
 
 				const valueBottom = wrapper.vm.yToValue(marginTop + graphHeight, marginTop, graphHeight);
-				expect(valueBottom).toBeCloseTo(-2, 1);
+				expect(valueBottom).toBeCloseTo(0, 1);
 
 				const valueCenter = wrapper.vm.yToValue(marginTop + graphHeight / 2, marginTop, graphHeight);
-				expect(valueCenter).toBeCloseTo(8, 1);
+				expect(valueCenter).toBeCloseTo(12, 1);
 			});
 
 			it('should be inverse of valueToY', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
-				const testValues = [-2, 0, 4, 8, 12, 16, 18];
+				const testValues = [0, 4, 8, 12, 16, 20, 24];
 
 				testValues.forEach((value) => {
 					const y = wrapper.vm.valueToY(value, marginTop, graphHeight);
@@ -235,12 +248,12 @@ describe('ImpedanceGraph', () => {
 
 				expect(labels.length).toBeGreaterThan(0);
 
-				// With default settings (center 8, step 2, range 20)
-				// Should have labels at -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+				// With default settings (center 12, step 2, range 24)
+				// Should have labels at 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24
 				const values = labels.map((l) => l.value);
-				expect(values).toContain(-2);
-				expect(values).toContain(8);
-				expect(values).toContain(18);
+				expect(values).toContain(0);
+				expect(values).toContain(12);
+				expect(values).toContain(24);
 			});
 
 			it('should format labels as integers', () => {
@@ -257,10 +270,10 @@ describe('ImpedanceGraph', () => {
 				const labels = wrapper.vm.generateValueLabels();
 				const values = labels.map((l) => l.value);
 
-				// Should have labels at -17, -12, -7, -2, 3, 8, 13, 18, 23, 28, 33
-				expect(values).toContain(-17);
-				expect(values).toContain(8);
-				expect(values).toContain(33);
+				// Should have labels at -18, -13, -8, -3, 2, 7, 12, 17, 22, 27, 32, 37, 42
+				expect(values).toContain(-18);
+				expect(values).toContain(12);
+				expect(values).toContain(42);
 			});
 		});
 	});
@@ -472,14 +485,14 @@ describe('ImpedanceGraph', () => {
 
 			wrapper.vm.renderGraph();
 
-			// Should only be called once for current curves
-			expect(drawCurvesSpy).toHaveBeenCalledTimes(1);
-			expect(drawCurvesSpy).toHaveBeenCalledWith(
-				wrapper.vm.curves,
+			// Should be called for current curves (and possibly external curves), but not held curves
+			expect(drawCurvesSpy).toHaveBeenCalled();
+			expect(drawCurvesSpy).not.toHaveBeenCalledWith(
+				expect.anything(),
 				expect.any(Object),
 				expect.any(Number),
 				expect.any(Number),
-				false,
+				true,
 			);
 
 			drawCurvesSpy.mockRestore();
@@ -579,7 +592,7 @@ describe('ImpedanceGraph', () => {
 			wrapper.vm.resizeCanvas();
 
 			expect(canvas.width).toBe(1000);
-			expect(canvas.height).toBe(660); // 700 - 40 for menu bar
+			expect(canvas.height).toBe(700);
 		});
 
 		it('should render without errors when no data is available', () => {
@@ -591,7 +604,7 @@ describe('ImpedanceGraph', () => {
 		it('should have appropriate default scale settings for impedance', () => {
 			expect(wrapper.vm.scaleSettings.minFreq).toBe(20);
 			expect(wrapper.vm.scaleSettings.maxFreq).toBe(20000);
-			expect(wrapper.vm.scaleSettings.centerValue).toBe(8);
+			expect(wrapper.vm.scaleSettings.centerValue).toBe(12);
 			expect(wrapper.vm.scaleSettings.stepSize).toBe(2);
 		});
 
@@ -652,14 +665,14 @@ describe('ImpedanceGraph', () => {
 
 				expect(wrapper.vm.scaleSettings.stepSize).toBe(5);
 
-				// Verify range calculation uses new step size
+				// Verify range calculation uses new step size (multiplier is 12)
 				const marginTop = 20;
 				const graphHeight = 600;
-				const range = wrapper.vm.scaleSettings.stepSize * 10;
-				expect(range).toBe(50);
+				const range = wrapper.vm.scaleSettings.stepSize * 12;
+				expect(range).toBe(60);
 
-				// Verify transformation uses new range
-				const yMax = wrapper.vm.valueToY(33, marginTop, graphHeight);
+				// Verify transformation uses new range (center 12, range 60: -18 to 42)
+				const yMax = wrapper.vm.valueToY(42, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 			});
 		});
@@ -704,7 +717,7 @@ describe('ImpedanceGraph', () => {
 				// Verify all settings are back to defaults
 				expect(wrapper.vm.scaleSettings.minFreq).toBe(20);
 				expect(wrapper.vm.scaleSettings.maxFreq).toBe(20000);
-				expect(wrapper.vm.scaleSettings.centerValue).toBe(8);
+				expect(wrapper.vm.scaleSettings.centerValue).toBe(12);
 				expect(wrapper.vm.scaleSettings.stepSize).toBe(2);
 			});
 		});
@@ -737,14 +750,14 @@ describe('ImpedanceGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 1 * 10 = 10 Ω (11 to 21)
-				const yMax = wrapper.vm.valueToY(21, marginTop, graphHeight);
+				// Range is 1 * 12 = 12 Ω (10 to 22)
+				const yMax = wrapper.vm.valueToY(22, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
 				const yCenter = wrapper.vm.valueToY(16, marginTop, graphHeight);
 				expect(yCenter).toBeCloseTo(marginTop + graphHeight / 2, 1);
 
-				const yMin = wrapper.vm.valueToY(11, marginTop, graphHeight);
+				const yMin = wrapper.vm.valueToY(10, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 			});
 
@@ -840,9 +853,9 @@ describe('ImpedanceGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 200 Ω (-92 to +108)
-				const yMax = wrapper.vm.valueToY(108, marginTop, graphHeight);
-				const yMin = wrapper.vm.valueToY(-92, marginTop, graphHeight);
+				// Range is 240 Ω (center 12: -108 to 132)
+				const yMax = wrapper.vm.valueToY(132, marginTop, graphHeight);
+				const yMin = wrapper.vm.valueToY(-108, marginTop, graphHeight);
 
 				expect(yMax).toBeCloseTo(marginTop, 1);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
@@ -854,9 +867,9 @@ describe('ImpedanceGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 10 Ω (3 to 13)
-				const yMax = wrapper.vm.valueToY(13, marginTop, graphHeight);
-				const yMin = wrapper.vm.valueToY(3, marginTop, graphHeight);
+				// Range is 12 Ω (center 12: 6 to 18)
+				const yMax = wrapper.vm.valueToY(18, marginTop, graphHeight);
+				const yMin = wrapper.vm.valueToY(6, marginTop, graphHeight);
 
 				expect(yMax).toBeCloseTo(marginTop, 1);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);

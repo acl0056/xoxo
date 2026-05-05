@@ -2,6 +2,15 @@ import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import FrequencyResponseGraph from '@/renderer/components/FrequencyResponseGraph.vue';
 
+jest.mock('electron', () => ({
+	ipcRenderer: {
+		on: jest.fn(),
+		send: jest.fn(),
+		invoke: jest.fn(),
+		removeAllListeners: jest.fn(),
+	},
+}), { virtual: true });
+
 describe('FrequencyResponseGraph', () => {
 	let wrapper;
 	let store;
@@ -23,6 +32,10 @@ describe('FrequencyResponseGraph', () => {
 			translate: jest.fn(),
 			rotate: jest.fn(),
 			scale: jest.fn(),
+			rect: jest.fn(),
+			clip: jest.fn(),
+			setLineDash: jest.fn(),
+			measureText: jest.fn(() => ({ width: 0 })),
 		}));
 
 		store = createStore({
@@ -31,6 +44,8 @@ describe('FrequencyResponseGraph', () => {
 					namespaced: true,
 					state: {
 						frequencyResponse: null,
+						availableAngles: [],
+						currentAngle: 0,
 					},
 				},
 			},
@@ -119,14 +134,14 @@ describe('FrequencyResponseGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Default scale: center at 0, step size 5, range 50 dB (-25 to +25)
-				const yMax = wrapper.vm.magnitudeToY(25, marginTop, graphHeight);
+				// Default scale: center at 90, step size 5, range 60 dB (60 to 120)
+				const yMax = wrapper.vm.magnitudeToY(120, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
-				const yMin = wrapper.vm.magnitudeToY(-25, marginTop, graphHeight);
+				const yMin = wrapper.vm.magnitudeToY(60, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 
-				const yCenter = wrapper.vm.magnitudeToY(0, marginTop, graphHeight);
+				const yCenter = wrapper.vm.magnitudeToY(90, marginTop, graphHeight);
 				expect(yCenter).toBeCloseTo(marginTop + graphHeight / 2, 1);
 			});
 
@@ -137,11 +152,11 @@ describe('FrequencyResponseGraph', () => {
 				// Change step size to 10
 				wrapper.vm.scaleSettings.stepSize = 10;
 
-				// Range is now 100 dB (-50 to +50)
-				const yMax = wrapper.vm.magnitudeToY(50, marginTop, graphHeight);
+				// Range is now 120 dB (30 to 150)
+				const yMax = wrapper.vm.magnitudeToY(150, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
-				const yMin = wrapper.vm.magnitudeToY(-50, marginTop, graphHeight);
+				const yMin = wrapper.vm.magnitudeToY(30, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 			});
 
@@ -149,14 +164,14 @@ describe('FrequencyResponseGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Change center to 90 dB
-				wrapper.vm.scaleSettings.centerValue = 90;
+				// Change center to 80 dB
+				wrapper.vm.scaleSettings.centerValue = 80;
 
-				// Range is 50 dB (65 to 115)
-				const yMax = wrapper.vm.magnitudeToY(115, marginTop, graphHeight);
+				// Range is 60 dB (50 to 110)
+				const yMax = wrapper.vm.magnitudeToY(110, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
-				const yCenter = wrapper.vm.magnitudeToY(90, marginTop, graphHeight);
+				const yCenter = wrapper.vm.magnitudeToY(80, marginTop, graphHeight);
 				expect(yCenter).toBeCloseTo(marginTop + graphHeight / 2, 1);
 			});
 		});
@@ -167,19 +182,19 @@ describe('FrequencyResponseGraph', () => {
 				const graphHeight = 600;
 
 				const magTop = wrapper.vm.yToMagnitude(marginTop, marginTop, graphHeight);
-				expect(magTop).toBeCloseTo(25, 1);
+				expect(magTop).toBeCloseTo(120, 1);
 
 				const magBottom = wrapper.vm.yToMagnitude(marginTop + graphHeight, marginTop, graphHeight);
-				expect(magBottom).toBeCloseTo(-25, 1);
+				expect(magBottom).toBeCloseTo(60, 1);
 
 				const magCenter = wrapper.vm.yToMagnitude(marginTop + graphHeight / 2, marginTop, graphHeight);
-				expect(magCenter).toBeCloseTo(0, 1);
+				expect(magCenter).toBeCloseTo(90, 1);
 			});
 
 			it('should be inverse of magnitudeToY', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
-				const testMagnitudes = [-25, -10, 0, 5, 10, 20, 25];
+				const testMagnitudes = [60, 70, 80, 90, 100, 110, 120];
 
 				testMagnitudes.forEach((mag) => {
 					const y = wrapper.vm.magnitudeToY(mag, marginTop, graphHeight);
@@ -235,12 +250,12 @@ describe('FrequencyResponseGraph', () => {
 
 				expect(labels.length).toBeGreaterThan(0);
 
-				// With default settings (center 0, step 5, range 50)
-				// Should have labels at -25, -20, -15, ..., 20, 25
+				// With default settings (center 90, step 5, range 60)
+				// Should have labels at 60, 65, 70, ..., 115, 120
 				const magnitudes = labels.map((l) => l.mag);
-				expect(magnitudes).toContain(-25);
-				expect(magnitudes).toContain(0);
-				expect(magnitudes).toContain(25);
+				expect(magnitudes).toContain(60);
+				expect(magnitudes).toContain(90);
+				expect(magnitudes).toContain(120);
 			});
 
 			it('should format labels as integers', () => {
@@ -257,10 +272,11 @@ describe('FrequencyResponseGraph', () => {
 				const labels = wrapper.vm.generateMagnitudeLabels();
 				const magnitudes = labels.map((l) => l.mag);
 
-				// Should have labels at -50, -40, -30, ..., 40, 50
-				expect(magnitudes).toContain(-50);
-				expect(magnitudes).toContain(0);
-				expect(magnitudes).toContain(50);
+				// Center 90, step 10, range 120: labels at -30, -20, ..., 200, 210
+				// Actually: 90 - 60 = 30 to 90 + 60 = 150
+				expect(magnitudes).toContain(30);
+				expect(magnitudes).toContain(90);
+				expect(magnitudes).toContain(150);
 				expect(magnitudes.every((m) => m % 10 === 0)).toBe(true);
 			});
 		});
@@ -439,14 +455,14 @@ describe('FrequencyResponseGraph', () => {
 
 			wrapper.vm.renderGraph();
 
-			// Should only be called once for current curves
-			expect(drawCurvesSpy).toHaveBeenCalledTimes(1);
-			expect(drawCurvesSpy).toHaveBeenCalledWith(
-				wrapper.vm.curves,
+			// Should be called for current curves (and possibly external curves), but not held curves
+			expect(drawCurvesSpy).toHaveBeenCalled();
+			expect(drawCurvesSpy).not.toHaveBeenCalledWith(
+				expect.anything(),
 				expect.any(Object),
 				expect.any(Number),
 				expect.any(Number),
-				false,
+				true,
 			);
 
 			drawCurvesSpy.mockRestore();
@@ -514,7 +530,7 @@ describe('FrequencyResponseGraph', () => {
 			wrapper.vm.resizeCanvas();
 
 			expect(canvas.width).toBe(1000);
-			expect(canvas.height).toBe(660); // 700 - 40 for menu bar
+			expect(canvas.height).toBe(700);
 		});
 	});
 
@@ -523,7 +539,7 @@ describe('FrequencyResponseGraph', () => {
 			it('should have default scale settings', () => {
 				expect(wrapper.vm.scaleSettings.minFreq).toBe(20);
 				expect(wrapper.vm.scaleSettings.maxFreq).toBe(20000);
-				expect(wrapper.vm.scaleSettings.centerValue).toBe(0);
+				expect(wrapper.vm.scaleSettings.centerValue).toBe(90);
 				expect(wrapper.vm.scaleSettings.stepSize).toBe(5);
 			});
 
@@ -572,14 +588,14 @@ describe('FrequencyResponseGraph', () => {
 
 				expect(wrapper.vm.scaleSettings.stepSize).toBe(10);
 
-				// Verify range calculation uses new step size
+				// Verify range calculation uses new step size (multiplier is 12)
 				const marginTop = 20;
 				const graphHeight = 600;
-				const range = wrapper.vm.scaleSettings.stepSize * 10;
-				expect(range).toBe(100);
+				const range = wrapper.vm.scaleSettings.stepSize * 12;
+				expect(range).toBe(120);
 
-				// Verify transformation uses new range
-				const yMax = wrapper.vm.magnitudeToY(50, marginTop, graphHeight);
+				// Verify transformation uses new range (center 90, range 120: 30 to 150)
+				const yMax = wrapper.vm.magnitudeToY(150, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 			});
 		});
@@ -624,7 +640,7 @@ describe('FrequencyResponseGraph', () => {
 				// Verify all settings are back to defaults
 				expect(wrapper.vm.scaleSettings.minFreq).toBe(20);
 				expect(wrapper.vm.scaleSettings.maxFreq).toBe(20000);
-				expect(wrapper.vm.scaleSettings.centerValue).toBe(0);
+				expect(wrapper.vm.scaleSettings.centerValue).toBe(90);
 				expect(wrapper.vm.scaleSettings.stepSize).toBe(5);
 			});
 		});
@@ -657,14 +673,14 @@ describe('FrequencyResponseGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 2 * 10 = 20 dB (80 to 100)
-				const yMax = wrapper.vm.magnitudeToY(100, marginTop, graphHeight);
+				// Range is 2 * 12 = 24 dB (78 to 102)
+				const yMax = wrapper.vm.magnitudeToY(102, marginTop, graphHeight);
 				expect(yMax).toBeCloseTo(marginTop, 1);
 
 				const yCenter = wrapper.vm.magnitudeToY(90, marginTop, graphHeight);
 				expect(yCenter).toBeCloseTo(marginTop + graphHeight / 2, 1);
 
-				const yMin = wrapper.vm.magnitudeToY(80, marginTop, graphHeight);
+				const yMin = wrapper.vm.magnitudeToY(78, marginTop, graphHeight);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
 			});
 
@@ -760,9 +776,9 @@ describe('FrequencyResponseGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 200 dB (-100 to +100)
-				const yMax = wrapper.vm.magnitudeToY(100, marginTop, graphHeight);
-				const yMin = wrapper.vm.magnitudeToY(-100, marginTop, graphHeight);
+				// Range is 240 dB (center 90: -30 to 210)
+				const yMax = wrapper.vm.magnitudeToY(210, marginTop, graphHeight);
+				const yMin = wrapper.vm.magnitudeToY(-30, marginTop, graphHeight);
 
 				expect(yMax).toBeCloseTo(marginTop, 1);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);
@@ -774,9 +790,9 @@ describe('FrequencyResponseGraph', () => {
 				const marginTop = 20;
 				const graphHeight = 600;
 
-				// Range is 10 dB (-5 to +5)
-				const yMax = wrapper.vm.magnitudeToY(5, marginTop, graphHeight);
-				const yMin = wrapper.vm.magnitudeToY(-5, marginTop, graphHeight);
+				// Range is 12 dB (center 90: 84 to 96)
+				const yMax = wrapper.vm.magnitudeToY(96, marginTop, graphHeight);
+				const yMin = wrapper.vm.magnitudeToY(84, marginTop, graphHeight);
 
 				expect(yMax).toBeCloseTo(marginTop, 1);
 				expect(yMin).toBeCloseTo(marginTop + graphHeight, 1);

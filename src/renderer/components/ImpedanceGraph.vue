@@ -331,7 +331,7 @@ export default {
 			scaleSettings: {
 				minFreq: 20,
 				maxFreq: 20000,
-				centerValue: 8,
+				centerValue: 12,
 				stepSize: 2,
 			},
 			curves: [],
@@ -523,7 +523,7 @@ export default {
 			}
 
 			// Horizontal grid lines (impedance/phase)
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const numHorizontalLines = Math.ceil(range / this.scaleSettings.stepSize);
 
 			for (let i = 0; i <= numHorizontalLines; i++) {
@@ -665,7 +665,7 @@ export default {
 			return marginLeft + normalized * graphWidth;
 		},
 		valueToY(value, marginTop, graphHeight) {
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minValue = this.scaleSettings.centerValue - range / 2;
 			const maxValue = this.scaleSettings.centerValue + range / 2;
 			const normalized = (maxValue - value) / (maxValue - minValue);
@@ -686,7 +686,7 @@ export default {
 		},
 		yToValue(y, marginTop, graphHeight) {
 			const normalized = (y - marginTop) / graphHeight;
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minValue = this.scaleSettings.centerValue - range / 2;
 			const maxValue = this.scaleSettings.centerValue + range / 2;
 			return maxValue - normalized * (maxValue - minValue);
@@ -708,7 +708,7 @@ export default {
 		},
 		generateValueLabels() {
 			const labels = [];
-			const range = this.scaleSettings.stepSize * 10;
+			const range = this.scaleSettings.stepSize * 12;
 			const minValue = this.scaleSettings.centerValue - range / 2;
 			const maxValue = this.scaleSettings.centerValue + range / 2;
 
@@ -956,7 +956,7 @@ export default {
 		resetScaleSettings() {
 			this.scaleSettings.minFreq = 20;
 			this.scaleSettings.maxFreq = 20000;
-			this.scaleSettings.centerValue = 8;
+			this.scaleSettings.centerValue = 12;
 			this.scaleSettings.stepSize = 2;
 			this.saveScaleSettings();
 			this.renderGraph();

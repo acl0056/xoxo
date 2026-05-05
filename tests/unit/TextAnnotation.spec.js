@@ -210,6 +210,8 @@ describe('TextAnnotation', () => {
 				y: 20,
 				text: 'Test annotation',
 				fontSize: 14,
+				bold: false,
+				textAlign: 'left',
 			});
 		});
 

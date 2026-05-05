@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-30T20:20:16.358Z",
-    "modified": "2026-04-30T20:20:16.363Z"
+    "modified": "2026-05-05T02:40:47.306Z"
   },
   "components": [
     {
@@ -38,8 +38,8 @@
       "id": "molxhffr-kcg86ka",
       "type": "resistor",
       "label": "R1",
-      "x": 20,
-      "y": 63,
+      "x": 37,
+      "y": 22,
       "rotation": 0,
       "parameters": {
         "resistance": 13,
@@ -79,7 +79,7 @@
       "label": "R4",
       "x": 44,
       "y": 45,
-      "rotation": 90,
+      "rotation": 270,
       "parameters": {
         "resistance": 2.2,
         "tolerance": 5,
@@ -115,11 +115,13 @@
         "name": "",
         "sensitivity": 0,
         "delay": 0,
+        "delayUnit": "in",
         "inverted": false,
         "muted": false,
         "frdFile": "19 in 0 deg.frd",
         "zmaFile": "orb.zma",
-        "phaseSource": "measured",
+        "frdPhaseSource": "measured",
+        "zmaPhaseSource": "measured",
         "offAxisFiles": []
       },
       "frdData": {
@@ -3210,30 +3212,6 @@
       "segments": []
     },
     {
-      "id": "molxhffv-76ia5yw",
-      "startNode": {
-        "componentId": "molxhffr-jefkmgw",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "molxhffr-awy9ns6",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "molxhffv-rqfd32j",
-      "startNode": {
-        "componentId": "molxhffr-awy9ns6",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "molxhffu-vxsov8s",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
       "id": "molxhffv-lwagr3a",
       "startNode": {
         "componentId": "molxhffr-yu81105",
@@ -3253,6 +3231,30 @@
       },
       "endNode": {
         "componentId": "molxhffu-cnb71pe",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mos0s2fl-u5iccqf",
+      "startNode": {
+        "componentId": "molxhffr-awy9ns6",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "molxhffr-jefkmgw",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mos0s2gf-1cfa4mv",
+      "startNode": {
+        "componentId": "molxhffr-awy9ns6",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "molxhffu-vxsov8s",
         "terminal": 1
       },
       "segments": []

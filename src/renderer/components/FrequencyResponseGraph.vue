@@ -316,8 +316,8 @@
 <script>
 import { mapState } from 'vuex';
 import { useToast } from 'vue-toastification';
-import AngleControl from './AngleControl.vue';
 import FrdParser from '@/io/FrdParser';
+import AngleControl from './AngleControl.vue';
 
 export default {
 	name: 'FrequencyResponseGraph',

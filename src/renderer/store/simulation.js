@@ -79,7 +79,9 @@ export default {
 		/**
 		 * Run circuit simulation asynchronously
 		 */
-		async runSimulation({ commit, rootState, state, dispatch }) {
+		async runSimulation({
+			commit, rootState, state, dispatch,
+		}) {
 			console.log('[SIM] runSimulation called, isSimulating:', state.isSimulating);
 			// If already simulating, queue a re-run after current one finishes
 			if (state.isSimulating) {
@@ -183,7 +185,9 @@ export default {
 				// Only validate if both responses are present (schema requires both)
 				// Validate without curveColors since it's not part of the simulation results schema
 				if (ipcPayload.frequencyResponse && ipcPayload.impedanceResponse) {
-					const { curveColors: _, currentAngle: __, availableAngles: ___, graphSettings: ____, ...simulationOnly } = ipcPayload;
+					const {
+						curveColors: _, currentAngle: __, availableAngles: ___, graphSettings: ____, ...simulationOnly
+					} = ipcPayload;
 					if (!validateSimulationResults(simulationOnly)) {
 						console.error('Simulation results failed schema validation:', validateSimulationResults.errors);
 					}

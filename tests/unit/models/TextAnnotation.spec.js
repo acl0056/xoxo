@@ -132,6 +132,8 @@ describe('TextAnnotation', () => {
 				y: 25,
 				text: 'Test annotation',
 				fontSize: 16,
+				bold: false,
+				textAlign: 'left',
 			});
 		});
 	});

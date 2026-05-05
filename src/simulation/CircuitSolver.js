@@ -390,7 +390,7 @@ class CircuitSolver {
 						phasesOverride = getDerivedZmaPhases(component);
 					}
 					const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency, phasesOverride);
-					const phaseRad = phaseDeg * Math.PI / 180;
+					const phaseRad = (phaseDeg * Math.PI) / 180;
 					const zRe = magnitude * Math.cos(phaseRad);
 					const zIm = magnitude * Math.sin(phaseRad);
 					const denominator = zRe * zRe + zIm * zIm;
@@ -463,7 +463,7 @@ class CircuitSolver {
 							phasesOverride = getDerivedZmaPhases(component);
 						}
 						const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency, phasesOverride);
-						const phaseRad = phaseDeg * Math.PI / 180;
+						const phaseRad = (phaseDeg * Math.PI) / 180;
 						const zRe = magnitude * Math.cos(phaseRad);
 						const zIm = magnitude * Math.sin(phaseRad);
 						const denominator = zRe * zRe + zIm * zIm;
@@ -696,12 +696,13 @@ class CircuitSolver {
 
 		// Solve at each frequency — track sub-step totals
 		const perFrequencyResults = [];
-		let totalLUSolve = 0;
-		let totalExtract = 0;
-		let totalClone = 0;
-		let totalCalcAdmittance = 0;
-		let totalStamping = 0;
-		let totalZeroBuffers = 0;
+		// Profiling counters (reserved for future use)
+		// const totalLUSolve = 0;
+		// const totalExtract = 0;
+		// const totalClone = 0;
+		// const totalCalcAdmittance = 0;
+		// const totalStamping = 0;
+		// const totalZeroBuffers = 0;
 
 		for (const frequency of this.frequencyPoints) {
 			try {
@@ -750,7 +751,7 @@ class CircuitSolver {
 
 		// Build componentVoltages using cached terminal info
 		const componentVoltages = {};
-		for (const { component, n1, n2 } of componentTerminalCache) {
+		for (const { component } of componentTerminalCache) {
 			if (component.type === 'wire-segment' || component.type === 'source') continue;
 
 			const terminals = this.getComponentTerminals(component);

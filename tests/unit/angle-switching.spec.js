@@ -2,6 +2,14 @@ import { createStore } from 'vuex';
 import simulation from '@/renderer/store/simulation';
 import { Speaker } from '@/models/Speaker';
 
+jest.mock('electron', () => ({
+	ipcRenderer: {
+		on: jest.fn(),
+		send: jest.fn(),
+		invoke: jest.fn(),
+	},
+}), { virtual: true });
+
 describe('Angle Switching', () => {
 	let store;
 
@@ -10,7 +18,9 @@ describe('Angle Switching', () => {
 		store = createStore({
 			state: {
 				circuit: {
-					components: [],
+					circuit: {
+						components: [],
+					},
 				},
 			},
 			modules: {
@@ -29,25 +39,25 @@ describe('Angle Switching', () => {
 		});
 
 		test('should update current angle via mutation', () => {
-			store.commit('simulation/setCurrentAngle', 30);
+			store.commit('simulation/SET_CURRENT_ANGLE', 30);
 			expect(store.state.simulation.currentAngle).toBe(30);
 		});
 
 		test('should update excluded speakers via mutation', () => {
 			const speakerIds = ['speaker-1', 'speaker-2'];
-			store.commit('simulation/setExcludedSpeakers', speakerIds);
+			store.commit('simulation/SET_EXCLUDED_SPEAKERS', speakerIds);
 			expect(store.state.simulation.excludedSpeakers).toEqual(speakerIds);
 		});
 
 		test('should check if speaker is excluded via getter', () => {
-			store.commit('simulation/setExcludedSpeakers', ['speaker-1', 'speaker-2']);
+			store.commit('simulation/SET_EXCLUDED_SPEAKERS', ['speaker-1', 'speaker-2']);
 			expect(store.getters['simulation/isSpeakerExcluded']('speaker-1')).toBe(true);
 			expect(store.getters['simulation/isSpeakerExcluded']('speaker-3')).toBe(false);
 		});
 
 		test('should get excluded speakers list via getter', () => {
 			const speakerIds = ['speaker-1', 'speaker-2'];
-			store.commit('simulation/setExcludedSpeakers', speakerIds);
+			store.commit('simulation/SET_EXCLUDED_SPEAKERS', speakerIds);
 			expect(store.getters['simulation/getExcludedSpeakers']).toEqual(speakerIds);
 		});
 	});
@@ -62,7 +72,7 @@ describe('Angle Switching', () => {
 			speaker2.id = 'speaker-2';
 			speaker2.label = 'S2';
 
-			store.state.circuit.components = [speaker1, speaker2];
+			store.state.circuit.circuit.components = [speaker1, speaker2];
 
 			await store.dispatch('simulation/switchAngle', 0);
 
@@ -75,7 +85,7 @@ describe('Angle Switching', () => {
 			speaker1.id = 'speaker-1';
 			speaker1.label = 'S1';
 			// Speaker1 has off-axis data at 30 degrees
-			speaker1.offAxisData = [
+			speaker1.parameters.offAxisFiles = [
 				{ angle: 30, frequencies: [100, 200], magnitudes: [85, 86], phases: [0, -5] },
 			];
 
@@ -84,7 +94,7 @@ describe('Angle Switching', () => {
 			speaker2.label = 'S2';
 			// Speaker2 has no off-axis data
 
-			store.state.circuit.components = [speaker1, speaker2];
+			store.state.circuit.circuit.components = [speaker1, speaker2];
 
 			await store.dispatch('simulation/switchAngle', 30);
 
@@ -102,7 +112,7 @@ describe('Angle Switching', () => {
 			speaker2.id = 'speaker-2';
 			speaker2.label = 'S2';
 
-			store.state.circuit.components = [speaker1, speaker2];
+			store.state.circuit.circuit.components = [speaker1, speaker2];
 
 			await store.dispatch('simulation/switchAngle', 45);
 
@@ -114,18 +124,18 @@ describe('Angle Switching', () => {
 			const speaker1 = new Speaker(10, 10);
 			speaker1.id = 'speaker-1';
 			speaker1.label = 'S1';
-			speaker1.offAxisData = [
+			speaker1.parameters.offAxisFiles = [
 				{ angle: 30, frequencies: [100, 200], magnitudes: [85, 86], phases: [0, -5] },
 			];
 
 			const speaker2 = new Speaker(20, 20);
 			speaker2.id = 'speaker-2';
 			speaker2.label = 'S2';
-			speaker2.offAxisData = [
+			speaker2.parameters.offAxisFiles = [
 				{ angle: 30, frequencies: [100, 200], magnitudes: [87, 88], phases: [0, -3] },
 			];
 
-			store.state.circuit.components = [speaker1, speaker2];
+			store.state.circuit.circuit.components = [speaker1, speaker2];
 
 			await store.dispatch('simulation/switchAngle', 30);
 
@@ -134,7 +144,7 @@ describe('Angle Switching', () => {
 		});
 
 		test('should handle circuit with no components', async () => {
-			store.state.circuit.components = [];
+			store.state.circuit.circuit.components = [];
 
 			await store.dispatch('simulation/switchAngle', 30);
 
@@ -143,7 +153,7 @@ describe('Angle Switching', () => {
 		});
 
 		test('should handle circuit with only non-speaker components', async () => {
-			store.state.circuit.components = [
+			store.state.circuit.circuit.components = [
 				{ id: 'r1', type: 'resistor', x: 10, y: 10 },
 				{ id: 'c1', type: 'capacitor', x: 20, y: 20 },
 			];
@@ -155,7 +165,7 @@ describe('Angle Switching', () => {
 		});
 
 		test('should handle null circuit', async () => {
-			store.state.circuit = null;
+			store.state.circuit.circuit = null;
 
 			await store.dispatch('simulation/switchAngle', 30);
 
@@ -167,18 +177,18 @@ describe('Angle Switching', () => {
 			const speaker1 = new Speaker(10, 10);
 			speaker1.id = 'speaker-1';
 			speaker1.label = 'S1';
-			speaker1.offAxisData = [
+			speaker1.parameters.offAxisFiles = [
 				{ angle: 30, frequencies: [100, 200], magnitudes: [85, 86], phases: [0, -5] },
 			];
 
 			const speaker2 = new Speaker(20, 20);
 			speaker2.id = 'speaker-2';
 			speaker2.label = 'S2';
-			speaker2.offAxisData = [
+			speaker2.parameters.offAxisFiles = [
 				{ angle: 45, frequencies: [100, 200], magnitudes: [87, 88], phases: [0, -3] },
 			];
 
-			store.state.circuit.components = [speaker1, speaker2];
+			store.state.circuit.circuit.components = [speaker1, speaker2];
 
 			// Switch to 30 degrees - speaker2 should be excluded
 			await store.dispatch('simulation/switchAngle', 30);
@@ -219,7 +229,7 @@ describe('Angle Switching', () => {
 
 		test('should return null for non-existent angle', () => {
 			const speaker = new Speaker(10, 10);
-			speaker.offAxisData = [
+			speaker.parameters.offAxisFiles = [
 				{ angle: 30, frequencies: [100, 200], magnitudes: [85, 86], phases: [0, -5] },
 			];
 
@@ -231,11 +241,11 @@ describe('Angle Switching', () => {
 		test('should handle custom angles', async () => {
 			const speaker = new Speaker(10, 10);
 			speaker.id = 'speaker-1';
-			speaker.offAxisData = [
+			speaker.parameters.offAxisFiles = [
 				{ angle: 37.5, frequencies: [100, 200], magnitudes: [85, 86], phases: [0, -5] },
 			];
 
-			store.state.circuit.components = [speaker];
+			store.state.circuit.circuit.components = [speaker];
 
 			await store.dispatch('simulation/switchAngle', 37.5);
 
@@ -248,7 +258,7 @@ describe('Angle Switching', () => {
 			speaker.id = 'speaker-1';
 			// No off-axis data, only on-axis
 
-			store.state.circuit.components = [speaker];
+			store.state.circuit.circuit.components = [speaker];
 
 			await store.dispatch('simulation/switchAngle', 0);
 
@@ -259,11 +269,11 @@ describe('Angle Switching', () => {
 		test('should handle angle 180 (rear)', async () => {
 			const speaker = new Speaker(10, 10);
 			speaker.id = 'speaker-1';
-			speaker.offAxisData = [
+			speaker.parameters.offAxisFiles = [
 				{ angle: 180, frequencies: [100, 200], magnitudes: [60, 62], phases: [0, -180] },
 			];
 
-			store.state.circuit.components = [speaker];
+			store.state.circuit.circuit.components = [speaker];
 
 			await store.dispatch('simulation/switchAngle', 180);
 

@@ -751,8 +751,7 @@ export class DxoImporter {
 
 		// Create Wire objects for every pair of terminals sharing a grid position
 		const createdWires = new Set();
-		let wireCount = 0;
-		for (const [posKey, terminals] of positionToTerminals) {
+		for (const [, terminals] of positionToTerminals) {
 			for (let i = 0; i < terminals.length; i++) {
 				for (let j = i + 1; j < terminals.length; j++) {
 					const a = terminals[i];
@@ -767,7 +766,6 @@ export class DxoImporter {
 						{ componentId: b.componentId, terminal: b.terminalIndex },
 					);
 					this.circuit.addWire(wire);
-					wireCount++;
 				}
 			}
 		}

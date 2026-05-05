@@ -40,8 +40,8 @@ describe('Speaker', () => {
 			const speaker = new Speaker(0, 0);
 
 			expect(speaker.terminals).toHaveLength(2);
-			expect(speaker.terminals[0]).toEqual({ x: -3, y: 0 });
-			expect(speaker.terminals[1]).toEqual({ x: 3, y: 0 });
+			expect(speaker.terminals[0]).toEqual({ x: -1, y: -1 });
+			expect(speaker.terminals[1]).toEqual({ x: -1, y: 1 });
 		});
 	});
 
@@ -533,7 +533,7 @@ describe('Speaker', () => {
 			});
 		});
 
-		it('should not serialize parsed data properties', () => {
+		it('should serialize embedded data properties', () => {
 			const speaker = new Speaker(10, 20);
 			speaker.frdData = { frequencies: [100, 200], magnitudes: [80, 85] };
 			speaker.zmaData = { frequencies: [100, 200], impedances: [8, 9] };
@@ -541,9 +541,9 @@ describe('Speaker', () => {
 
 			const json = speaker.toJSON();
 
-			expect(json.frdData).toBeUndefined();
-			expect(json.zmaData).toBeUndefined();
-			expect(json.offAxisData).toBeUndefined();
+			expect(json.frdData).toEqual({ frequencies: [100, 200], magnitudes: [80, 85] });
+			expect(json.zmaData).toEqual({ frequencies: [100, 200], impedances: [8, 9] });
+			expect(json.offAxisData).toEqual([{ angle: 30, data: {} }]);
 		});
 	});
 

@@ -45,11 +45,11 @@ describe('VoltageSource', () => {
 			expect(source.terminals).toHaveLength(2);
 		});
 
-		it('should have terminals at -3 and +3 from center', () => {
+		it('should have terminals at correct positions', () => {
 			const source = new VoltageSource(0, 0);
 
-			expect(source.terminals[0]).toEqual({ x: -3, y: 0 });
-			expect(source.terminals[1]).toEqual({ x: 3, y: 0 });
+			expect(source.terminals[0]).toEqual({ x: 3, y: -2 });
+			expect(source.terminals[1]).toEqual({ x: 3, y: 2 });
 		});
 
 		it('should generate a unique id', () => {
@@ -371,7 +371,7 @@ describe('VoltageSource', () => {
 
 			const source = VoltageSource.fromJSON(json);
 
-			expect(source.terminals).toEqual([{ x: -3, y: 0 }, { x: 3, y: 0 }]);
+			expect(source.terminals).toEqual([{ x: 3, y: -2 }, { x: 3, y: 2 }]);
 		});
 
 		it('should use default power if not provided', () => {

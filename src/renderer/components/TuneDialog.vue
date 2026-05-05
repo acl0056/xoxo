@@ -124,9 +124,15 @@
 						v-model="localParameters.delayUnit"
 						class="delay-unit-select"
 					>
-						<option value="in">in</option>
-						<option value="cm">cm</option>
-						<option value="ms">ms</option>
+						<option value="in">
+							in
+						</option>
+						<option value="cm">
+							cm
+						</option>
+						<option value="ms">
+							ms
+						</option>
 					</select>
 				</div>
 
@@ -351,6 +357,7 @@ export default {
 			incrementInterval: null,
 			incrementTimeout: null,
 			undoValue: null,
+			initializing: false,
 		};
 	},
 	computed: {
@@ -399,10 +406,49 @@ export default {
 				}
 			},
 		},
+		'component.parameters': {
+			deep: true,
+			handler(newParameters) {
+				if (!newParameters || this.initializing) return;
+				// Sync local parameters when the component is updated externally (e.g., undo)
+				this.initializing = true;
+				this.localParameters = JSON.parse(JSON.stringify(newParameters));
+				if (this.isPassiveComponent && this.valueParameterName) {
+					this.valueInput = formatEngineering(this.localParameters[this.valueParameterName]);
+				}
+				this.$nextTick(() => {
+					this.initializing = false;
+				});
+			},
+		},
 		visible(newVisible) {
 			if (newVisible && this.component) {
 				this.initializeParameters();
 			}
+		},
+		'localParameters.inverted': function inverted() {
+			this.emitUpdate();
+		},
+		'localParameters.muted': function muted() {
+			this.emitUpdate();
+		},
+		'localParameters.sensitivity': function sensitivity() {
+			this.emitUpdate();
+		},
+		'localParameters.delay': function delay() {
+			this.emitUpdate();
+		},
+		'localParameters.frdPhaseSource': function frdPhaseSource() {
+			this.emitUpdate();
+		},
+		'localParameters.zmaPhaseSource': function zmaPhaseSource() {
+			this.emitUpdate();
+		},
+		'localParameters.offAxisFiles': {
+			deep: true,
+			handler() {
+				this.emitUpdate();
+			},
 		},
 	},
 	methods: {
@@ -426,6 +472,8 @@ export default {
 		initializeParameters() {
 			if (!this.component) return;
 
+			this.initializing = true;
+
 			// Deep clone the parameters
 			this.localParameters = JSON.parse(JSON.stringify(this.component.parameters));
 
@@ -434,6 +482,10 @@ export default {
 				const value = this.localParameters[this.valueParameterName];
 				this.valueInput = formatEngineering(value);
 			}
+
+			this.$nextTick(() => {
+				this.initializing = false;
+			});
 		},
 		handleValueInput() {
 			// Allow user to type freely without immediate parsing
@@ -546,6 +598,14 @@ export default {
 			// Reset voltage source to standard values: 1W at 8Ω
 			this.localParameters.power = 1.0;
 			this.localParameters.impedance = 8.0;
+			this.emitUpdate();
+		},
+		emitUpdate() {
+			if (!this.component || this.initializing) return;
+			this.$emit('update', {
+				componentId: this.component.id,
+				parameters: this.localParameters,
+			});
 		},
 		close() {
 			// Apply changes before closing

@@ -48,6 +48,10 @@ export default {
 			await this.handleOpenFile();
 		});
 
+		ipcRenderer.on('open-recent-file', async (event, filePath) => {
+			await this.handleOpenRecentFile(filePath);
+		});
+
 		ipcRenderer.on('menu-save', async () => {
 			await this.handleSaveFile();
 		});
@@ -283,6 +287,60 @@ export default {
 
 				if (!loadResult.success) {
 					await ipcRenderer.invoke('show-error-dialog', 'Error Loading Circuit', 'Failed to load circuit', loadResult.error);
+				}
+			} catch (error) {
+				await ipcRenderer.invoke('show-error-dialog', 'Error Parsing File', 'Invalid circuit file format', error.message);
+			}
+		},
+
+		/**
+		 * Handle opening a recent file from the File > Recent Files menu
+		 * @param {string} filePath - The path of the recent file to open
+		 */
+		async handleOpenRecentFile(filePath) {
+			const { ipcRenderer } = require('electron');
+			const isDirty = this.$store.getters['circuit/isDirty'];
+
+			// Check for unsaved changes first
+			if (isDirty) {
+				const response = await ipcRenderer.invoke('show-unsaved-changes-dialog');
+
+				if (response === 0) {
+					// Save before opening
+					const saved = await this.handleSaveFile();
+					if (!saved) {
+						return;
+					}
+				} else if (response === 2) {
+					// Cancel
+					return;
+				}
+				// If response === 1 (Don't Save), continue to open
+			}
+
+			// Read file
+			const result = await ipcRenderer.invoke('read-file', filePath);
+			if (!result.success) {
+				await ipcRenderer.invoke('show-error-dialog', 'Error Opening File', 'Failed to read file', result.error);
+				return;
+			}
+
+			// Parse and load circuit
+			try {
+				const circuitData = JSON.parse(result.data);
+
+				// Restore window layout if present
+				if (circuitData.windowLayout) {
+					ipcRenderer.send('restore-window-layout', circuitData.windowLayout);
+				}
+
+				const loadResult = await this.$store.dispatch('circuit/loadFile', { filePath, circuitData });
+
+				if (!loadResult.success) {
+					await ipcRenderer.invoke('show-error-dialog', 'Error Loading Circuit', 'Failed to load circuit', loadResult.error);
+				} else {
+					// Update recent files and last opened file tracking
+					await ipcRenderer.invoke('add-recent-file', filePath);
 				}
 			} catch (error) {
 				await ipcRenderer.invoke('show-error-dialog', 'Error Parsing File', 'Invalid circuit file format', error.message);

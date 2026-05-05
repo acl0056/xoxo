@@ -369,7 +369,9 @@ ipcMain.on('restore-window-layout', (event, layout) => {
 
 	function isVisibleOnAnyDisplay(bounds) {
 		return displays.some((display) => {
-			const { x, y, width, height } = display.workArea;
+			const {
+				x, y, width, height,
+			} = display.workArea;
 			// Check that at least part of the window is visible
 			return bounds.x < x + width
 				&& bounds.x + bounds.width > x

@@ -368,7 +368,8 @@ describe('Component Serialization - Speaker', () => {
 			expect(json.parameters.muted).toBe(false);
 			expect(json.parameters.frdFile).toBe(null);
 			expect(json.parameters.zmaFile).toBe(null);
-			expect(json.parameters.phaseSource).toBe('derived');
+			expect(json.parameters.frdPhaseSource).toBe('measured');
+			expect(json.parameters.zmaPhaseSource).toBe('measured');
 			expect(json.parameters.offAxisFiles).toEqual([]);
 		});
 
@@ -446,17 +447,19 @@ describe('Component Serialization - Speaker', () => {
 
 		it('should serialize speaker with measured phase source', () => {
 			const speaker = new Speaker(0, 0);
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.frdPhaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'measured';
 
 			const json = speaker.toJSON();
 
-			expect(json.parameters.phaseSource).toBe('measured');
+			expect(json.parameters.frdPhaseSource).toBe('measured');
+			expect(json.parameters.zmaPhaseSource).toBe('measured');
 		});
 
 		it('should serialize speaker with single off-axis file', () => {
 			const speaker = new Speaker(0, 0);
 			speaker.parameters.offAxisFiles = [
-				{ angle: 30, frdPath: '/path/to/driver-30.frd' },
+				{ angle: 30, frdPath: '/path/to/driver-30.frd', phaseSource: 'measured' },
 			];
 
 			const json = speaker.toJSON();
@@ -464,15 +467,16 @@ describe('Component Serialization - Speaker', () => {
 			expect(json.parameters.offAxisFiles).toHaveLength(1);
 			expect(json.parameters.offAxisFiles[0].angle).toBe(30);
 			expect(json.parameters.offAxisFiles[0].frdPath).toBe('/path/to/driver-30.frd');
+			expect(json.parameters.offAxisFiles[0].phaseSource).toBe('measured');
 		});
 
 		it('should serialize speaker with multiple off-axis files', () => {
 			const speaker = new Speaker(0, 0);
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/driver-15.frd' },
-				{ angle: 30, frdPath: '/path/to/driver-30.frd' },
-				{ angle: 45, frdPath: '/path/to/driver-45.frd' },
-				{ angle: 60, frdPath: '/path/to/driver-60.frd' },
+				{ angle: 15, frdPath: '/path/to/driver-15.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/driver-30.frd', phaseSource: 'measured' },
+				{ angle: 45, frdPath: '/path/to/driver-45.frd', phaseSource: 'measured' },
+				{ angle: 60, frdPath: '/path/to/driver-60.frd', phaseSource: 'measured' },
 			];
 
 			const json = speaker.toJSON();
@@ -492,10 +496,11 @@ describe('Component Serialization - Speaker', () => {
 			speaker.parameters.muted = false;
 			speaker.parameters.frdFile = '/path/to/tweeter.frd';
 			speaker.parameters.zmaFile = '/path/to/tweeter.zma';
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.frdPhaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'derived';
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/tweeter-15.frd' },
-				{ angle: 30, frdPath: '/path/to/tweeter-30.frd' },
+				{ angle: 15, frdPath: '/path/to/tweeter-15.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/tweeter-30.frd', phaseSource: 'measured' },
 			];
 
 			const json = speaker.toJSON();
@@ -511,7 +516,8 @@ describe('Component Serialization - Speaker', () => {
 			expect(json.parameters.muted).toBe(false);
 			expect(json.parameters.frdFile).toBe('/path/to/tweeter.frd');
 			expect(json.parameters.zmaFile).toBe('/path/to/tweeter.zma');
-			expect(json.parameters.phaseSource).toBe('measured');
+			expect(json.parameters.frdPhaseSource).toBe('measured');
+			expect(json.parameters.zmaPhaseSource).toBe('derived');
 			expect(json.parameters.offAxisFiles).toHaveLength(2);
 		});
 	});
@@ -533,14 +539,16 @@ describe('Component Serialization - Speaker', () => {
 					muted: false,
 					frdFile: null,
 					zmaFile: null,
-					phaseSource: 'measured',
+					frdPhaseSource: 'measured',
+					zmaPhaseSource: 'measured',
 					offAxisFiles: [],
 				},
 			};
 
 			const speaker = Speaker.fromJSON(json);
 
-			expect(speaker.parameters.phaseSource).toBe('measured');
+			expect(speaker.parameters.frdPhaseSource).toBe('measured');
+			expect(speaker.parameters.zmaPhaseSource).toBe('measured');
 		});
 
 		it('should deserialize speaker with off-axis files', () => {
@@ -559,10 +567,11 @@ describe('Component Serialization - Speaker', () => {
 					muted: false,
 					frdFile: null,
 					zmaFile: null,
-					phaseSource: 'derived',
+					frdPhaseSource: 'derived',
+					zmaPhaseSource: 'derived',
 					offAxisFiles: [
-						{ angle: 30, frdPath: '/path/to/file-30.frd' },
-						{ angle: 60, frdPath: '/path/to/file-60.frd' },
+						{ angle: 30, frdPath: '/path/to/file-30.frd', phaseSource: 'derived' },
+						{ angle: 60, frdPath: '/path/to/file-60.frd', phaseSource: 'derived' },
 					],
 				},
 			};
@@ -571,6 +580,7 @@ describe('Component Serialization - Speaker', () => {
 
 			expect(speaker.parameters.offAxisFiles).toHaveLength(2);
 			expect(speaker.parameters.offAxisFiles[0].angle).toBe(30);
+			expect(speaker.parameters.offAxisFiles[0].phaseSource).toBe('derived');
 			expect(speaker.parameters.offAxisFiles[1].angle).toBe(60);
 		});
 	});
@@ -833,13 +843,13 @@ describe('Component Serialization - Round-trip with edge cases', () => {
 	it('should preserve speaker with complex off-axis configuration', () => {
 		const original = new Speaker(50, 60);
 		original.parameters.offAxisFiles = [
-			{ angle: 0, frdPath: '/path/to/on-axis.frd' },
-			{ angle: 15, frdPath: '/path/to/15deg.frd' },
-			{ angle: 30, frdPath: '/path/to/30deg.frd' },
-			{ angle: 45, frdPath: '/path/to/45deg.frd' },
-			{ angle: 60, frdPath: '/path/to/60deg.frd' },
-			{ angle: 75, frdPath: '/path/to/75deg.frd' },
-			{ angle: 90, frdPath: '/path/to/90deg.frd' },
+			{ angle: 0, frdPath: '/path/to/on-axis.frd', phaseSource: 'measured' },
+			{ angle: 15, frdPath: '/path/to/15deg.frd', phaseSource: 'measured' },
+			{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'measured' },
+			{ angle: 45, frdPath: '/path/to/45deg.frd', phaseSource: 'measured' },
+			{ angle: 60, frdPath: '/path/to/60deg.frd', phaseSource: 'measured' },
+			{ angle: 75, frdPath: '/path/to/75deg.frd', phaseSource: 'measured' },
+			{ angle: 90, frdPath: '/path/to/90deg.frd', phaseSource: 'measured' },
 		];
 
 		const json = original.toJSON();

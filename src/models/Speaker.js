@@ -24,8 +24,9 @@ export class Speaker extends Component {
 			muted: false, // Mute flag
 			frdFile: null, // Primary on-axis FRD file path
 			zmaFile: null, // Impedance file path
-			phaseSource: 'derived', // 'measured' or 'derived' (minimum phase)
-			offAxisFiles: [], // Array of {angle: number, frdPath: string}
+			frdPhaseSource: 'measured', // 'measured' or 'derived' (minimum phase) for primary FRD
+			zmaPhaseSource: 'measured', // 'measured' or 'derived' (minimum phase) for ZMA
+			offAxisFiles: [], // Array of {angle: number, frdPath: string, phaseSource: string}
 		};
 
 		// Parsed data (not serialized, loaded from files)
@@ -106,6 +107,7 @@ export class Speaker extends Component {
 			this.parameters.offAxisFiles.push({
 				angle,
 				frdPath: filePath,
+				phaseSource: 'measured',
 			});
 		}
 
@@ -212,10 +214,15 @@ export class Speaker extends Component {
 			errors.push('ZMA file must be null or a string');
 		}
 
-		// Validate phaseSource
+		// Validate frdPhaseSource
 		const validPhaseSources = ['measured', 'derived'];
-		if (!validPhaseSources.includes(this.parameters.phaseSource)) {
-			errors.push('Phase source must be one of: measured, derived');
+		if (!validPhaseSources.includes(this.parameters.frdPhaseSource)) {
+			errors.push('FRD phase source must be one of: measured, derived');
+		}
+
+		// Validate zmaPhaseSource
+		if (!validPhaseSources.includes(this.parameters.zmaPhaseSource)) {
+			errors.push('ZMA phase source must be one of: measured, derived');
 		}
 
 		// Validate offAxisFiles array
@@ -228,6 +235,9 @@ export class Speaker extends Component {
 				}
 				if (typeof file.frdPath !== 'string') {
 					errors.push(`Off-axis file ${index}: frdPath must be a string`);
+				}
+				if (!validPhaseSources.includes(file.phaseSource)) {
+					errors.push(`Off-axis file ${index}: phaseSource must be one of: measured, derived`);
 				}
 			});
 		}
@@ -260,8 +270,13 @@ export class Speaker extends Component {
 				muted: this.parameters.muted,
 				frdFile: this.parameters.frdFile,
 				zmaFile: this.parameters.zmaFile,
-				phaseSource: this.parameters.phaseSource,
-				offAxisFiles: this.parameters.offAxisFiles,
+				frdPhaseSource: this.parameters.frdPhaseSource,
+				zmaPhaseSource: this.parameters.zmaPhaseSource,
+				offAxisFiles: this.parameters.offAxisFiles.map((entry) => ({
+					angle: entry.angle,
+					frdPath: entry.frdPath,
+					phaseSource: entry.phaseSource,
+				})),
 			},
 		};
 
@@ -289,6 +304,35 @@ export class Speaker extends Component {
 		speaker.id = json.id;
 		speaker.label = json.label || '';
 		speaker.rotation = json.rotation || 0;
+
+		// Determine per-file phase source with legacy migration
+		let frdPhaseSource;
+		let zmaPhaseSource;
+		const legacyPhaseSource = json.parameters.phaseSource;
+
+		if (json.parameters.frdPhaseSource !== undefined) {
+			// New format: use per-file values directly
+			frdPhaseSource = json.parameters.frdPhaseSource;
+			zmaPhaseSource = json.parameters.zmaPhaseSource || 'measured';
+		} else if (legacyPhaseSource !== undefined) {
+			// Legacy format: propagate global phaseSource to both
+			frdPhaseSource = legacyPhaseSource;
+			zmaPhaseSource = legacyPhaseSource;
+		} else {
+			// No phase source at all: default to measured
+			frdPhaseSource = 'measured';
+			zmaPhaseSource = 'measured';
+		}
+
+		// Migrate off-axis entries: add phaseSource if missing
+		const offAxisFiles = (json.parameters.offAxisFiles || []).map((entry) => ({
+			angle: entry.angle,
+			frdPath: entry.frdPath,
+			phaseSource: entry.phaseSource !== undefined
+				? entry.phaseSource
+				: (legacyPhaseSource !== undefined ? legacyPhaseSource : 'measured'),
+		}));
+
 		speaker.parameters = {
 			name: json.parameters.name || '',
 			sensitivity: json.parameters.sensitivity || 0.0,
@@ -298,8 +342,9 @@ export class Speaker extends Component {
 			muted: json.parameters.muted || false,
 			frdFile: json.parameters.frdFile || null,
 			zmaFile: json.parameters.zmaFile || null,
-			phaseSource: json.parameters.phaseSource || 'derived',
-			offAxisFiles: json.parameters.offAxisFiles || [],
+			frdPhaseSource,
+			zmaPhaseSource,
+			offAxisFiles,
 		};
 		speaker.terminals = json.terminals || speaker.terminals;
 

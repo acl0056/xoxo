@@ -376,12 +376,16 @@ export class DxoImporter {
 		const zmaFilename = this.extractValue(this.readLine());
 		const useHilbert = this.parseBoolean(this.extractValue(this.readLine()));
 
-		// Skip Hilbert parameters and other settings (19 lines remaining in the 39-line block)
-		// Lower/Upper Hilbert freq, Lower/Upper slope, Invert Hilbert, Hilbert Delay,
+		// Read remaining 19 lines of the driver block individually to extract zPhaseHilbert
+		// Lines: Lower/Upper Hilbert freq, Lower/Upper slope, Invert Hilbert, Hilbert Delay,
 		// get acoust info, ACOUstic FRD, Vendor, SPARE, rectang Ht/Wt, empty,
 		// Z Phase Hilbert, baffle thickness, Baffle type, OffAxis from file, Include baffle, driver depth
-		for (let i = 0; i < 19; i++) {
-			this.readLine();
+		for (let i = 0; i < 13; i++) {
+			this.readLine(); // Skip lines 0-12 (lowerFreq through empty)
+		}
+		const zPhaseHilbert = this.parseBoolean(this.extractValue(this.readLine())); // Line 13: Z Phase Hilbert
+		for (let i = 0; i < 5; i++) {
+			this.readLine(); // Skip lines 14-18 (baffleThickness through driverDepth)
 		}
 
 		// Check if there's embedded FRD/ZMA data or if we're at the next driver
@@ -409,7 +413,8 @@ export class DxoImporter {
 		speaker.parameters.delay = delay;
 		speaker.parameters.inverted = inverted;
 		speaker.parameters.muted = muted;
-		speaker.parameters.phaseSource = useHilbert ? 'derived' : 'measured';
+		speaker.parameters.frdPhaseSource = useHilbert ? 'derived' : 'measured';
+		speaker.parameters.zmaPhaseSource = zPhaseHilbert ? 'derived' : 'measured';
 
 		// Store FRD and ZMA data (may be null)
 		speaker.frdData = frdData;

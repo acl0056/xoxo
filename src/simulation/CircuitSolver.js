@@ -1,4 +1,5 @@
 import Complex from 'complex.js';
+import HilbertTransform from './HilbertTransform';
 import { complexLUSolve } from './ComplexLUSolver';
 
 /**
@@ -7,10 +8,12 @@ import { complexLUSolve } from './ComplexLUSolver';
  *
  * @param {{ frequencies: number[], impedances: number[], phases: number[] }} zmaData
  * @param {number} frequency - Frequency in Hz
+ * @param {number[]} [phasesOverride] - Optional phase array to use instead of zmaData.phases (e.g., Hilbert-derived phases)
  * @returns {{ magnitude: number, phaseDeg: number }} Interpolated impedance magnitude and phase in degrees
  */
-function interpolateZMA(zmaData, frequency) {
-	const { frequencies, impedances, phases } = zmaData;
+function interpolateZMA(zmaData, frequency, phasesOverride) {
+	const { frequencies, impedances } = zmaData;
+	const phases = phasesOverride || zmaData.phases;
 
 	// Edge clamping: if frequency is at or below the lowest point, use the first point
 	if (frequency <= frequencies[0]) {
@@ -40,6 +43,33 @@ function interpolateZMA(zmaData, frequency) {
 	const phaseDeg = phases[i] + t * (phases[i + 1] - phases[i]);
 
 	return { magnitude, phaseDeg };
+}
+
+/**
+ * Get the derived ZMA phase array for a speaker component.
+ * Computes minimum phase from impedance magnitude data via Hilbert Transform.
+ * Caches the result on the component instance as `_derivedZmaPhases` to avoid recomputing per frequency.
+ *
+ * @param {Object} component - Speaker component with zmaData
+ * @returns {number[]|null} Derived phase array in degrees, or null if computation fails
+ */
+function getDerivedZmaPhases(component) {
+	// Return cached result if available
+	if (component._derivedZmaPhases) {
+		return component._derivedZmaPhases;
+	}
+
+	try {
+		// Convert impedance magnitudes from ohms (linear) to dB for Hilbert Transform
+		const impedancesInDb = component.zmaData.impedances.map((z) => 20 * Math.log10(z));
+		const derivedPhases = HilbertTransform.calculateMinimumPhase(component.zmaData.frequencies, impedancesInDb);
+		// Cache on the component instance (transient, non-serialized)
+		component._derivedZmaPhases = derivedPhases;
+		return derivedPhases;
+	} catch (error) {
+		console.warn(`Failed to compute derived ZMA phase via Hilbert Transform: ${error.message}. Falling back to measured phase.`);
+		return null;
+	}
 }
 
 /**
@@ -354,7 +384,12 @@ class CircuitSolver {
 				// Use frequency-dependent impedance from ZMA data when available
 				if (component.zmaData && component.zmaData.frequencies && component.zmaData.frequencies.length > 0) {
 					const frequency = omega / (2 * Math.PI);
-					const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency);
+					// Resolve ZMA phase based on per-file phase source setting
+					let phasesOverride = null;
+					if (component.parameters.zmaPhaseSource === 'derived') {
+						phasesOverride = getDerivedZmaPhases(component);
+					}
+					const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency, phasesOverride);
 					const phaseRad = phaseDeg * Math.PI / 180;
 					const zRe = magnitude * Math.cos(phaseRad);
 					const zIm = magnitude * Math.sin(phaseRad);
@@ -422,7 +457,12 @@ class CircuitSolver {
 				case 'speaker': {
 					if (component.zmaData && component.zmaData.frequencies && component.zmaData.frequencies.length > 0) {
 						const frequency = omega / (2 * Math.PI);
-						const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency);
+						// Resolve ZMA phase based on per-file phase source setting
+						let phasesOverride = null;
+						if (component.parameters.zmaPhaseSource === 'derived') {
+							phasesOverride = getDerivedZmaPhases(component);
+						}
+						const { magnitude, phaseDeg } = interpolateZMA(component.zmaData, frequency, phasesOverride);
 						const phaseRad = phaseDeg * Math.PI / 180;
 						const zRe = magnitude * Math.cos(phaseRad);
 						const zIm = magnitude * Math.sin(phaseRad);

@@ -23,7 +23,8 @@ describe('Speaker', () => {
 			expect(speaker.parameters.muted).toBe(false);
 			expect(speaker.parameters.frdFile).toBeNull();
 			expect(speaker.parameters.zmaFile).toBeNull();
-			expect(speaker.parameters.phaseSource).toBe('derived');
+			expect(speaker.parameters.frdPhaseSource).toBe('measured');
+			expect(speaker.parameters.zmaPhaseSource).toBe('measured');
 			expect(speaker.parameters.offAxisFiles).toEqual([]);
 		});
 
@@ -76,6 +77,7 @@ describe('Speaker', () => {
 			expect(speaker.parameters.offAxisFiles[0]).toEqual({
 				angle: 30,
 				frdPath: '/path/to/30deg.frd',
+				phaseSource: 'measured',
 			});
 		});
 
@@ -187,9 +189,9 @@ describe('Speaker', () => {
 			];
 
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/15deg.frd' },
-				{ angle: 30, frdPath: '/path/to/30deg.frd' },
-				{ angle: 45, frdPath: '/path/to/45deg.frd' },
+				{ angle: 15, frdPath: '/path/to/15deg.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'measured' },
+				{ angle: 45, frdPath: '/path/to/45deg.frd', phaseSource: 'measured' },
 			];
 
 			speaker.removeOffAxisFile(30);
@@ -258,9 +260,10 @@ describe('Speaker', () => {
 			speaker.parameters.muted = false;
 			speaker.parameters.frdFile = '/path/to/tweeter.frd';
 			speaker.parameters.zmaFile = '/path/to/tweeter.zma';
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.frdPhaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'derived';
 			speaker.parameters.offAxisFiles = [
-				{ angle: 30, frdPath: '/path/to/30deg.frd' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'measured' },
 			];
 
 			const result = speaker.validate();
@@ -357,28 +360,56 @@ describe('Speaker', () => {
 			expect(result.valid).toBe(true);
 		});
 
-		it('should reject invalid phaseSource', () => {
+		it('should reject invalid frdPhaseSource', () => {
 			const speaker = new Speaker(10, 20);
-			speaker.parameters.phaseSource = 'invalid';
+			speaker.parameters.frdPhaseSource = 'invalid';
 
 			const result = speaker.validate();
 
 			expect(result.valid).toBe(false);
-			expect(result.errors).toContain('Phase source must be one of: measured, derived');
+			expect(result.errors).toContain('FRD phase source must be one of: measured, derived');
 		});
 
-		it('should accept measured phaseSource', () => {
+		it('should reject invalid zmaPhaseSource', () => {
 			const speaker = new Speaker(10, 20);
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'invalid';
+
+			const result = speaker.validate();
+
+			expect(result.valid).toBe(false);
+			expect(result.errors).toContain('ZMA phase source must be one of: measured, derived');
+		});
+
+		it('should accept measured frdPhaseSource', () => {
+			const speaker = new Speaker(10, 20);
+			speaker.parameters.frdPhaseSource = 'measured';
 
 			const result = speaker.validate();
 
 			expect(result.valid).toBe(true);
 		});
 
-		it('should accept derived phaseSource', () => {
+		it('should accept derived frdPhaseSource', () => {
 			const speaker = new Speaker(10, 20);
-			speaker.parameters.phaseSource = 'derived';
+			speaker.parameters.frdPhaseSource = 'derived';
+
+			const result = speaker.validate();
+
+			expect(result.valid).toBe(true);
+		});
+
+		it('should accept measured zmaPhaseSource', () => {
+			const speaker = new Speaker(10, 20);
+			speaker.parameters.zmaPhaseSource = 'measured';
+
+			const result = speaker.validate();
+
+			expect(result.valid).toBe(true);
+		});
+
+		it('should accept derived zmaPhaseSource', () => {
+			const speaker = new Speaker(10, 20);
+			speaker.parameters.zmaPhaseSource = 'derived';
 
 			const result = speaker.validate();
 
@@ -398,7 +429,7 @@ describe('Speaker', () => {
 		it('should reject off-axis file with invalid angle', () => {
 			const speaker = new Speaker(10, 20);
 			speaker.parameters.offAxisFiles = [
-				{ angle: -10, frdPath: '/path/to/file.frd' },
+				{ angle: -10, frdPath: '/path/to/file.frd', phaseSource: 'measured' },
 			];
 
 			const result = speaker.validate();
@@ -410,7 +441,7 @@ describe('Speaker', () => {
 		it('should reject off-axis file with angle > 180', () => {
 			const speaker = new Speaker(10, 20);
 			speaker.parameters.offAxisFiles = [
-				{ angle: 200, frdPath: '/path/to/file.frd' },
+				{ angle: 200, frdPath: '/path/to/file.frd', phaseSource: 'measured' },
 			];
 
 			const result = speaker.validate();
@@ -422,7 +453,7 @@ describe('Speaker', () => {
 		it('should reject off-axis file with non-string frdPath', () => {
 			const speaker = new Speaker(10, 20);
 			speaker.parameters.offAxisFiles = [
-				{ angle: 30, frdPath: 123 },
+				{ angle: 30, frdPath: 123, phaseSource: 'measured' },
 			];
 
 			const result = speaker.validate();
@@ -431,12 +462,24 @@ describe('Speaker', () => {
 			expect(result.errors).toContain('Off-axis file 0: frdPath must be a string');
 		});
 
+		it('should reject off-axis file with invalid phaseSource', () => {
+			const speaker = new Speaker(10, 20);
+			speaker.parameters.offAxisFiles = [
+				{ angle: 30, frdPath: '/path/to/file.frd', phaseSource: 'invalid' },
+			];
+
+			const result = speaker.validate();
+
+			expect(result.valid).toBe(false);
+			expect(result.errors).toContain('Off-axis file 0: phaseSource must be one of: measured, derived');
+		});
+
 		it('should validate multiple off-axis files', () => {
 			const speaker = new Speaker(10, 20);
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/15deg.frd' },
-				{ angle: 30, frdPath: '/path/to/30deg.frd' },
-				{ angle: 45, frdPath: '/path/to/45deg.frd' },
+				{ angle: 15, frdPath: '/path/to/15deg.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'derived' },
+				{ angle: 45, frdPath: '/path/to/45deg.frd', phaseSource: 'measured' },
 			];
 
 			const result = speaker.validate();
@@ -458,9 +501,10 @@ describe('Speaker', () => {
 			speaker.parameters.muted = false;
 			speaker.parameters.frdFile = '/path/to/tweeter.frd';
 			speaker.parameters.zmaFile = '/path/to/tweeter.zma';
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.frdPhaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'derived';
 			speaker.parameters.offAxisFiles = [
-				{ angle: 30, frdPath: '/path/to/30deg.frd' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'measured' },
 			];
 
 			const json = speaker.toJSON();
@@ -478,11 +522,14 @@ describe('Speaker', () => {
 			expect(json.parameters.muted).toBe(false);
 			expect(json.parameters.frdFile).toBe('/path/to/tweeter.frd');
 			expect(json.parameters.zmaFile).toBe('/path/to/tweeter.zma');
-			expect(json.parameters.phaseSource).toBe('measured');
+			expect(json.parameters.frdPhaseSource).toBe('measured');
+			expect(json.parameters.zmaPhaseSource).toBe('derived');
+			expect(json.parameters.phaseSource).toBeUndefined();
 			expect(json.parameters.offAxisFiles).toHaveLength(1);
 			expect(json.parameters.offAxisFiles[0]).toEqual({
 				angle: 30,
 				frdPath: '/path/to/30deg.frd',
+				phaseSource: 'measured',
 			});
 		});
 
@@ -517,9 +564,10 @@ describe('Speaker', () => {
 					muted: false,
 					frdFile: '/path/to/tweeter.frd',
 					zmaFile: '/path/to/tweeter.zma',
-					phaseSource: 'measured',
+					frdPhaseSource: 'measured',
+					zmaPhaseSource: 'derived',
 					offAxisFiles: [
-						{ angle: 30, frdPath: '/path/to/30deg.frd' },
+						{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'measured' },
 					],
 				},
 			};
@@ -539,11 +587,13 @@ describe('Speaker', () => {
 			expect(speaker.parameters.muted).toBe(false);
 			expect(speaker.parameters.frdFile).toBe('/path/to/tweeter.frd');
 			expect(speaker.parameters.zmaFile).toBe('/path/to/tweeter.zma');
-			expect(speaker.parameters.phaseSource).toBe('measured');
+			expect(speaker.parameters.frdPhaseSource).toBe('measured');
+			expect(speaker.parameters.zmaPhaseSource).toBe('derived');
 			expect(speaker.parameters.offAxisFiles).toHaveLength(1);
 			expect(speaker.parameters.offAxisFiles[0]).toEqual({
 				angle: 30,
 				frdPath: '/path/to/30deg.frd',
+				phaseSource: 'measured',
 			});
 		});
 
@@ -566,8 +616,36 @@ describe('Speaker', () => {
 			expect(speaker.parameters.muted).toBe(false);
 			expect(speaker.parameters.frdFile).toBeNull();
 			expect(speaker.parameters.zmaFile).toBeNull();
-			expect(speaker.parameters.phaseSource).toBe('derived');
+			expect(speaker.parameters.frdPhaseSource).toBe('measured');
+			expect(speaker.parameters.zmaPhaseSource).toBe('measured');
 			expect(speaker.parameters.offAxisFiles).toEqual([]);
+		});
+
+		it('should migrate legacy phaseSource to per-file settings', () => {
+			const json = {
+				id: 'test-id-123',
+				type: 'speaker',
+				x: 10,
+				y: 20,
+				rotation: 0,
+				parameters: {
+					name: 'Test',
+					sensitivity: 0,
+					delay: 0,
+					inverted: false,
+					muted: false,
+					phaseSource: 'derived',
+					offAxisFiles: [
+						{ angle: 30, frdPath: '/path/to/30deg.frd' },
+					],
+				},
+			};
+
+			const speaker = Speaker.fromJSON(json);
+
+			expect(speaker.parameters.frdPhaseSource).toBe('derived');
+			expect(speaker.parameters.zmaPhaseSource).toBe('derived');
+			expect(speaker.parameters.offAxisFiles[0].phaseSource).toBe('derived');
 		});
 
 		it('should initialize parsed data properties as null or empty', () => {
@@ -583,7 +661,8 @@ describe('Speaker', () => {
 					delay: 0,
 					inverted: false,
 					muted: false,
-					phaseSource: 'derived',
+					frdPhaseSource: 'derived',
+					zmaPhaseSource: 'measured',
 				},
 			};
 
@@ -607,10 +686,11 @@ describe('Speaker', () => {
 			original.parameters.muted = true;
 			original.parameters.frdFile = '/path/to/woofer.frd';
 			original.parameters.zmaFile = '/path/to/woofer.zma';
-			original.parameters.phaseSource = 'measured';
+			original.parameters.frdPhaseSource = 'measured';
+			original.parameters.zmaPhaseSource = 'derived';
 			original.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/15deg.frd' },
-				{ angle: 30, frdPath: '/path/to/30deg.frd' },
+				{ angle: 15, frdPath: '/path/to/15deg.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/30deg.frd', phaseSource: 'derived' },
 			];
 
 			const json = original.toJSON();

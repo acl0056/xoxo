@@ -244,7 +244,7 @@
 		},
 		"speakerParameters": {
 			"type": "object",
-			"required": ["name", "sensitivity", "delay", "inverted", "muted", "phaseSource"],
+			"required": ["name", "sensitivity", "delay", "inverted", "muted", "frdPhaseSource", "zmaPhaseSource"],
 			"properties": {
 				"name": {
 					"type": "string",
@@ -275,10 +275,15 @@
 					"type": ["string", "null"],
 					"description": "Path to ZMA file"
 				},
-				"phaseSource": {
+				"frdPhaseSource": {
 					"type": "string",
 					"enum": ["measured", "derived"],
-					"description": "Phase data source"
+					"description": "Phase data source for the primary FRD file"
+				},
+				"zmaPhaseSource": {
+					"type": "string",
+					"enum": ["measured", "derived"],
+					"description": "Phase data source for the ZMA file"
 				},
 				"offAxisFiles": {
 					"type": "array",
@@ -291,7 +296,7 @@
 		},
 		"offAxisFile": {
 			"type": "object",
-			"required": ["angle", "frdPath"],
+			"required": ["angle", "frdPath", "phaseSource"],
 			"properties": {
 				"angle": {
 					"type": "number",
@@ -302,6 +307,11 @@
 				"frdPath": {
 					"type": "string",
 					"description": "Path to off-axis FRD file"
+				},
+				"phaseSource": {
+					"type": "string",
+					"enum": ["measured", "derived"],
+					"description": "Phase data source for this off-axis FRD file"
 				}
 			}
 		},

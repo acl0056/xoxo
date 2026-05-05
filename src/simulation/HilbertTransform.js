@@ -171,4 +171,4 @@ class HilbertTransform {
 	}
 }
 
-module.exports = HilbertTransform;
+export default HilbertTransform;

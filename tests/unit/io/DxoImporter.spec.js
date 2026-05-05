@@ -154,7 +154,8 @@ describe('DxoImporter', () => {
 				expect(speaker.parameters.delay).toBeDefined();
 				expect(typeof speaker.parameters.inverted).toBe('boolean');
 				expect(typeof speaker.parameters.muted).toBe('boolean');
-				expect(['measured', 'derived']).toContain(speaker.parameters.phaseSource);
+				expect(['measured', 'derived']).toContain(speaker.parameters.frdPhaseSource);
+				expect(['measured', 'derived']).toContain(speaker.parameters.zmaPhaseSource);
 			});
 		});
 

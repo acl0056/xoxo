@@ -36,6 +36,41 @@
 					step="1"
 				>
 				<span>px</span>
+				<button
+					class="bold-button"
+					:class="{ active: localBold }"
+					title="Bold"
+					@click="localBold = !localBold"
+				>
+					<strong>B</strong>
+				</button>
+			</div>
+
+			<div class="form-group">
+				<label>Align:</label>
+				<div class="align-buttons">
+					<button
+						:class="{ active: localTextAlign === 'left' }"
+						title="Align Left"
+						@click="localTextAlign = 'left'"
+					>
+						&#x2190;
+					</button>
+					<button
+						:class="{ active: localTextAlign === 'center' }"
+						title="Align Center"
+						@click="localTextAlign = 'center'"
+					>
+						&#x2194;
+					</button>
+					<button
+						:class="{ active: localTextAlign === 'right' }"
+						title="Align Right"
+						@click="localTextAlign = 'right'"
+					>
+						&#x2192;
+					</button>
+				</div>
 			</div>
 
 			<div class="button-group">
@@ -68,6 +103,8 @@ export default {
 		return {
 			localText: '',
 			localFontSize: 12,
+			localTextAlign: 'left',
+			localBold: false,
 		};
 	},
 	watch: {
@@ -77,6 +114,8 @@ export default {
 				if (newAnnotation) {
 					this.localText = newAnnotation.text || '';
 					this.localFontSize = newAnnotation.fontSize || 12;
+					this.localTextAlign = newAnnotation.textAlign || 'left';
+					this.localBold = newAnnotation.bold || false;
 				}
 			},
 		},
@@ -101,6 +140,8 @@ export default {
 				annotationId: this.annotation.id,
 				text: this.localText,
 				fontSize: this.localFontSize,
+				textAlign: this.localTextAlign,
+				bold: this.localBold,
 			});
 
 			this.close();
@@ -230,5 +271,52 @@ export default {
 
 .primary-button:hover {
 	background-color: #0052a3;
+}
+
+.align-buttons {
+	display: flex;
+	gap: 4px;
+}
+
+.align-buttons button {
+	width: 32px;
+	height: 28px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.align-buttons button:hover {
+	background-color: #f0f0f0;
+}
+
+.align-buttons button.active {
+	background-color: #0066cc;
+	color: white;
+	border-color: #0066cc;
+}
+
+.bold-button {
+	width: 32px;
+	height: 28px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+	cursor: pointer;
+	font-size: 14px;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.bold-button:hover {
+	background-color: #f0f0f0;
+}
+
+.bold-button.active {
+	background-color: #0066cc;
+	color: white;
+	border-color: #0066cc;
 }
 </style>

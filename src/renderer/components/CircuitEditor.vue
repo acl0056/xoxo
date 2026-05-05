@@ -109,7 +109,7 @@ export default {
 			tuneDialogComponent: null,
 			annotationDialogVisible: false,
 			annotationDialogAnnotation: null,
-			dragPreview: null, // { componentType, gridX, gridY } for rendering preview during drag
+			dragPreview: null, // { componentType, gridX, gridY, rotation } for rendering preview during drag
 		};
 	},
 	computed: {
@@ -1009,12 +1009,17 @@ export default {
 
 				// Set text style
 				this.context.fillStyle = '#000000';
-				this.context.font = `${annotation.fontSize}px Arial`;
-				this.context.textAlign = 'left';
+				const fontWeight = annotation.bold ? 'bold ' : '';
+				this.context.font = `${fontWeight}${annotation.fontSize}px Arial`;
+				this.context.textAlign = annotation.textAlign || 'left';
 				this.context.textBaseline = 'top';
 
-				// Draw text
-				this.context.fillText(annotation.text, 0, 0);
+				// Draw text with multiline support
+				const lines = (annotation.text || '').split('\n');
+				const lineHeight = annotation.fontSize * 1.3;
+				for (let i = 0; i < lines.length; i++) {
+					this.context.fillText(lines[i], 0, i * lineHeight);
+				}
 
 				this.context.restore();
 			});
@@ -1051,14 +1056,14 @@ export default {
 
 		renderDragPreview() {
 			if (!this.dragPreview) return;
-			const { componentType, gridX, gridY } = this.dragPreview;
+			const { componentType, gridX, gridY, rotation } = this.dragPreview;
 
 			// Create a temporary mock component for rendering
 			const mockComponent = {
 				type: componentType,
 				x: gridX,
 				y: gridY,
-				rotation: 0,
+				rotation: rotation || 0,
 				label: '',
 				parameters: {},
 			};
@@ -1067,6 +1072,7 @@ export default {
 			this.context.save();
 			this.context.globalAlpha = 0.5;
 			this.context.translate(gridX * this.gridSize, gridY * this.gridSize);
+			this.context.rotate(((rotation || 0) * Math.PI) / 180);
 
 			switch (componentType) {
 				case 'resistor':
@@ -1083,6 +1089,13 @@ export default {
 					break;
 				case 'ground':
 					this.renderGround(mockComponent);
+					break;
+				case 'text':
+					this.context.fillStyle = '#000000';
+					this.context.font = '12px Arial';
+					this.context.textAlign = 'left';
+					this.context.textBaseline = 'top';
+					this.context.fillText('Text', 0, 0);
 					break;
 				default:
 					break;
@@ -1425,20 +1438,15 @@ export default {
 
 				this.wireSegments.push({ x: snapped.x, y: snapped.y });
 			} else {
-				// Check if double-clicking on empty canvas to create annotation
+				// Double-click on an annotation opens the edit dialog
 				const rect = this.$refs.canvas.getBoundingClientRect();
 				const screenX = event.clientX - rect.left;
 				const screenY = event.clientY - rect.top;
-
 				const world = this.screenToWorld(screenX, screenY);
 
-				// Check if clicking on a component or wire
-				const clickedComponent = this.getComponentAtPosition(world.x, world.y);
-				const clickedWire = this.getWireAtPosition(world.x, world.y);
-
-				if (!clickedComponent && !clickedWire) {
-					// Create annotation at this position
-					this.createAnnotation(world.x, world.y);
+				const clickedAnnotation = this.getAnnotationAtPosition(world.x, world.y);
+				if (clickedAnnotation) {
+					this.editAnnotation(clickedAnnotation);
 				}
 			}
 		},
@@ -1725,11 +1733,11 @@ export default {
 			this.wireSegments = [];
 		},
 
-		handleAnnotationUpdate({ annotationId, text, fontSize }) {
+		handleAnnotationUpdate({ annotationId, text, fontSize, textAlign, bold }) {
 			// Update annotation in the store
 			this.$store.dispatch('circuit/updateAnnotation', {
 				annotationId,
-				updates: { text, fontSize },
+				updates: { text, fontSize, textAlign, bold },
 			});
 			this.renderCircuit();
 		},
@@ -1750,6 +1758,9 @@ export default {
 					terminals: component.terminals,
 				},
 			});
+
+			// Update wire connections — rotation changes terminal positions
+			this.updateWireConnections(component.id);
 			this.renderCircuit();
 		},
 
@@ -1836,6 +1847,12 @@ export default {
 		},
 
 		handleKeyDown(event) {
+			// Don't handle keyboard shortcuts when typing in an input or textarea
+			const tagName = event.target.tagName.toLowerCase();
+			if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+				return;
+			}
+
 			// Handle keyboard shortcuts
 			if (event.key === 'Escape') {
 				// Close context menu
@@ -1893,9 +1910,16 @@ export default {
 					}
 				}
 			} else if (event.key === ' ') {
-				// Rotate selected component
+				// Rotate selected component or drag preview
 				event.preventDefault(); // Prevent page scroll
-				if (this.selectedComponentId) {
+				if (this.dragPreview) {
+					// Rotate the drag preview
+					this.dragPreview = {
+						...this.dragPreview,
+						rotation: (this.dragPreview.rotation + 90) % 360,
+					};
+					this.renderCircuit();
+				} else if (this.selectedComponentId) {
 					const circuit = this.$store.state.circuit?.circuit;
 					const component = circuit.components.find((c) => c.id === this.selectedComponentId);
 					if (component) {
@@ -1922,7 +1946,8 @@ export default {
 			// Get component type from global state (set by ComponentPalette on dragstart)
 			const componentType = window.__pendingDragComponentType;
 			if (componentType && (!this.dragPreview || this.dragPreview.gridX !== gridX || this.dragPreview.gridY !== gridY)) {
-				this.dragPreview = { componentType, gridX, gridY };
+				const currentRotation = this.dragPreview?.rotation || 0;
+				this.dragPreview = { componentType, gridX, gridY, rotation: currentRotation };
 				// Throttle rendering with requestAnimationFrame to avoid lag
 				if (!this._dragRafPending) {
 					this._dragRafPending = true;
@@ -1972,15 +1997,20 @@ export default {
 			const gridX = Math.round(snapped.x / this.gridSize);
 			const gridY = Math.round(snapped.y / this.gridSize);
 
-			// Create the component
-			this.createComponent(componentType, gridX, gridY);
+			// Create the component or annotation
+			if (componentType === 'text') {
+				this.createAnnotation(snapped.x, snapped.y);
+			} else {
+				const rotation = this.dragPreview?.rotation || 0;
+				this.createComponent(componentType, gridX, gridY, rotation);
+			}
 
 			// Clear drag preview and global state
 			this.dragPreview = null;
 			window.__pendingDragComponentType = null;
 		},
 
-		createComponent(componentType, gridX, gridY) {
+		createComponent(componentType, gridX, gridY, rotation = 0) {
 			// Import component classes dynamically
 			let ComponentClass;
 
@@ -2012,6 +2042,7 @@ export default {
 
 			// Create new component instance
 			const component = new ComponentClass(gridX, gridY);
+			component.rotation = rotation;
 
 			// Auto-generate label (R1, R2, C1, L1, S1, etc.)
 			const circuit = this.$store.state.circuit?.circuit;
@@ -2035,8 +2066,9 @@ export default {
 			// Select the new component
 			this.$store.commit('ui/SET_SELECTED_COMPONENT', component.id);
 
-			// Render the updated circuit after state updates
+			// Check for wire connections at the drop position
 			this.$nextTick(() => {
+				this.updateWireConnections(component.id);
 				this.renderCircuit();
 			});
 		},
@@ -2309,13 +2341,11 @@ export default {
 									&& w.endNode.terminal === ti));
 
 							if (!alreadyConnected) {
-								import('@/models/Wire').then(({ Wire }) => {
-									const newWire = new Wire(
-										{ componentId: movedComponentId, terminal: ti },
-										{ componentId: otherComponent.id, terminal: oi },
-									);
-									this.$store.dispatch('circuit/addWire', newWire);
-								});
+								const newWire = new Wire(
+									{ componentId: movedComponentId, terminal: ti },
+									{ componentId: otherComponent.id, terminal: oi },
+								);
+								this.$store.dispatch('circuit/addWire', newWire);
 							}
 						}
 					}
@@ -2363,13 +2393,11 @@ export default {
 									&& w.endNode.terminal === ti));
 
 							if (!alreadyConnected) {
-								import('@/models/Wire').then(({ Wire }) => {
-									const newWire = new Wire(
-										{ componentId, terminal: ti },
-										{ componentId: otherComponent.id, terminal: oi },
-									);
-									this.$store.dispatch('circuit/addWire', newWire);
-								});
+								const newWire = new Wire(
+									{ componentId, terminal: ti },
+									{ componentId: otherComponent.id, terminal: oi },
+								);
+								this.$store.dispatch('circuit/addWire', newWire);
 							}
 						}
 					}
@@ -2463,20 +2491,38 @@ export default {
 			for (let i = circuit.annotations.length - 1; i >= 0; i--) {
 				const annotation = circuit.annotations[i];
 
-				// Estimate text bounds
+				// Estimate text bounds (multiline)
 				this.context.save();
-				this.context.font = `${annotation.fontSize}px Arial`;
-				const textMetrics = this.context.measureText(annotation.text);
-				const textWidth = textMetrics.width;
-				const textHeight = annotation.fontSize * 1.2; // Approximate height
+				const fontWeight = annotation.bold ? 'bold ' : '';
+				this.context.font = `${fontWeight}${annotation.fontSize}px Arial`;
+				const lines = (annotation.text || 'Text').split('\n');
+				let maxWidth = 30; // Minimum width
+				for (const line of lines) {
+					const lineWidth = this.context.measureText(line || ' ').width;
+					if (lineWidth > maxWidth) maxWidth = lineWidth;
+				}
+				const lineHeight = annotation.fontSize * 1.3;
+				const textHeight = Math.max(lines.length * lineHeight, 20);
 				this.context.restore();
 
-				const annotationX = annotation.x * this.gridSize;
+				const anchorX = annotation.x * this.gridSize;
 				const annotationY = annotation.y * this.gridSize;
+				const padding = 5;
+				const align = annotation.textAlign || 'left';
 
-				// Check if click is within text bounds
-				if (worldX >= annotationX && worldX <= annotationX + textWidth
-					&& worldY >= annotationY && worldY <= annotationY + textHeight) {
+				// Calculate left edge based on alignment
+				let leftEdge;
+				if (align === 'right') {
+					leftEdge = anchorX - maxWidth;
+				} else if (align === 'center') {
+					leftEdge = anchorX - maxWidth / 2;
+				} else {
+					leftEdge = anchorX;
+				}
+
+				// Check if click is within text bounds (with padding)
+				if (worldX >= leftEdge - padding && worldX <= leftEdge + maxWidth + padding
+					&& worldY >= annotationY - padding && worldY <= annotationY + textHeight + padding) {
 					return annotation;
 				}
 			}

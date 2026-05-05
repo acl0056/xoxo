@@ -106,8 +106,8 @@ describe('Schema Validation for toJSON() output', () => {
 			speaker.parameters.frdFile = '/path/to/tweeter.frd';
 			speaker.parameters.zmaFile = '/path/to/tweeter.zma';
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/tweeter-15.frd' },
-				{ angle: 30, frdPath: '/path/to/tweeter-30.frd' },
+				{ angle: 15, frdPath: '/path/to/tweeter-15.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/tweeter-30.frd', phaseSource: 'measured' },
 			];
 			circuit.addComponent(speaker);
 
@@ -382,7 +382,8 @@ describe('Schema Validation for toJSON() output', () => {
 
 			const speaker = new Speaker(50, 60);
 			speaker.label = 'S1';
-			speaker.parameters.phaseSource = 'measured';
+			speaker.parameters.frdPhaseSource = 'measured';
+			speaker.parameters.zmaPhaseSource = 'measured';
 			circuit.addComponent(speaker);
 
 			const json = circuit.toJSON();
@@ -401,7 +402,28 @@ describe('Schema Validation for toJSON() output', () => {
 
 			const speaker = new Speaker(50, 60);
 			speaker.label = 'S1';
-			speaker.parameters.phaseSource = 'derived';
+			speaker.parameters.frdPhaseSource = 'derived';
+			speaker.parameters.zmaPhaseSource = 'derived';
+			circuit.addComponent(speaker);
+
+			const json = circuit.toJSON();
+			const valid = validateCircuit(json);
+
+			if (!valid) {
+				console.error('Validation errors:', validateCircuit.errors);
+			}
+
+			expect(valid).toBe(true);
+		});
+
+		it('should produce schema-compliant JSON for speaker with mixed phase sources', () => {
+			const circuit = new Circuit();
+			circuit.metadata.name = 'Mixed Phase Circuit';
+
+			const speaker = new Speaker(50, 60);
+			speaker.label = 'S1';
+			speaker.parameters.frdPhaseSource = 'derived';
+			speaker.parameters.zmaPhaseSource = 'measured';
 			circuit.addComponent(speaker);
 
 			const json = circuit.toJSON();

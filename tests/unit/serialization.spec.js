@@ -83,8 +83,8 @@ describe('Model Serialization (toJSON)', () => {
 			speaker.parameters.frdFile = '/path/to/tweeter.frd';
 			speaker.parameters.zmaFile = '/path/to/tweeter.zma';
 			speaker.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/tweeter-15.frd' },
-				{ angle: 30, frdPath: '/path/to/tweeter-30.frd' },
+				{ angle: 15, frdPath: '/path/to/tweeter-15.frd', phaseSource: 'measured' },
+				{ angle: 30, frdPath: '/path/to/tweeter-30.frd', phaseSource: 'measured' },
 			];
 
 			const json = speaker.toJSON();
@@ -98,14 +98,16 @@ describe('Model Serialization (toJSON)', () => {
 				name: 'Tweeter',
 				sensitivity: 3.0,
 				delay: 0.5,
+				delayUnit: 'in',
 				inverted: true,
 				muted: false,
 				frdFile: '/path/to/tweeter.frd',
 				zmaFile: '/path/to/tweeter.zma',
-				phaseSource: 'derived',
+				frdPhaseSource: 'measured',
+				zmaPhaseSource: 'measured',
 				offAxisFiles: [
-					{ angle: 15, frdPath: '/path/to/tweeter-15.frd' },
-					{ angle: 30, frdPath: '/path/to/tweeter-30.frd' },
+					{ angle: 15, frdPath: '/path/to/tweeter-15.frd', phaseSource: 'measured' },
+					{ angle: 30, frdPath: '/path/to/tweeter-30.frd', phaseSource: 'measured' },
 				],
 			});
 		});
@@ -524,10 +526,11 @@ describe('Model Deserialization (fromJSON)', () => {
 					muted: false,
 					frdFile: '/path/to/tweeter.frd',
 					zmaFile: '/path/to/tweeter.zma',
-					phaseSource: 'measured',
+					frdPhaseSource: 'measured',
+					zmaPhaseSource: 'measured',
 					offAxisFiles: [
-						{ angle: 15, frdPath: '/path/to/tweeter-15.frd' },
-						{ angle: 30, frdPath: '/path/to/tweeter-30.frd' },
+						{ angle: 15, frdPath: '/path/to/tweeter-15.frd', phaseSource: 'measured' },
+						{ angle: 30, frdPath: '/path/to/tweeter-30.frd', phaseSource: 'measured' },
 					],
 				},
 			};
@@ -547,11 +550,13 @@ describe('Model Deserialization (fromJSON)', () => {
 			expect(speaker.parameters.muted).toBe(false);
 			expect(speaker.parameters.frdFile).toBe('/path/to/tweeter.frd');
 			expect(speaker.parameters.zmaFile).toBe('/path/to/tweeter.zma');
-			expect(speaker.parameters.phaseSource).toBe('measured');
+			expect(speaker.parameters.frdPhaseSource).toBe('measured');
+			expect(speaker.parameters.zmaPhaseSource).toBe('measured');
 			expect(speaker.parameters.offAxisFiles).toHaveLength(2);
 			expect(speaker.parameters.offAxisFiles[0]).toEqual({
 				angle: 15,
 				frdPath: '/path/to/tweeter-15.frd',
+				phaseSource: 'measured',
 			});
 		});
 
@@ -897,11 +902,13 @@ describe('Model Deserialization (fromJSON)', () => {
 							name: '',
 							sensitivity: 0.0,
 							delay: 0.0,
+							delayUnit: 'in',
 							inverted: false,
 							muted: false,
 							frdFile: null,
 							zmaFile: null,
-							phaseSource: 'derived',
+							frdPhaseSource: 'measured',
+							zmaPhaseSource: 'measured',
 							offAxisFiles: [],
 						},
 					},
@@ -1065,7 +1072,7 @@ describe('Model Deserialization (fromJSON)', () => {
 			original.parameters.name = 'Tweeter';
 			original.parameters.sensitivity = 3.0;
 			original.parameters.offAxisFiles = [
-				{ angle: 15, frdPath: '/path/to/file.frd' },
+				{ angle: 15, frdPath: '/path/to/file.frd', phaseSource: 'measured' },
 			];
 
 			const json = original.toJSON();

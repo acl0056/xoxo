@@ -428,6 +428,16 @@ export default {
 
 			const saved = this.savedCurveColors || {};
 
+			// Preserve existing curve settings (showPhase, smoothing, visible)
+			const existingSettings = {};
+			for (const curve of this.curves) {
+				existingSettings[curve.id] = {
+					showPhase: curve.showPhase,
+					smoothing: curve.smoothing,
+					visible: curve.visible,
+				};
+			}
+
 			this.curves = [
 				{
 					id: 'system',
@@ -437,9 +447,9 @@ export default {
 					originalMagnitudes: [...(this.frequencyResponse.spl || [])],
 					phases: this.frequencyResponse.phase || [],
 					color: saved.system || this.curveColors.system || '#0066cc',
-					visible: true,
-					showPhase: false,
-					smoothing: 'none',
+					visible: existingSettings.system?.visible ?? true,
+					showPhase: existingSettings.system?.showPhase ?? false,
+					smoothing: existingSettings.system?.smoothing ?? 'none',
 				},
 			];
 
@@ -460,9 +470,9 @@ export default {
 						originalMagnitudes: [...(response.spl || [])],
 						phases: response.phase || [],
 						color,
-						visible: true,
-						showPhase: false,
-						smoothing: 'none',
+						visible: existingSettings[id]?.visible ?? true,
+						showPhase: existingSettings[id]?.showPhase ?? false,
+						smoothing: existingSettings[id]?.smoothing ?? 'none',
 					});
 
 					if (saved[id]) {

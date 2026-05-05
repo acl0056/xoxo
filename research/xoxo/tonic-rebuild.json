@@ -2,12 +2,12 @@
   "version": "1.0",
   "metadata": {
     "name": "",
-    "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-05-01T03:12:25.900Z"
+    "created": "2026-05-04T02:49:05.803Z",
+    "modified": "2026-05-05T00:57:29.721Z"
   },
   "components": [
     {
-      "id": "mo4n6bwz-3n08kby",
+      "id": "moqlp0jv-9d7it6m",
       "type": "source",
       "label": "",
       "x": 20,
@@ -21,204 +21,11 @@
       }
     },
     {
-      "id": "mo4n6bwz-36pra54",
-      "type": "inductor",
-      "label": "L1",
-      "x": 41,
-      "y": 55,
-      "rotation": 0,
-      "parameters": {
-        "inductance": 0.0022,
-        "tolerance": 10,
-        "esr": 0.332,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bwz-91ukkc0",
-      "type": "capacitor",
-      "label": "C1",
-      "x": 41,
-      "y": 38,
-      "rotation": 0,
-      "parameters": {
-        "capacitance": 0.0000022,
-        "tolerance": 10,
-        "esr": 0.05,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bwz-zrv81kx",
-      "type": "capacitor",
-      "label": "C2",
-      "x": 44,
-      "y": 58,
-      "rotation": 90,
-      "parameters": {
-        "capacitance": 0.000022,
-        "tolerance": 10,
-        "esr": 0.05,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bwz-510fppb",
-      "type": "resistor",
-      "label": "R1",
-      "x": 29,
-      "y": 38,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 12.5,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-okwldqf",
-      "type": "resistor",
-      "label": "R2",
-      "x": 47,
-      "y": 32,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 2,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-ejc2k22",
-      "type": "resistor",
-      "label": "R3",
-      "x": 53,
-      "y": 38,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 2.2,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-1vgokep",
-      "type": "resistor",
-      "label": "R4",
-      "x": 47,
-      "y": 61,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 0.33,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-40yuzw8",
-      "type": "resistor",
-      "label": "R5",
-      "x": 47,
-      "y": 44,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 0.33,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-rehxu91",
-      "type": "inductor",
-      "label": "L3",
-      "x": 44,
-      "y": 41,
-      "rotation": 90,
-      "parameters": {
-        "inductance": 0.00047,
-        "tolerance": 10,
-        "esr": 0.2,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-5p4my02",
-      "type": "resistor",
-      "label": "R11",
-      "x": 35,
-      "y": 38,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 2.7,
-        "tolerance": 5,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-iul6v8b",
-      "type": "capacitor",
-      "label": "C4",
-      "x": 47,
-      "y": 38,
-      "rotation": 0,
-      "parameters": {
-        "capacitance": 0.0000056,
-        "tolerance": 10,
-        "esr": 0.05,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mo4n6bx0-0zephm4",
-      "type": "ground",
-      "label": "",
-      "x": 23,
-      "y": 42,
-      "rotation": 0,
-      "parameters": {}
-    },
-    {
-      "id": "mo4n6bx0-cu1ocw9",
-      "type": "ground",
-      "label": "",
-      "x": 50,
-      "y": 44,
-      "rotation": 0,
-      "parameters": {}
-    },
-    {
-      "id": "mo4n6bx0-jqwyq9j",
-      "type": "ground",
-      "label": "",
-      "x": 50,
-      "y": 61,
-      "rotation": 0,
-      "parameters": {}
-    },
-    {
-      "id": "mo4n6bx0-3z79hbb",
-      "type": "ground",
-      "label": "",
-      "x": 65,
-      "y": 57,
-      "rotation": 0,
-      "parameters": {}
-    },
-    {
-      "id": "mo4n6bx0-r9z991d",
-      "type": "ground",
-      "label": "",
-      "x": 65,
-      "y": 40,
-      "rotation": 0,
-      "parameters": {}
-    },
-    {
-      "id": "mo4n6bx1-yzz8ry0",
+      "id": "moqlp7rp-673eqr1",
       "type": "speaker",
       "label": "S1",
-      "x": 66,
-      "y": 39,
+      "x": 69,
+      "y": 29,
       "rotation": 0,
       "parameters": {
         "name": "Tweeter",
@@ -229,15 +36,18 @@
         "muted": false,
         "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 0.frd",
         "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/tweeter.zma",
-        "phaseSource": "measured",
+        "frdPhaseSource": "measured",
+        "zmaPhaseSource": "measured",
         "offAxisFiles": [
           {
             "angle": 30,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 30.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 30.frd",
+            "phaseSource": "measured"
           },
           {
             "angle": 60,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 60.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 60.frd",
+            "phaseSource": "measured"
           }
         ]
       },
@@ -6927,30 +6737,33 @@
       ]
     },
     {
-      "id": "mo4n6bx2-714i7iq",
+      "id": "moqlpcki-3ptehtl",
       "type": "speaker",
       "label": "S2",
-      "x": 66,
-      "y": 56,
+      "x": 69,
+      "y": 48,
       "rotation": 0,
       "parameters": {
-        "name": "Woofer",
+        "name": "woofer",
         "sensitivity": 0,
-        "delay": 0.0000804827191049731,
+        "delay": 0.00008071682464454977,
         "delayUnit": "in",
         "inverted": false,
         "muted": false,
         "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 0.frd",
         "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/woofer.zma",
-        "phaseSource": "measured",
+        "frdPhaseSource": "measured",
+        "zmaPhaseSource": "measured",
         "offAxisFiles": [
           {
             "angle": 30,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 30.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 30.frd",
+            "phaseSource": "measured"
           },
           {
             "angle": 60,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 60.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 60.frd",
+            "phaseSource": "measured"
           }
         ]
       },
@@ -13640,479 +13453,686 @@
       ]
     },
     {
-      "id": "mo4n6bx3-pi3pbel",
-      "type": "wire-segment",
-      "label": "",
+      "id": "moqlq6xj-18yvkx4",
+      "type": "resistor",
+      "label": "R1",
       "x": 26,
-      "y": 46.5,
-      "rotation": 90,
+      "y": 28,
+      "rotation": 0,
       "parameters": {
-        "length": 17
+        "resistance": 12.5,
+        "tolerance": 5,
+        "state": "normal"
       }
     },
     {
-      "id": "mo4n6bx3-cwrgbue",
-      "type": "wire-segment",
-      "label": "",
-      "x": 54.5,
-      "y": 55,
+      "id": "moqlqbdp-xu3fwge",
+      "type": "resistor",
+      "label": "R2",
+      "x": 32,
+      "y": 28,
       "rotation": 0,
       "parameters": {
-        "length": 21
+        "resistance": 2.7,
+        "tolerance": 5,
+        "state": "normal"
       }
     },
     {
-      "id": "mo4n6bx3-5729skh",
+      "id": "moqlqhz2-4m18v7d",
       "type": "wire-segment",
       "label": "",
-      "x": 60.5,
-      "y": 38,
-      "rotation": 0,
+      "x": 23,
+      "y": 33.5,
+      "rotation": 270,
       "parameters": {
         "length": 9
       }
     },
     {
-      "id": "mo4n6bx3-hfo839z",
+      "id": "moqlqkqb-7n5ejrg",
       "type": "wire-segment",
       "label": "",
-      "x": 32,
-      "y": 55,
+      "x": 23,
+      "y": 28.5,
+      "rotation": 270,
+      "parameters": {
+        "length": 1
+      }
+    },
+    {
+      "id": "moqlqrx2-b0u915u",
+      "type": "capacitor",
+      "label": "C1",
+      "x": 38,
+      "y": 28,
+      "rotation": 0,
+      "parameters": {
+        "capacitance": 0.0000027,
+        "tolerance": 10,
+        "esr": 0,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqlqxeb-c77gin2",
+      "type": "capacitor",
+      "label": "C2",
+      "x": 44,
+      "y": 28,
+      "rotation": 0,
+      "parameters": {
+        "capacitance": 0.0000056,
+        "tolerance": 10,
+        "esr": 0,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqlr0gy-h7pmbs7",
+      "type": "resistor",
+      "label": "R3",
+      "x": 44,
+      "y": 23,
+      "rotation": 0,
+      "parameters": {
+        "resistance": 2,
+        "tolerance": 5,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqlr41q-3scny9f",
+      "type": "wire-segment",
+      "label": "",
+      "x": 41,
+      "y": 25.5,
+      "rotation": 270,
+      "parameters": {
+        "length": 5
+      }
+    },
+    {
+      "id": "moqlr6q0-277gcvl",
+      "type": "wire-segment",
+      "label": "",
+      "x": 47,
+      "y": 25.5,
+      "rotation": 90,
+      "parameters": {
+        "length": 5
+      }
+    },
+    {
+      "id": "moqlsr30-obo72os",
+      "type": "resistor",
+      "label": "R4",
+      "x": 50,
+      "y": 28,
+      "rotation": 0,
+      "parameters": {
+        "resistance": 2.2,
+        "tolerance": 5,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqlsxqi-3r0d4vd",
+      "type": "wire-segment",
+      "label": "",
+      "x": 60.5,
+      "y": 28,
+      "rotation": 0,
+      "parameters": {
+        "length": 15
+      }
+    },
+    {
+      "id": "moqlt4vs-198h7z4",
+      "type": "ground",
+      "label": "",
+      "x": 68,
+      "y": 30,
+      "rotation": 0,
+      "parameters": {}
+    },
+    {
+      "id": "moqlv5z6-xvv2crc",
+      "type": "inductor",
+      "label": "L1",
+      "x": 41,
+      "y": 31,
+      "rotation": 90,
+      "parameters": {
+        "inductance": 0.00047,
+        "tolerance": 10,
+        "esr": 0,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqlvfpm-wwuuc23",
+      "type": "resistor",
+      "label": "R5",
+      "x": 44,
+      "y": 34,
+      "rotation": 0,
+      "parameters": {
+        "resistance": 0.33,
+        "tolerance": 5,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqml8u6-pl70hlq",
+      "type": "ground",
+      "label": "",
+      "x": 47,
+      "y": 34,
+      "rotation": 0,
+      "parameters": {}
+    },
+    {
+      "id": "moqmlj7b-54l2d2c",
+      "type": "ground",
+      "label": "",
+      "x": 23,
+      "y": 42,
+      "rotation": 0,
+      "parameters": {}
+    },
+    {
+      "id": "moqmnnke-a74gdwm",
+      "type": "inductor",
+      "label": "L2",
+      "x": 38,
+      "y": 47,
+      "rotation": 0,
+      "parameters": {
+        "inductance": 0.0022,
+        "tolerance": 10,
+        "esr": 0,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqmnr8t-hnvnegw",
+      "type": "capacitor",
+      "label": "C3",
+      "x": 41,
+      "y": 50,
+      "rotation": 90,
+      "parameters": {
+        "capacitance": 0.000022,
+        "tolerance": 10,
+        "esr": 0,
+        "state": "normal"
+      }
+    },
+    {
+      "id": "moqmq0ui-hfy3l2l",
+      "type": "wire-segment",
+      "label": "",
+      "x": 35,
+      "y": 42.5,
+      "rotation": 270,
+      "parameters": {
+        "length": 9
+      }
+    },
+    {
+      "id": "moqmq3js-t0nbfq0",
+      "type": "wire-segment",
+      "label": "",
+      "x": 29,
+      "y": 38,
       "rotation": 0,
       "parameters": {
         "length": 12
       }
     },
     {
-      "id": "mo4n6bx3-djstojb",
+      "id": "moqmqbot-h88rrr4",
       "type": "wire-segment",
       "label": "",
-      "x": 24.5,
-      "y": 38,
+      "x": 54.5,
+      "y": 47,
       "rotation": 0,
       "parameters": {
-        "length": 3
+        "length": 27
       }
     },
     {
-      "id": "mo4n6bx3-bciytaw",
-      "type": "wire-segment",
+      "id": "moqmqh3y-0mou5b1",
+      "type": "ground",
       "label": "",
-      "x": 50,
-      "y": 35,
-      "rotation": 90,
-      "parameters": {
-        "length": 6
-      }
+      "x": 47,
+      "y": 53,
+      "rotation": 0,
+      "parameters": {}
     },
     {
-      "id": "mo4n6bx3-bwjvwlm",
-      "type": "wire-segment",
-      "label": "",
+      "id": "moqmqkfv-kbfgcdd",
+      "type": "resistor",
+      "label": "R6",
       "x": 44,
-      "y": 35,
-      "rotation": 90,
+      "y": 53,
+      "rotation": 0,
       "parameters": {
-        "length": 6
+        "resistance": 0.33,
+        "tolerance": 5,
+        "state": "normal"
       }
+    },
+    {
+      "id": "moqmqrvg-tknv18g",
+      "type": "ground",
+      "label": "",
+      "x": 68,
+      "y": 49,
+      "rotation": 0,
+      "parameters": {}
     }
   ],
   "wires": [
     {
-      "id": "mo4n6bx4-9nt1g6f",
+      "id": "moqlqi2s-jhzg0ie",
       "startNode": {
-        "componentId": "mo4n6bwz-3n08kby",
+        "componentId": "moqlqhz2-4m18v7d",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-djstojb",
+        "componentId": "moqlp0jv-9d7it6m",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-lzgz0xk",
+      "id": "moqlqktw-20g4u7m",
       "startNode": {
-        "componentId": "mo4n6bwz-3n08kby",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-0zephm4",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-q72me5w",
-      "startNode": {
-        "componentId": "mo4n6bwz-36pra54",
+        "componentId": "moqlqkqb-7n5ejrg",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-hfo839z",
+        "componentId": "moqlqhz2-4m18v7d",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-mc0de0a",
+      "id": "moqlr4at-h33mpej",
       "startNode": {
-        "componentId": "mo4n6bwz-36pra54",
+        "componentId": "moqlr41q-3scny9f",
         "terminal": 1
       },
       "endNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
+        "componentId": "moqlr0gy-h7pmbs7",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-p8s8wx1",
+      "id": "moqlv9vf-rao3a5d",
       "startNode": {
-        "componentId": "mo4n6bwz-36pra54",
-        "terminal": 1
+        "componentId": "moqlv5z6-xvv2crc",
+        "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
+        "componentId": "moqlr41q-3scny9f",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-viwnaat",
+      "id": "moqmei6u-2xr9kdy",
       "startNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
+        "componentId": "moqlq6xj-18yvkx4",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-xbzxmby",
-      "startNode": {
-        "componentId": "mo4n6bwz-91ukkc0",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-5p4my02",
+        "componentId": "moqlqkqb-7n5ejrg",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-hbu7z54",
+      "id": "moqmek0s-6w556l9",
       "startNode": {
-        "componentId": "mo4n6bwz-91ukkc0",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-rehxu91",
+        "componentId": "moqlqbdp-xu3fwge",
         "terminal": 0
       },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-bcxbak3",
-      "startNode": {
-        "componentId": "mo4n6bwz-91ukkc0",
-        "terminal": 1
-      },
       "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-7bbfx9p",
-      "startNode": {
-        "componentId": "mo4n6bwz-91ukkc0",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bwjvwlm",
+        "componentId": "moqlq6xj-18yvkx4",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-22mpdfd",
+      "id": "moqmemj5-lesug7j",
       "startNode": {
-        "componentId": "mo4n6bx0-rehxu91",
+        "componentId": "moqlqrx2-b0u915u",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-fmt9jo8",
-      "startNode": {
-        "componentId": "mo4n6bx0-rehxu91",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bwjvwlm",
+        "componentId": "moqlqbdp-xu3fwge",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-xetxist",
+      "id": "moqmemqk-lo1pqh3",
       "startNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bwjvwlm",
+        "componentId": "moqlqrx2-b0u915u",
         "terminal": 1
       },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-xpuqlxy",
-      "startNode": {
-        "componentId": "mo4n6bwz-510fppb",
-        "terminal": 0
-      },
       "endNode": {
-        "componentId": "mo4n6bx3-pi3pbel",
+        "componentId": "moqlr41q-3scny9f",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-k9jsf0a",
+      "id": "moqmemuf-ps0q23m",
       "startNode": {
-        "componentId": "mo4n6bwz-510fppb",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-djstojb",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-006vkui",
-      "startNode": {
-        "componentId": "mo4n6bx3-pi3pbel",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-djstojb",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-t8jpevr",
-      "startNode": {
-        "componentId": "mo4n6bwz-510fppb",
+        "componentId": "moqlqrx2-b0u915u",
         "terminal": 1
       },
       "endNode": {
-        "componentId": "mo4n6bx0-5p4my02",
+        "componentId": "moqlv5z6-xvv2crc",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-fkpxch1",
+      "id": "moqmevus-j4l5uvc",
       "startNode": {
-        "componentId": "mo4n6bx0-okwldqf",
+        "componentId": "moqlqxeb-c77gin2",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-bwjvwlm",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-5x6lq3n",
-      "startNode": {
-        "componentId": "mo4n6bx0-okwldqf",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bciytaw",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-x7frc56",
-      "startNode": {
-        "componentId": "mo4n6bx0-ejc2k22",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
+        "componentId": "moqlqrx2-b0u915u",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-z7q9x9d",
+      "id": "moqmevys-qph3ptz",
       "startNode": {
-        "componentId": "mo4n6bx0-ejc2k22",
+        "componentId": "moqlqxeb-c77gin2",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx3-bciytaw",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-9zjb0a8",
-      "startNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bciytaw",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-8w3k76j",
-      "startNode": {
-        "componentId": "mo4n6bx0-ejc2k22",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-5729skh",
+        "componentId": "moqlr41q-3scny9f",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "mo4n6bx4-6673pbm",
+      "id": "moqmew39-g9oo61i",
       "startNode": {
-        "componentId": "mo4n6bx0-3z79hbb",
+        "componentId": "moqlqxeb-c77gin2",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx2-714i7iq",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-yqtf4xy",
-      "startNode": {
-        "componentId": "mo4n6bx0-r9z991d",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx1-yzz8ry0",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-5jt9o2v",
-      "startNode": {
-        "componentId": "mo4n6bx1-yzz8ry0",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-5729skh",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-9etidkg",
-      "startNode": {
-        "componentId": "mo4n6bx2-714i7iq",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-79de4ee",
-      "startNode": {
-        "componentId": "mo4n6bx3-pi3pbel",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-hfo839z",
+        "componentId": "moqlv5z6-xvv2crc",
         "terminal": 0
       },
       "segments": []
     },
     {
-      "id": "momc6ghk-p4if4il",
+      "id": "moqmezht-d4ktrql",
       "startNode": {
-        "componentId": "mo4n6bx0-40yuzw8",
+        "componentId": "moqlr6q0-277gcvl",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx0-rehxu91",
+        "componentId": "moqlr0gy-h7pmbs7",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "momc6snz-63agqv2",
+      "id": "moqmezlq-c6zzv73",
       "startNode": {
-        "componentId": "mo4n6bx0-cu1ocw9",
-        "terminal": 0
+        "componentId": "moqlr6q0-277gcvl",
+        "terminal": 1
       },
       "endNode": {
-        "componentId": "mo4n6bx0-40yuzw8",
+        "componentId": "moqlqxeb-c77gin2",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "momc7ary-oikvqhl",
+      "id": "moqmf7bq-76m4vxs",
       "startNode": {
-        "componentId": "mo4n6bx0-1vgokep",
+        "componentId": "moqlsr30-obo72os",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
+        "componentId": "moqlqxeb-c77gin2",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "momc7gvg-1z860tt",
+      "id": "moqmf7fc-n57d9mc",
       "startNode": {
-        "componentId": "mo4n6bx0-jqwyq9j",
+        "componentId": "moqlsr30-obo72os",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bx0-1vgokep",
+        "componentId": "moqlr6q0-277gcvl",
         "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmfhg4-f3ner8b",
+      "startNode": {
+        "componentId": "moqlvfpm-wwuuc23",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlv5z6-xvv2crc",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmfo0j-4d3mnh2",
+      "startNode": {
+        "componentId": "moqlsxqi-3r0d4vd",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlsr30-obo72os",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmfo83-v9qyklu",
+      "startNode": {
+        "componentId": "moqlsxqi-3r0d4vd",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "moqlp7rp-673eqr1",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmj8lq-9vss67w",
+      "startNode": {
+        "componentId": "moqlt4vs-198h7z4",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlp7rp-673eqr1",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqml8vv-6lndzc7",
+      "startNode": {
+        "componentId": "moqml8u6-pl70hlq",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlvfpm-wwuuc23",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmljab-ofa2lk2",
+      "startNode": {
+        "componentId": "moqmlj7b-54l2d2c",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlp0jv-9d7it6m",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmq3l4-s4sl52q",
+      "startNode": {
+        "componentId": "moqmq3js-t0nbfq0",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlp0jv-9d7it6m",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmq3m9-lbp7vt9",
+      "startNode": {
+        "componentId": "moqmq3js-t0nbfq0",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlqhz2-4m18v7d",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmq3ne-cpmu53m",
+      "startNode": {
+        "componentId": "moqmq3js-t0nbfq0",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "moqmq0ui-hfy3l2l",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmqbsa-dvho5al",
+      "startNode": {
+        "componentId": "moqmqbot-h88rrr4",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "moqlpcki-3ptehtl",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "moqmqrx1-u7sdymj",
+      "startNode": {
+        "componentId": "moqmqrvg-tknv18g",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqlpcki-3ptehtl",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "morx0ye0-ukgncm5",
+      "startNode": {
+        "componentId": "moqmnnke-a74gdwm",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqmq0ui-hfy3l2l",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "morx0yho-b5k5ken",
+      "startNode": {
+        "componentId": "moqmnnke-a74gdwm",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "moqmqbot-h88rrr4",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "morx196l-giubyrg",
+      "startNode": {
+        "componentId": "moqmnr8t-hnvnegw",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqmnnke-a74gdwm",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "morx1985-emzwla9",
+      "startNode": {
+        "componentId": "moqmnr8t-hnvnegw",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqmqbot-h88rrr4",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "morx2x3g-gydc7ov",
+      "startNode": {
+        "componentId": "moqmqkfv-kbfgcdd",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "moqmnr8t-hnvnegw",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "morx2x57-xczn5dp",
+      "startNode": {
+        "componentId": "moqmqkfv-kbfgcdd",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "moqmqh3y-0mou5b1",
+        "terminal": 0
       },
       "segments": []
     }
   ],
   "annotations": [],
-  "graphSettings": {
-    "frequencyResponse": {
-      "minFreq": 100,
-      "maxFreq": 20000,
-      "centerValue": 90,
-      "stepSize": 5
-    },
-    "impedance": {}
-  },
   "windowLayout": {
     "main": {
       "x": 0,

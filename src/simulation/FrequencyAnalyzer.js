@@ -1,4 +1,5 @@
 import Complex from 'complex.js';
+import HilbertTransform from './HilbertTransform';
 import SchemaValidator from './SchemaValidator';
 
 /**
@@ -15,6 +16,27 @@ class FrequencyAnalyzer {
 	constructor(circuit, solverResults) {
 		this.circuit = circuit;
 		this.solverResults = solverResults;
+	}
+
+	/**
+	 * Get the phase data array for FRD data based on the phase source setting.
+	 * When 'derived', computes minimum phase from magnitude data via Hilbert Transform.
+	 * When 'measured' (or anything else), returns the original measured phases.
+	 *
+	 * @param {Object} frdData - FRD data with frequencies, magnitudes, and phases arrays
+	 * @param {string} phaseSource - Phase source setting: 'derived' or 'measured'
+	 * @returns {number[]} Phase array to use for interpolation
+	 */
+	getPhaseData(frdData, phaseSource) {
+		if (phaseSource === 'derived') {
+			try {
+				return HilbertTransform.calculateMinimumPhase(frdData.frequencies, frdData.magnitudes);
+			} catch (error) {
+				console.warn(`Failed to compute derived phase via Hilbert Transform: ${error.message}. Falling back to measured phase.`);
+				return frdData.phases;
+			}
+		}
+		return frdData.phases;
 	}
 
 	/**
@@ -59,6 +81,18 @@ class FrequencyAnalyzer {
 			throw new Error(`Speaker ${speakerComponent.label} has no FRD data loaded`);
 		}
 
+		// Resolve phase array based on per-file phase source setting (once, before the frequency loop)
+		let phaseSource;
+		if (currentAngle > 0 && speakerComponent.parameters.offAxisFiles) {
+			const offAxisFileEntry = speakerComponent.parameters.offAxisFiles.find(
+				(entry) => entry.angle === currentAngle,
+			);
+			phaseSource = offAxisFileEntry ? offAxisFileEntry.phaseSource : 'measured';
+		} else {
+			phaseSource = speakerComponent.parameters.frdPhaseSource || 'measured';
+		}
+		const phases = this.getPhaseData(frdData, phaseSource);
+
 		// Find the voltage source to normalize SPL by source voltage
 		const voltageSource = this.circuit.components.find(
 			(component) => component.type === 'source',
@@ -90,7 +124,7 @@ class FrequencyAnalyzer {
 			);
 			const frdPhase = this.interpolate(
 				frdData.frequencies,
-				frdData.phases,
+				phases,
 				frequency,
 			);
 

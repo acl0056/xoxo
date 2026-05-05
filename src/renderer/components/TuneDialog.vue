@@ -158,6 +158,31 @@
 					<span class="file-path">{{ localParameters.frdFile || 'None' }}</span>
 				</div>
 
+				<div
+					v-if="localParameters.frdFile"
+					class="parameter-row"
+				>
+					<label>FRD phase source:</label>
+					<div class="radio-group">
+						<label>
+							<input
+								v-model="localParameters.frdPhaseSource"
+								type="radio"
+								value="measured"
+							>
+							As Measured
+						</label>
+						<label>
+							<input
+								v-model="localParameters.frdPhaseSource"
+								type="radio"
+								value="derived"
+							>
+							Derived (Minimum Phase)
+						</label>
+					</div>
+				</div>
+
 				<div class="parameter-row">
 					<label>ZMA File:</label>
 					<button @click="selectZmaFile">
@@ -166,12 +191,15 @@
 					<span class="file-path">{{ localParameters.zmaFile || 'None' }}</span>
 				</div>
 
-				<div class="parameter-row">
-					<label>Phase Source:</label>
+				<div
+					v-if="localParameters.zmaFile"
+					class="parameter-row"
+				>
+					<label>ZMA phase source:</label>
 					<div class="radio-group">
 						<label>
 							<input
-								v-model="localParameters.phaseSource"
+								v-model="localParameters.zmaPhaseSource"
 								type="radio"
 								value="measured"
 							>
@@ -179,7 +207,7 @@
 						</label>
 						<label>
 							<input
-								v-model="localParameters.phaseSource"
+								v-model="localParameters.zmaPhaseSource"
 								type="radio"
 								value="derived"
 							>
@@ -214,6 +242,27 @@
 						>
 							Remove
 						</button>
+						<div
+							v-if="offAxis.frdPath"
+							class="radio-group"
+						>
+							<label>
+								<input
+									v-model="offAxis.phaseSource"
+									type="radio"
+									value="measured"
+								>
+								As Measured
+							</label>
+							<label>
+								<input
+									v-model="offAxis.phaseSource"
+									type="radio"
+									value="derived"
+								>
+								Derived (Minimum Phase)
+							</label>
+						</div>
 					</div>
 					<button
 						class="add-button"
@@ -487,6 +536,7 @@ export default {
 			this.localParameters.offAxisFiles.push({
 				angle: 0,
 				frdPath: '',
+				phaseSource: 'measured',
 			});
 		},
 		removeOffAxisFile(index) {

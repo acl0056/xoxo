@@ -17,6 +17,8 @@ export class TextAnnotation {
 		this.y = y;
 		this.text = text;
 		this.fontSize = 12;
+		this.textAlign = 'left'; // 'left', 'center', or 'right'
+		this.bold = false;
 	}
 
 	/**
@@ -70,6 +72,8 @@ export class TextAnnotation {
 			y: this.y,
 			text: this.text,
 			fontSize: this.fontSize,
+			textAlign: this.textAlign,
+			bold: this.bold,
 		};
 	}
 
@@ -82,6 +86,8 @@ export class TextAnnotation {
 		const annotation = new TextAnnotation(json.x, json.y, json.text);
 		annotation.id = json.id;
 		annotation.fontSize = json.fontSize !== undefined ? json.fontSize : 12;
+		annotation.textAlign = json.textAlign || 'left';
+		annotation.bold = json.bold || false;
 		return annotation;
 	}
 }

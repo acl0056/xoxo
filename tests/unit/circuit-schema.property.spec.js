@@ -72,6 +72,7 @@ describe('Property-Based Tests: Circuit Schema Validation', () => {
 	const offAxisFileArbitrary = () => fc.record({
 		angle: fc.double({ min: 0.1, max: 180, noNaN: true, noDefaultInfinity: true }),
 		frdPath: fc.string({ minLength: 1 }),
+		phaseSource: fc.constantFrom('measured', 'derived'),
 	}).map((obj) => {
 		const { __proto__, ...cleanObj } = obj;
 		return cleanObj;
@@ -88,7 +89,8 @@ describe('Property-Based Tests: Circuit Schema Validation', () => {
 		muted: fc.boolean(),
 		frdFile: fc.oneof(fc.constant(null), fc.string({ minLength: 1 })),
 		zmaFile: fc.oneof(fc.constant(null), fc.string({ minLength: 1 })),
-		phaseSource: fc.constantFrom('measured', 'derived'),
+		frdPhaseSource: fc.constantFrom('measured', 'derived'),
+		zmaPhaseSource: fc.constantFrom('measured', 'derived'),
 		offAxisFiles: fc.array(offAxisFileArbitrary(), { maxLength: 10 }),
 	}).map((obj) => {
 		const { __proto__, ...cleanObj } = obj;

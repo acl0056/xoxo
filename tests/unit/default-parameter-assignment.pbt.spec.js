@@ -120,7 +120,8 @@ describe('Feature: crossover-network-simulator, Property 8: Default parameter as
 							expect(isValidParameterValue(component.parameters.delay)).toBe(true);
 							expect(isValidParameterValue(component.parameters.inverted)).toBe(true);
 							expect(isValidParameterValue(component.parameters.muted)).toBe(true);
-							expect(isValidParameterValue(component.parameters.phaseSource)).toBe(true);
+							expect(isValidParameterValue(component.parameters.frdPhaseSource)).toBe(true);
+							expect(isValidParameterValue(component.parameters.zmaPhaseSource)).toBe(true);
 							expect(isValidParameterValue(component.parameters.offAxisFiles)).toBe(true);
 							break;
 
@@ -211,7 +212,8 @@ describe('Feature: crossover-network-simulator, Property 8: Default parameter as
 					expect(typeof speaker.parameters.muted).toBe('boolean');
 
 					// Phase source should be valid
-					expect(['measured', 'derived']).toContain(speaker.parameters.phaseSource);
+					expect(['measured', 'derived']).toContain(speaker.parameters.frdPhaseSource);
+					expect(['measured', 'derived']).toContain(speaker.parameters.zmaPhaseSource);
 
 					// Off-axis files should be an array
 					expect(Array.isArray(speaker.parameters.offAxisFiles)).toBe(true);

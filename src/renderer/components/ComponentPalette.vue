@@ -27,6 +27,21 @@
 				</div>
 				<span class="palette-label">{{ componentType.label }}</span>
 			</div>
+			<hr class="palette-separator">
+			<div
+				v-for="annotationType in annotationTypes"
+				:key="annotationType.type"
+				class="palette-item"
+			>
+				<div
+					class="palette-icon"
+					:draggable="true"
+					@dragstart="startDrag($event, annotationType)"
+				>
+					<span class="icon-placeholder">T</span>
+				</div>
+				<span class="palette-label">{{ annotationType.label }}</span>
+			</div>
 		</div>
 	</div>
 </template>
@@ -68,6 +83,12 @@ export default {
 					type: 'ground',
 					label: 'Ground',
 					icon: groundIcon,
+				},
+			],
+			annotationTypes: [
+				{
+					type: 'text',
+					label: 'Text',
 				},
 			],
 		};
@@ -176,5 +197,12 @@ export default {
 	color: #333;
 	user-select: none;
 	text-align: center;
+}
+
+.palette-separator {
+	width: 80%;
+	border: none;
+	border-top: 1px solid #ccc;
+	margin: 4px auto;
 }
 </style>

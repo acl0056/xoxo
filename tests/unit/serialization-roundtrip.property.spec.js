@@ -69,6 +69,7 @@ describe('Feature: crossover-network-simulator, Property 11: Serialization Round
 	const offAxisFileArbitrary = fc.record({
 		angle: fc.integer({ min: 0, max: 180 }),
 		frdPath: fc.string({ minLength: 1, maxLength: 50 }),
+		phaseSource: fc.constantFrom('measured', 'derived'),
 	});
 
 	/**
@@ -82,7 +83,8 @@ describe('Feature: crossover-network-simulator, Property 11: Serialization Round
 		muted: fc.boolean(),
 		frdFile: fc.oneof(fc.constant(null), fc.string({ minLength: 1, maxLength: 50 })),
 		zmaFile: fc.oneof(fc.constant(null), fc.string({ minLength: 1, maxLength: 50 })),
-		phaseSource: fc.constantFrom('measured', 'derived'),
+		frdPhaseSource: fc.constantFrom('measured', 'derived'),
+		zmaPhaseSource: fc.constantFrom('measured', 'derived'),
 		offAxisFiles: fc.array(offAxisFileArbitrary, { maxLength: 7 }),
 	});
 

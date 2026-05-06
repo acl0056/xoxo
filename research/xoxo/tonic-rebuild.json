@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-05-04T02:49:05.803Z",
-    "modified": "2026-05-05T02:39:53.801Z"
+    "modified": "2026-05-06T00:08:11.052Z"
   },
   "components": [
     {
@@ -13508,7 +13508,7 @@
       "y": 28,
       "rotation": 0,
       "parameters": {
-        "capacitance": 0.0000027,
+        "capacitance": 0.0000022,
         "tolerance": 10,
         "esr": 0,
         "state": "normal"

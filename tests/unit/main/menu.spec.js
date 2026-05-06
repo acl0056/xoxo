@@ -28,9 +28,6 @@ describe('createApplicationMenu', () => {
 			exit: jest.fn(),
 			undo: jest.fn(),
 			redo: jest.fn(),
-			zoomIn: jest.fn(),
-			zoomOut: jest.fn(),
-			resetZoom: jest.fn(),
 			showAbout: jest.fn(),
 			openDocumentation: jest.fn(),
 			getRecentFilesMenu: jest.fn(() => []),
@@ -232,59 +229,13 @@ describe('createApplicationMenu', () => {
 		const template = Menu.buildFromTemplate.mock.calls[0][0];
 		const viewMenu = template.find((item) => item.label === 'View');
 
-		const zoomInItem = viewMenu.submenu.find((item) => item.label === 'Zoom In');
-		expect(zoomInItem).toBeDefined();
-		expect(zoomInItem.accelerator).toBe('CmdOrCtrl+Plus');
+		const frequencyResponseItem = viewMenu.submenu.find((item) => item.label === 'Frequency Response');
+		expect(frequencyResponseItem).toBeDefined();
+		expect(frequencyResponseItem.accelerator).toBe('CmdOrCtrl+1');
 
-		const zoomOutItem = viewMenu.submenu.find((item) => item.label === 'Zoom Out');
-		expect(zoomOutItem).toBeDefined();
-		expect(zoomOutItem.accelerator).toBe('CmdOrCtrl+-');
-
-		const resetZoomItem = viewMenu.submenu.find((item) => item.label === 'Reset Zoom');
-		expect(resetZoomItem).toBeDefined();
-		expect(resetZoomItem.accelerator).toBe('CmdOrCtrl+0');
-	});
-
-	it('should call handler when View > Zoom In is clicked', () => {
-		Menu.buildFromTemplate.mockReturnValue({});
-
-		createApplicationMenu(mockWindow, mockHandlers);
-
-		const template = Menu.buildFromTemplate.mock.calls[0][0];
-		const viewMenu = template.find((item) => item.label === 'View');
-		const zoomInItem = viewMenu.submenu.find((item) => item.label === 'Zoom In');
-
-		zoomInItem.click();
-
-		expect(mockHandlers.zoomIn).toHaveBeenCalled();
-	});
-
-	it('should call handler when View > Zoom Out is clicked', () => {
-		Menu.buildFromTemplate.mockReturnValue({});
-
-		createApplicationMenu(mockWindow, mockHandlers);
-
-		const template = Menu.buildFromTemplate.mock.calls[0][0];
-		const viewMenu = template.find((item) => item.label === 'View');
-		const zoomOutItem = viewMenu.submenu.find((item) => item.label === 'Zoom Out');
-
-		zoomOutItem.click();
-
-		expect(mockHandlers.zoomOut).toHaveBeenCalled();
-	});
-
-	it('should call handler when View > Reset Zoom is clicked', () => {
-		Menu.buildFromTemplate.mockReturnValue({});
-
-		createApplicationMenu(mockWindow, mockHandlers);
-
-		const template = Menu.buildFromTemplate.mock.calls[0][0];
-		const viewMenu = template.find((item) => item.label === 'View');
-		const resetZoomItem = viewMenu.submenu.find((item) => item.label === 'Reset Zoom');
-
-		resetZoomItem.click();
-
-		expect(mockHandlers.resetZoom).toHaveBeenCalled();
+		const impedanceItem = viewMenu.submenu.find((item) => item.label === 'Impedance');
+		expect(impedanceItem).toBeDefined();
+		expect(impedanceItem.accelerator).toBe('CmdOrCtrl+2');
 	});
 
 	it('should include Help menu with Documentation item', () => {

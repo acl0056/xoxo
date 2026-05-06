@@ -14143,14 +14143,14 @@
     "frequencyResponse": {
       "x": 901,
       "y": 25,
-      "width": 779,
-      "height": 532
+      "width": 900,
+      "height": 539
     },
     "impedance": {
       "x": 901,
-      "y": 558,
-      "width": 779,
-      "height": 522
+      "y": 565,
+      "width": 900,
+      "height": 504
     }
   }
 }

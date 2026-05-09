@@ -329,6 +329,177 @@
 					</label>
 				</div>
 			</div>
+
+			<!-- PEQ parameters -->
+			<div
+				v-if="component && component.type === 'peq'"
+				class="parameter-section"
+			>
+				<div class="parameter-row">
+					<label>Global Gain (dB):</label>
+					<input
+						v-model.number="localParameters.gain"
+						type="number"
+						step="0.5"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>Delay (s):</label>
+					<input
+						v-model.number="localParameters.delay"
+						type="number"
+						min="0"
+						step="0.001"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>DSP Rate (sps):</label>
+					<input
+						list="dsp-rate-options"
+						type="number"
+						min="1"
+						:value="localParameters.dspRate"
+						@input="localParameters.dspRate = Number($event.target.value)"
+					>
+					<datalist id="dsp-rate-options">
+						<option value="48000">
+							48000
+						</option>
+						<option value="96000">
+							96000
+						</option>
+						<option value="192000">
+							192000
+						</option>
+					</datalist>
+				</div>
+
+				<div class="parameter-row">
+					<label>
+						<input
+							v-model="localParameters.muted"
+							type="checkbox"
+						>
+						Muted
+					</label>
+				</div>
+
+				<div class="peq-sections">
+					<h4>Filter Sections</h4>
+					<div
+						v-for="(section, index) in localParameters.sections"
+						:key="index"
+						class="peq-section-row"
+					>
+						<span class="section-number">{{ index + 1 }}.</span>
+
+						<select
+							v-model="section.filterType"
+							class="filter-type-select"
+							@change="emitPeqUpdate"
+						>
+							<option value="peaking">
+								PEQ
+							</option>
+							<option value="highShelf">
+								High Shelf
+							</option>
+							<option value="lowShelf">
+								Low Shelf
+							</option>
+							<option value="lowPass1">
+								LP 1pole
+							</option>
+							<option value="highPass1">
+								HP 1pole
+							</option>
+							<option value="lowPass2">
+								LP 2pole
+							</option>
+							<option value="highPass2">
+								HP 2pole
+							</option>
+							<option value="allPass">
+								All-pass
+							</option>
+						</select>
+
+						<label class="inline-label">Freq:</label>
+						<input
+							v-model.number="section.frequency"
+							type="number"
+							min="1"
+							step="1"
+							class="freq-input"
+							@input="emitPeqUpdate"
+						>
+						<span class="unit-label">Hz</span>
+
+						<span
+							v-if="section.frequency > localParameters.dspRate / 2"
+							class="nyquist-warning"
+							title="Frequency exceeds Nyquist (dspRate / 2)"
+						>⚠</span>
+
+						<label class="inline-label">Q:</label>
+						<input
+							v-model.number="section.q"
+							type="number"
+							min="0.01"
+							step="0.01"
+							class="q-input"
+							@input="emitPeqUpdate"
+						>
+
+						<template v-if="sectionHasGain(section.filterType)">
+							<label class="inline-label">Gain:</label>
+							<input
+								v-model.number="section.gain"
+								type="number"
+								step="0.5"
+								class="section-gain-input"
+								@input="emitPeqUpdate"
+							>
+							<span class="unit-label">dB</span>
+						</template>
+
+						<label class="inline-label bypass-label">
+							<input
+								v-model="section.bypass"
+								type="checkbox"
+								@change="emitPeqUpdate"
+							>
+							Bypass
+						</label>
+
+						<button
+							class="remove-button"
+							:disabled="localParameters.sections.length <= 1"
+							@click="removePeqSection(index)"
+						>
+							Remove
+						</button>
+					</div>
+				</div>
+
+				<div class="peq-actions">
+					<button
+						class="add-button"
+						:disabled="localParameters.sections.length >= 10"
+						@click="addPeqSection"
+					>
+						Add Section
+					</button>
+					<button
+						class="export-biquad-button"
+						@click="openBiquadExport"
+					>
+						View/Export BiQuads
+					</button>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -349,7 +520,7 @@ export default {
 			default: false,
 		},
 	},
-	emits: ['close', 'update'],
+	emits: ['close', 'update', 'open-biquad-export'],
 	data() {
 		return {
 			localParameters: {},
@@ -448,6 +619,24 @@ export default {
 			deep: true,
 			handler() {
 				this.emitUpdate();
+			},
+		},
+		'localParameters.gain': function peqGain() {
+			if (this.component && this.component.type === 'peq') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.dspRate': function peqDspRate() {
+			if (this.component && this.component.type === 'peq') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.sections': {
+			deep: true,
+			handler() {
+				if (this.component && this.component.type === 'peq') {
+					this.emitUpdate();
+				}
 			},
 		},
 	},
@@ -599,6 +788,36 @@ export default {
 			this.localParameters.power = 1.0;
 			this.localParameters.impedance = 8.0;
 			this.emitUpdate();
+		},
+		sectionHasGain(filterType) {
+			return ['peaking', 'highShelf', 'lowShelf'].includes(filterType);
+		},
+		addPeqSection() {
+			if (!this.localParameters.sections) return;
+			if (this.localParameters.sections.length >= 10) return;
+			this.localParameters.sections.push({
+				filterType: 'peaking',
+				frequency: 1000,
+				q: 0.707,
+				gain: 0,
+				bypass: false,
+			});
+			this.emitUpdate();
+		},
+		removePeqSection(index) {
+			if (!this.localParameters.sections) return;
+			if (this.localParameters.sections.length <= 1) return;
+			this.localParameters.sections.splice(index, 1);
+			this.emitUpdate();
+		},
+		emitPeqUpdate() {
+			this.emitUpdate();
+		},
+		openBiquadExport() {
+			this.$emit('open-biquad-export', {
+				componentId: this.component.id,
+				parameters: this.localParameters,
+			});
 		},
 		emitUpdate() {
 			if (!this.component || this.initializing) return;
@@ -838,5 +1057,110 @@ export default {
 
 .remove-button:hover {
 	background-color: #ffcccc;
+}
+
+.peq-sections {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid #e0e0e0;
+}
+
+.peq-sections h4 {
+	margin-top: 0;
+	margin-bottom: 12px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.peq-section-row {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.section-number {
+	font-weight: 600;
+	min-width: 20px;
+}
+
+.filter-type-select {
+	padding: 4px 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.freq-input {
+	width: 80px;
+	padding: 4px 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.q-input {
+	width: 60px;
+	padding: 4px 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.section-gain-input {
+	width: 60px;
+	padding: 4px 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.inline-label {
+	font-size: 13px;
+	font-weight: 500;
+	min-width: auto;
+}
+
+.unit-label {
+	font-size: 12px;
+	color: #666;
+}
+
+.bypass-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.nyquist-warning {
+	color: #e67e00;
+	font-size: 16px;
+	cursor: help;
+}
+
+.peq-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.export-biquad-button {
+	padding: 6px 14px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background-color: #f5f5f5;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.export-biquad-button:hover {
+	background-color: #e0e0e0;
+}
+
+.remove-button:disabled,
+.add-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 </style>

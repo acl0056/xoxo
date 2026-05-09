@@ -231,7 +231,13 @@ class CircuitSolver {
 		for (const component of this.circuit.components) {
 			if (component.type === 'ground') continue;
 			const terminals = this.getComponentTerminals(component);
-			if (terminals.length < 2) continue;
+			if (terminals.length < 2) {
+				// Components with fewer than 2 connected terminals are effectively disconnected
+				if (terminals.length === 0) {
+					this.excludedComponents.add(component.id);
+				}
+				continue;
+			}
 			const allUnmapped = terminals.every((t) => !this.nodeMap.has(t) && find(t) !== 'GROUND' && find(find(t)) !== 'GROUND');
 			if (allUnmapped) {
 				this.excludedComponents.add(component.id);
@@ -255,7 +261,22 @@ class CircuitSolver {
 			}
 		}
 
-		this.matrixSize = representativeToIndex.size + this.voltageSourceMap.size;
+		// Assign indices for PEQ VCVS branch currents (one per PEQ)
+		this.peqCurrentMap = new Map();
+		for (const component of this.circuit.components) {
+			if (component.type === 'peq') {
+				if (this.excludedComponents.has(component.id)) continue;
+				const terminals = this.getComponentTerminals(component);
+				if (terminals.length < 4) {
+					console.warn(`[SOLVER] PEQ ${component.label || component.id.slice(-6)} has fewer than 4 connected terminals — skipping`);
+					continue;
+				}
+				this.peqCurrentMap.set(component.id, currentIndex);
+				currentIndex++;
+			}
+		}
+
+		this.matrixSize = representativeToIndex.size + this.voltageSourceMap.size + this.peqCurrentMap.size;
 		return this.matrixSize;
 	}
 
@@ -294,6 +315,12 @@ class CircuitSolver {
 			const terminals = this.getComponentTerminals(component);
 			if (terminals.length < 2) {
 				continue; // Component not properly connected
+			}
+
+			// Handle PEQ as VCVS
+			if (component.type === 'peq') {
+				this.stampPEQ(Are, Aim, component, frequency, n);
+				continue;
 			}
 
 			const node1Id = terminals[0];
@@ -573,6 +600,90 @@ class CircuitSolver {
 	}
 
 	/**
+	 * Stamp a PEQ component as a VCVS (Voltage-Controlled Voltage Source) into the MNA matrix.
+	 *
+	 * The PEQ has 4 terminals:
+	 *   Terminal 0: +in  (componentId_0)
+	 *   Terminal 1: -in  (componentId_1)
+	 *   Terminal 2: +out (componentId_2)
+	 *   Terminal 3: -out (componentId_3)
+	 *
+	 * VCVS constraint: V(no+) - V(no-) = G × [V(ni+) - V(ni-)]
+	 * where G = H(f) is the complex transfer function.
+	 *
+	 * MNA stamps (one extra row/column for branch current I_vcvs):
+	 * | Row/Col | no+ | no- | ni+ | ni- | I_vcvs |
+	 * |---------|-----|-----|-----|-----|--------|
+	 * | no+     |     |     |     |     | +1     |
+	 * | no-     |     |     |     |     | -1     |
+	 * | I_vcvs  | +1  | -1  | -G  | +G  |        |
+	 *
+	 * @param {Float64Array} Are - Real part of matrix buffer
+	 * @param {Float64Array} Aim - Imaginary part of matrix buffer
+	 * @param {Object} component - PEQ component
+	 * @param {number} frequency - Frequency in Hz
+	 * @param {number} n - Matrix dimension
+	 */
+	stampPEQ(Are, Aim, component, frequency, n) {
+		const currentIndex = this.peqCurrentMap.get(component.id);
+		if (currentIndex === undefined) {
+			return;
+		}
+
+		// Get terminal node IDs using the known terminal ordering
+		// Terminal 0: +in, Terminal 1: -in, Terminal 2: +out, Terminal 3: -out
+		const inputPosNodeId = `${component.id}_0`;
+		const inputNegNodeId = `${component.id}_1`;
+		const outputPosNodeId = `${component.id}_2`;
+		const outputNegNodeId = `${component.id}_3`;
+
+		// Map to matrix indices (null means ground)
+		const niPosRaw = this.nodeMap.get(inputPosNodeId);
+		const niNegRaw = this.nodeMap.get(inputNegNodeId);
+		const noPosRaw = this.nodeMap.get(outputPosNodeId);
+		const noNegRaw = this.nodeMap.get(outputNegNodeId);
+		const niPos = niPosRaw !== undefined ? niPosRaw : null;
+		const niNeg = niNegRaw !== undefined ? niNegRaw : null;
+		const noPos = noPosRaw !== undefined ? noPosRaw : null;
+		const noNeg = noNegRaw !== undefined ? noNegRaw : null;
+
+		// Evaluate the complex transfer function G = H(f)
+		const transferFunction = component.evaluateTransferFunction(frequency);
+		const gainRe = transferFunction.re;
+		const gainIm = transferFunction.im;
+
+		// Stamp KCL at output nodes: I_vcvs enters no+, leaves no-
+		// Row no+, Col I_vcvs: +1
+		if (noPos !== null) {
+			Are[noPos * n + currentIndex] += 1;
+		}
+		// Row no-, Col I_vcvs: -1
+		if (noNeg !== null) {
+			Are[noNeg * n + currentIndex] += -1;
+		}
+
+		// Stamp VCVS constraint row: V(no+) - V(no-) - G*V(ni+) + G*V(ni-) = 0
+		// Row I_vcvs, Col no+: +1
+		if (noPos !== null) {
+			Are[currentIndex * n + noPos] += 1;
+		}
+		// Row I_vcvs, Col no-: -1
+		if (noNeg !== null) {
+			Are[currentIndex * n + noNeg] += -1;
+		}
+		// Row I_vcvs, Col ni+: -G (complex)
+		if (niPos !== null) {
+			Are[currentIndex * n + niPos] += -gainRe;
+			Aim[currentIndex * n + niPos] += -gainIm;
+		}
+		// Row I_vcvs, Col ni-: +G (complex)
+		if (niNeg !== null) {
+			Are[currentIndex * n + niNeg] += gainRe;
+			Aim[currentIndex * n + niNeg] += gainIm;
+		}
+	}
+
+	/**
 	 * Solve the MNA system A*x = b at a given frequency using complexLUSolve.
 	 * Returns node voltages and branch currents.
 	 *
@@ -686,12 +797,36 @@ class CircuitSolver {
 			const terminals = this.getComponentTerminals(component);
 			if (terminals.length < 2) continue;
 
+			// PEQ components are handled separately in the frequency loop
+			if (component.type === 'peq') continue;
+
 			const n1Raw = this.nodeMap.get(terminals[0]);
 			const n2Raw = this.nodeMap.get(terminals[1]);
 			const n1 = n1Raw !== undefined ? n1Raw : null;
 			const n2 = n2Raw !== undefined ? n2Raw : null;
 
 			componentTerminalCache.push({ component, n1, n2 });
+		}
+
+		// Pre-compute PEQ terminal info ONCE (topology doesn't change, but H(f) does)
+		const peqCache = [];
+		for (const [peqId, currentIndex] of this.peqCurrentMap) {
+			const component = this.circuit.components.find((c) => c.id === peqId);
+			if (!component) continue;
+
+			const niPos = this.nodeMap.get(`${peqId}_0`);
+			const niNeg = this.nodeMap.get(`${peqId}_1`);
+			const noPos = this.nodeMap.get(`${peqId}_2`);
+			const noNeg = this.nodeMap.get(`${peqId}_3`);
+
+			peqCache.push({
+				component,
+				currentIndex,
+				niPos: niPos !== undefined ? niPos : null,
+				niNeg: niNeg !== undefined ? niNeg : null,
+				noPos: noPos !== undefined ? noPos : null,
+				noNeg: noNeg !== undefined ? noNeg : null,
+			});
 		}
 
 		// Solve at each frequency — track sub-step totals
@@ -720,6 +855,39 @@ class CircuitSolver {
 						this.addVoltageSource(Are, Aim, bre, bim, component, n1, n2, n);
 					} else {
 						this.stampComponentAdmittance(Are, Aim, component, omega, n1, n2, n);
+					}
+				}
+
+				// Stamp PEQ VCVS components (transfer function varies with frequency)
+				for (const {
+					component, currentIndex, niPos, niNeg, noPos, noNeg,
+				} of peqCache) {
+					const transferFunction = component.evaluateTransferFunction(frequency);
+					const gainRe = transferFunction.re;
+					const gainIm = transferFunction.im;
+
+					// KCL at output nodes
+					if (noPos !== null) {
+						Are[noPos * n + currentIndex] += 1;
+					}
+					if (noNeg !== null) {
+						Are[noNeg * n + currentIndex] += -1;
+					}
+
+					// VCVS constraint row
+					if (noPos !== null) {
+						Are[currentIndex * n + noPos] += 1;
+					}
+					if (noNeg !== null) {
+						Are[currentIndex * n + noNeg] += -1;
+					}
+					if (niPos !== null) {
+						Are[currentIndex * n + niPos] += -gainRe;
+						Aim[currentIndex * n + niPos] += -gainIm;
+					}
+					if (niNeg !== null) {
+						Are[currentIndex * n + niNeg] += gainRe;
+						Aim[currentIndex * n + niNeg] += gainIm;
 					}
 				}
 
@@ -763,6 +931,20 @@ class CircuitSolver {
 				const v1 = result.nodeVoltages[node1Id] || { re: 0, im: 0 };
 				const v2 = result.nodeVoltages[node2Id] || { re: 0, im: 0 };
 				return new Complex(v1.re - v2.re, v1.im - v2.im);
+			});
+
+			componentVoltages[component.id] = voltages;
+		}
+
+		// Build componentVoltages for PEQ components (output differential voltage)
+		for (const { component } of peqCache) {
+			const outputPosNodeId = `${component.id}_2`;
+			const outputNegNodeId = `${component.id}_3`;
+
+			const voltages = perFrequencyResults.map((result) => {
+				const vOutPos = result.nodeVoltages[outputPosNodeId] || { re: 0, im: 0 };
+				const vOutNeg = result.nodeVoltages[outputNegNodeId] || { re: 0, im: 0 };
+				return new Complex(vOutPos.re - vOutNeg.re, vOutPos.im - vOutNeg.im);
 			});
 
 			componentVoltages[component.id] = voltages;

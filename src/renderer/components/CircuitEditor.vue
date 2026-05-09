@@ -68,6 +68,7 @@ import { Capacitor } from '@/models/Capacitor';
 import { Inductor } from '@/models/Inductor';
 import { Speaker } from '@/models/Speaker';
 import { Ground } from '@/models/Ground';
+import { PEQ } from '@/models/PEQ';
 import { TextAnnotation } from '@/models/TextAnnotation';
 import { formatEngineering } from '@/utils/engineeringNotation';
 import ContextMenu from './ContextMenu.vue';
@@ -289,6 +290,9 @@ export default {
 						break;
 					case 'wire-segment':
 						this.renderWireSegment(component);
+						break;
+					case 'peq':
+						this.renderPEQ(component);
 						break;
 					default:
 						break;
@@ -994,6 +998,92 @@ export default {
 			this.context.lineCap = 'butt';
 		},
 
+		renderPEQ(component) {
+			const { gridSize } = this;
+
+			// Draw outer rectangle (4×4 grid units, from -2 to +2 in both axes)
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.strokeRect(-2 * gridSize, -2 * gridSize, 4 * gridSize, 4 * gridSize);
+
+			// Draw amplifier triangle inside the box (pointing right)
+			this.context.beginPath();
+			this.context.moveTo(-1.5 * gridSize, -1.5 * gridSize); // Top-left of triangle
+			this.context.lineTo(1.5 * gridSize, 0); // Right point (center)
+			this.context.lineTo(-1.5 * gridSize, 1.5 * gridSize); // Bottom-left of triangle
+			this.context.closePath();
+			this.context.stroke();
+
+			// Draw "PEQ" text inside the triangle
+			this.context.fillStyle = '#000000';
+			this.context.font = 'bold 10px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('PEQ', -0.3 * gridSize, 0);
+
+			// Draw +/- labels on left side (input terminals)
+			this.context.font = '12px Arial';
+			this.context.textAlign = 'right';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('+', -2.3 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -2.3 * gridSize, 2 * gridSize); // Bottom-left (-in)
+
+			// Draw +/- labels on right side (output terminals)
+			this.context.textAlign = 'left';
+			this.context.fillText('+', 2.3 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2.3 * gridSize, 2 * gridSize); // Bottom-right (-out)
+
+			// Draw terminal connection dots at the 4 corners
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Terminal 0: +in (top-left)
+			this.context.beginPath();
+			this.context.arc(-2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 1: -in (bottom-left)
+			this.context.beginPath();
+			this.context.arc(-2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 2: +out (top-right)
+			this.context.beginPath();
+			this.context.arc(2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 3: -out (bottom-right)
+			this.context.beginPath();
+			this.context.arc(2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw component label above the symbol
+			if (component.label) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '12px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'bottom';
+				this.context.fillText(component.label, 0, -2.5 * gridSize);
+			}
+
+			// Draw muted indicator (red X) when muted
+			if (component.parameters && component.parameters.muted) {
+				this.context.strokeStyle = '#ff0000';
+				this.context.lineWidth = 3;
+
+				// Draw X across the component
+				this.context.beginPath();
+				this.context.moveTo(-2 * gridSize, -2 * gridSize);
+				this.context.lineTo(2 * gridSize, 2 * gridSize);
+				this.context.stroke();
+
+				this.context.beginPath();
+				this.context.moveTo(2 * gridSize, -2 * gridSize);
+				this.context.lineTo(-2 * gridSize, 2 * gridSize);
+				this.context.stroke();
+			}
+		},
+
 		renderAnnotations() {
 			const circuit = this.$store.state.circuit?.circuit;
 			if (!circuit || !circuit.annotations) return;
@@ -1091,6 +1181,9 @@ export default {
 					break;
 				case 'ground':
 					this.renderGround(mockComponent);
+					break;
+				case 'peq':
+					this.renderPEQ(mockComponent);
 					break;
 				case 'text':
 					this.context.fillStyle = '#000000';
@@ -2047,6 +2140,10 @@ export default {
 					ComponentClass = Ground;
 					break;
 				}
+				case 'peq': {
+					ComponentClass = PEQ;
+					break;
+				}
 				default:
 					console.error(`Unknown component type: ${componentType}`);
 					return;
@@ -2056,20 +2153,22 @@ export default {
 			const component = new ComponentClass(gridX, gridY);
 			component.rotation = rotation;
 
-			// Auto-generate label (R1, R2, C1, L1, S1, etc.)
+			// Auto-generate label (R1, R2, C1, L1, S1, A0, A1, etc.)
 			const circuit = this.$store.state.circuit?.circuit;
 			if (circuit && componentType !== 'ground') {
 				const prefix = {
-					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S',
+					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S', peq: 'A',
 				}[componentType] || '';
 				if (prefix) {
 					const existingNumbers = circuit.components
 						.filter((c) => c.type === componentType && c.label)
 						.map((c) => {
 							const match = c.label.match(new RegExp(`^${prefix}(\\d+)$`));
-							return match ? parseInt(match[1], 10) : 0;
-						});
-					const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+							return match ? parseInt(match[1], 10) : -1;
+						})
+						.filter((n) => n >= 0);
+					const startNumber = componentType === 'peq' ? 0 : 1;
+					const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : startNumber;
 					component.label = `${prefix}${nextNumber}`;
 				}
 			}
@@ -2183,6 +2282,10 @@ export default {
 				const length = component.parameters.length * gridSize;
 				width = length;
 				height = gridSize; // Small height for hit detection
+			} else if (component.type === 'peq') {
+				// PEQ: 4×4 grid units box with terminals at ±2
+				width = 4 * gridSize;
+				height = 4 * gridSize;
 			}
 
 			// Account for rotation

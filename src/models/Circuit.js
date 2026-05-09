@@ -7,6 +7,7 @@ import { Speaker } from './Speaker';
 import { VoltageSource } from './VoltageSource';
 import { Ground } from './Ground';
 import { WireSegment } from './WireSegment';
+import { PEQ } from './PEQ';
 
 /**
  * Circuit class represents a complete crossover network design
@@ -412,6 +413,8 @@ export class Circuit {
 					return Ground.fromJSON(componentData);
 				case 'wire-segment':
 					return WireSegment.fromJSON(componentData);
+				case 'peq':
+					return PEQ.fromJSON(componentData);
 				default:
 					throw new Error(`Unknown component type: ${componentData.type}`);
 			}

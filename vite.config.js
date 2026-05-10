@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => {
 					entry: path.join(__dirname, 'src/main/index.js'),
 					onstart(args) {
 						// Copy additional main process files after build
-						const { execSync } = require('child_process');
-						execSync('node scripts/copy-main-files.js', { stdio: 'inherit' });
+						// const { execSync } = require('child_process');
+						// execSync('node scripts/copy-main-files.js', { stdio: 'inherit' });
 						args.startup();
 					},
 					vite: {

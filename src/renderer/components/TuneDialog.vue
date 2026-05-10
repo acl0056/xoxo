@@ -603,6 +603,42 @@
 					</label>
 				</div>
 			</div>
+
+			<!-- OpAmp parameters -->
+			<div
+				v-if="component && component.type === 'opamp'"
+				class="parameter-section"
+			>
+				<h4>Op Amp Setup</h4>
+
+				<div class="parameter-row">
+					<label>DC Gain (dB):</label>
+					<input
+						v-model.number="localParameters.dcGain"
+						type="number"
+						step="1"
+						@blur="validateOpAmpDcGain"
+						@input="emitOpAmpUpdate"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>Corner Frequency (Hz):</label>
+					<input
+						v-model.number="localParameters.cornerFrequency"
+						type="number"
+						min="0.001"
+						step="1"
+						@blur="validateOpAmpCornerFrequency"
+						@input="emitOpAmpUpdate"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>Unity-Gain Frequency (GBW):</label>
+					<span class="computed-value">{{ computedGBW }}</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -674,6 +710,13 @@ export default {
 		filterNyquist() {
 			const dspRate = this.localParameters.dspRate || 48000;
 			return dspRate / 2;
+		},
+		computedGBW() {
+			const { dcGain, cornerFrequency } = this.localParameters;
+			if (dcGain == null || cornerFrequency == null || cornerFrequency <= 0) return '—';
+			const linearGain = 10 ** (dcGain / 20);
+			const gbw = linearGain * cornerFrequency;
+			return this.formatGBW(gbw);
 		},
 	},
 	watch: {
@@ -764,6 +807,16 @@ export default {
 		},
 		'localParameters.turnFrequency': function turnFrequency() {
 			if (this.component && this.component.type === 'filter') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.dcGain': function dcGain() {
+			if (this.component && this.component.type === 'opamp') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.cornerFrequency': function cornerFrequency() {
+			if (this.component && this.component.type === 'opamp') {
 				this.emitUpdate();
 			}
 		},
@@ -988,6 +1041,33 @@ export default {
 		},
 		emitFilterUpdate() {
 			this.emitUpdate();
+		},
+		validateOpAmpDcGain() {
+			const value = this.localParameters.dcGain;
+			if (typeof value !== 'number' || !Number.isFinite(value)) {
+				this.localParameters.dcGain = 100;
+			}
+		},
+		validateOpAmpCornerFrequency() {
+			const value = this.localParameters.cornerFrequency;
+			if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+				this.localParameters.cornerFrequency = 50;
+			}
+		},
+		emitOpAmpUpdate() {
+			this.emitUpdate();
+		},
+		formatGBW(value) {
+			if (value >= 1e9) {
+				return `${(value / 1e9).toFixed(2)} GHz`;
+			}
+			if (value >= 1e6) {
+				return `${(value / 1e6).toFixed(2)} MHz`;
+			}
+			if (value >= 1e3) {
+				return `${(value / 1e3).toFixed(2)} kHz`;
+			}
+			return `${value.toFixed(2)} Hz`;
 		},
 		openBiquadExport() {
 			this.$emit('open-biquad-export', {
@@ -1338,5 +1418,14 @@ export default {
 .add-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.computed-value {
+	font-weight: 500;
+	color: #333;
+	padding: 6px 10px;
+	background-color: #f5f5f5;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
 }
 </style>

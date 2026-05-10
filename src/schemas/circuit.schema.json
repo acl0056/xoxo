@@ -68,7 +68,7 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment", "peq", "filter"],
+					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment", "peq", "filter", "opamp"],
 					"description": "Component type"
 				},
 				"label": {
@@ -181,6 +181,16 @@
 					"then": {
 						"properties": {
 							"parameters": { "$ref": "#/definitions/filterParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "opamp" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/opampParameters" }
 						}
 					}
 				}
@@ -474,6 +484,23 @@
 				"muted": {
 					"type": "boolean",
 					"description": "Mute flag"
+				}
+			}
+		},
+		"opampParameters": {
+			"type": "object",
+			"required": ["dcGain", "cornerFrequency"],
+			"properties": {
+				"dcGain": {
+					"type": "number",
+					"default": 100,
+					"description": "Open-loop DC gain in decibels"
+				},
+				"cornerFrequency": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"default": 50,
+					"description": "Open-loop corner frequency in hertz (3 dB point)"
 				}
 			}
 		},

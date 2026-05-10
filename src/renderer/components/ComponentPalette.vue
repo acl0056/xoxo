@@ -54,6 +54,7 @@ import speakerIcon from '@/renderer/assets/icons/speaker.svg';
 import groundIcon from '@/renderer/assets/icons/ground.svg';
 import peqIcon from '@/renderer/assets/icons/peq.svg';
 import filterIcon from '@/renderer/assets/icons/filter.svg';
+import opampIcon from '@/renderer/assets/icons/opamp.svg';
 
 export default {
 	name: 'ComponentPalette',
@@ -95,6 +96,11 @@ export default {
 					type: 'filter',
 					label: 'Filter',
 					icon: filterIcon,
+				},
+				{
+					type: 'opamp',
+					label: 'OpAmp',
+					icon: opampIcon,
 				},
 			],
 			annotationTypes: [

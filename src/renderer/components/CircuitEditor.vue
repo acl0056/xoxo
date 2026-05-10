@@ -70,6 +70,7 @@ import { Speaker } from '@/models/Speaker';
 import { Ground } from '@/models/Ground';
 import { PEQ } from '@/models/PEQ';
 import { Filter } from '@/models/Filter';
+import { OpAmp } from '@/models/OpAmp';
 import { TextAnnotation } from '@/models/TextAnnotation';
 import { formatEngineering } from '@/utils/engineeringNotation';
 import ContextMenu from './ContextMenu.vue';
@@ -297,6 +298,9 @@ export default {
 						break;
 					case 'filter':
 						this.renderFilter(component);
+						break;
+					case 'opamp':
+						this.renderOpAmp(component);
 						break;
 					default:
 						break;
@@ -1174,6 +1178,75 @@ export default {
 			}
 		},
 
+		renderOpAmp(component) {
+			const { gridSize } = this;
+
+			// Draw outer rectangle (4×4 grid units, from -2 to +2 in both axes)
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.strokeRect(-2 * gridSize, -2 * gridSize, 4 * gridSize, 4 * gridSize);
+
+			// Draw amplifier triangle inside the box (pointing right)
+			this.context.beginPath();
+			this.context.moveTo(-1.5 * gridSize, -1.5 * gridSize); // Top-left of triangle
+			this.context.lineTo(1.5 * gridSize, 0); // Right point (center)
+			this.context.lineTo(-1.5 * gridSize, 1.5 * gridSize); // Bottom-left of triangle
+			this.context.closePath();
+			this.context.stroke();
+
+			// Draw "Op" text inside the triangle
+			this.context.fillStyle = '#000000';
+			this.context.font = 'bold 10px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('Op', -0.3 * gridSize, 0);
+
+			// Draw +/- labels on left side (input terminals)
+			this.context.font = '12px Arial';
+			this.context.textAlign = 'right';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('+', -2.3 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -2.3 * gridSize, 2 * gridSize); // Bottom-left (-in)
+
+			// Draw +/- labels on right side (output terminals)
+			this.context.textAlign = 'left';
+			this.context.fillText('+', 2.3 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2.3 * gridSize, 2 * gridSize); // Bottom-right (-out)
+
+			// Draw terminal connection dots at the 4 corners
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Terminal 0: +in (top-left)
+			this.context.beginPath();
+			this.context.arc(-2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 1: -in (bottom-left)
+			this.context.beginPath();
+			this.context.arc(-2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 2: +out (top-right)
+			this.context.beginPath();
+			this.context.arc(2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 3: -out (bottom-right)
+			this.context.beginPath();
+			this.context.arc(2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw component label above the symbol
+			if (component.label) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '12px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'bottom';
+				this.context.fillText(component.label, 0, -2.5 * gridSize);
+			}
+		},
+
 		renderAnnotations() {
 			const circuit = this.$store.state.circuit?.circuit;
 			if (!circuit || !circuit.annotations) return;
@@ -1277,6 +1350,9 @@ export default {
 					break;
 				case 'filter':
 					this.renderFilter(mockComponent);
+					break;
+				case 'opamp':
+					this.renderOpAmp(mockComponent);
 					break;
 				case 'text':
 					this.context.fillStyle = '#000000';
@@ -2241,6 +2317,10 @@ export default {
 					ComponentClass = Filter;
 					break;
 				}
+				case 'opamp': {
+					ComponentClass = OpAmp;
+					break;
+				}
 				default:
 					console.error(`Unknown component type: ${componentType}`);
 					return;
@@ -2254,11 +2334,11 @@ export default {
 			const circuit = this.$store.state.circuit?.circuit;
 			if (circuit && componentType !== 'ground') {
 				const prefix = {
-					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S', peq: 'A', filter: 'A',
+					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S', peq: 'A', filter: 'A', opamp: 'A',
 				}[componentType] || '';
 				if (prefix) {
-					// For shared "A" prefix, count across both peq and filter types
-					const typesToCount = prefix === 'A' ? ['peq', 'filter'] : [componentType];
+					// For shared "A" prefix, count across peq, filter, and opamp types
+					const typesToCount = prefix === 'A' ? ['peq', 'filter', 'opamp'] : [componentType];
 					const existingNumbers = circuit.components
 						.filter((c) => typesToCount.includes(c.type) && c.label)
 						.map((c) => {

@@ -9,6 +9,7 @@ import { Ground } from './Ground';
 import { WireSegment } from './WireSegment';
 import { PEQ } from './PEQ';
 import { Filter } from './Filter';
+import { OpAmp } from './OpAmp';
 
 /**
  * Circuit class represents a complete crossover network design
@@ -418,6 +419,8 @@ export class Circuit {
 					return PEQ.fromJSON(componentData);
 				case 'filter':
 					return Filter.fromJSON(componentData);
+				case 'opamp':
+					return OpAmp.fromJSON(componentData);
 				default:
 					throw new Error(`Unknown component type: ${componentData.type}`);
 			}

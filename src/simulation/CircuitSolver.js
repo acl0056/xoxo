@@ -264,7 +264,7 @@ class CircuitSolver {
 		// Assign indices for PEQ/Filter VCVS branch currents (one per PEQ or Filter)
 		this.peqCurrentMap = new Map();
 		for (const component of this.circuit.components) {
-			if (component.type === 'peq' || component.type === 'filter') {
+			if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
 				if (this.excludedComponents.has(component.id)) continue;
 				const terminals = this.getComponentTerminals(component);
 				if (terminals.length < 4) {
@@ -318,7 +318,7 @@ class CircuitSolver {
 			}
 
 			// Handle PEQ as VCVS
-			if (component.type === 'peq' || component.type === 'filter') {
+			if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
 				this.stampPEQ(Are, Aim, component, frequency, n);
 				continue;
 			}
@@ -798,7 +798,7 @@ class CircuitSolver {
 			if (terminals.length < 2) continue;
 
 			// PEQ and Filter components are handled separately in the frequency loop
-			if (component.type === 'peq' || component.type === 'filter') continue;
+			if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') continue;
 
 			const n1Raw = this.nodeMap.get(terminals[0]);
 			const n2Raw = this.nodeMap.get(terminals[1]);

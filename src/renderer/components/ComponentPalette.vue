@@ -53,6 +53,7 @@ import inductorIcon from '@/renderer/assets/icons/inductor.svg';
 import speakerIcon from '@/renderer/assets/icons/speaker.svg';
 import groundIcon from '@/renderer/assets/icons/ground.svg';
 import peqIcon from '@/renderer/assets/icons/peq.svg';
+import filterIcon from '@/renderer/assets/icons/filter.svg';
 
 export default {
 	name: 'ComponentPalette',
@@ -89,6 +90,11 @@ export default {
 					type: 'peq',
 					label: 'PEQ',
 					icon: peqIcon,
+				},
+				{
+					type: 'filter',
+					label: 'Filter',
+					icon: filterIcon,
 				},
 			],
 			annotationTypes: [

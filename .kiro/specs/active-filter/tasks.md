@@ -7,7 +7,7 @@ Implement an Active Filter component for the crossover network simulator. The Ac
 ## Tasks
 
 - [ ] 1. Schema definition and FilterCoefficientCalculator core
-  - [ ] 1.1 Add Filter type and parameter definitions to circuit.schema.json
+  - [x] 1.1 Add Filter type and parameter definitions to circuit.schema.json
     - Add "filter" to the component type enum alongside existing types
     - Define `filterParameters` with required properties: filterShape, filterType, filterOrder, turnFrequency, gain, delay, muted
     - Validate filterShape enum: "butterworth", "linkwitzRiley", "bessel"
@@ -18,7 +18,7 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Add conditional validation block (allOf/if/then) for "filter" type in the component definition
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
 
-  - [ ] 1.2 Create src/simulation/FilterCoefficientCalculator.js
+  - [x] 1.2 Create src/simulation/FilterCoefficientCalculator.js
     - Implement `computeFilterCoefficients(params, dspRate)` returning `{ sections: Array<{ b0, b1, b2, a1, a2 }> }`
     - Implement `computeButterworthPoles(order)` — poles equally spaced on left half of unit circle at angles θ_k = π(2k + N - 1)/(2N)
     - Implement `computeLinkwitzRileyPoles(order)` — doubled Butterworth poles at order N/2
@@ -30,7 +30,7 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Implement NaN/Infinity protection — return unity coefficients for affected sections and log error
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11_
 
-  - [ ] 1.3 Create src/models/Filter.js extending Component
+  - [x] 1.3 Create src/models/Filter.js extending Component
     - Extend Component with type "filter"
     - Set default parameters: filterShape "butterworth", filterType "lowPass", filterOrder 2, turnFrequency 1000, gain 0, delay 0, muted false
     - Define 4 terminals at same positions as PEQ: +in {x:-2,y:-2}, -in {x:-2,y:2}, +out {x:2,y:-2}, -out {x:2,y:2}
@@ -41,19 +41,19 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Implement static fromJSON(json) reconstructing Filter instance
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-  - [ ] 1.4 Register Filter in Circuit.js deserialization and Component validTypes
+  - [x] 1.4 Register Filter in Circuit.js deserialization and Component validTypes
     - Import Filter in src/models/Circuit.js
     - Add case 'filter' to the fromJSON switch returning Filter.fromJSON(componentData)
     - Add "filter" to the Component base class validTypes array
     - _Requirements: 9.1, 9.2, 9.4_
 
-  - [ ] 1.5 Checkpoint — lint and verify schema + model
+  - [x] 1.5 Checkpoint — lint and verify schema + model
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure no existing tests are broken
     - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 2. FilterCoefficientCalculator tests and Filter model tests
-  - [ ] 2.1 Create tests/unit/FilterCoefficientCalculator.spec.js with unit tests
+  - [x] 2.1 Create tests/unit/FilterCoefficientCalculator.spec.js with unit tests
     - Test Butterworth order 2 poles at known positions (±45° on unit circle)
     - Test Butterworth order 4 poles at known positions
     - Test Linkwitz-Riley order 4 equals doubled Butterworth order 2 poles
@@ -67,42 +67,42 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Test orders 1 through 10 produce no NaN/Infinity coefficients for all shapes
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11_
 
-  - [ ] 2.2 Write property test for coefficient numerical stability
+  - [x] 2.2 Write property test for coefficient numerical stability
     - **Property 3: Coefficient Numerical Stability**
     - For any valid filter parameters (all three shapes, all three types, orders 1–40, turnFrequency between 1 Hz and 95% of Nyquist), verify all biquad coefficients are finite numbers
     - **Validates: Requirements 3.11**
 
-  - [ ] 2.3 Write property test for correct biquad section decomposition
+  - [x] 2.3 Write property test for correct biquad section decomposition
     - **Property 4: Correct Biquad Section Decomposition**
     - For any filter of order N (LP/HP), verify exactly ⌈N/2⌉ biquad sections; for bandpass, verify section count doubles
     - **Validates: Requirements 3.4, 3.5**
 
-  - [ ] 2.4 Write property test for low-pass DC passthrough
+  - [x] 2.4 Write property test for low-pass DC passthrough
     - **Property 5: Low-Pass Filter DC Passthrough**
     - For any low-pass filter (any shape, any order 1–40, turnFrequency 20–20000 Hz), verify |H(f_low)| ≈ 0 dB (±0.1 dB) at f = turnFrequency/100 (minimum 1 Hz)
     - **Validates: Requirements 3.6**
 
-  - [ ] 2.5 Write property test for high-pass DC blocking
+  - [x] 2.5 Write property test for high-pass DC blocking
     - **Property 6: High-Pass Filter DC Blocking**
     - For any high-pass filter (any shape, any order 1–40, turnFrequency 20–20000 Hz), verify |H(f_low)| is significantly attenuated (below -20 dB for order ≥ 2, below -10 dB for order 1)
     - **Validates: Requirements 3.7**
 
-  - [ ] 2.6 Write property test for Butterworth -3 dB at turn frequency
+  - [x] 2.6 Write property test for Butterworth -3 dB at turn frequency
     - **Property 7: Butterworth -3 dB at Turn Frequency**
     - For any Butterworth LP or HP filter (any order 1–40, turnFrequency 20–20000 Hz), verify |H(fc)| ≈ -3.01 dB (±0.5 dB)
     - **Validates: Requirements 4.7**
 
-  - [ ] 2.7 Write property test for Linkwitz-Riley -6 dB at turn frequency
+  - [x] 2.7 Write property test for Linkwitz-Riley -6 dB at turn frequency
     - **Property 8: Linkwitz-Riley -6 dB at Turn Frequency**
     - For any LR LP or HP filter (any even order 2–40, turnFrequency 20–20000 Hz), verify |H(fc)| ≈ -6.02 dB (±0.5 dB)
     - **Validates: Requirements 4.8**
 
-  - [ ] 2.8 Write property test for Linkwitz-Riley equals squared Butterworth
+  - [x] 2.8 Write property test for Linkwitz-Riley equals squared Butterworth
     - **Property 9: Linkwitz-Riley Equals Squared Butterworth**
     - For any LR filter of order N and any evaluation frequency, verify |H_LR(f)| ≈ |H_BW_N/2(f)|² (±0.01 dB)
     - **Validates: Requirements 3.2**
 
-  - [ ] 2.9 Create tests/unit/Filter.spec.js with unit tests
+  - [x] 2.9 Create tests/unit/Filter.spec.js with unit tests
     - Test constructor defaults match schema (filterShape, filterType, filterOrder, turnFrequency, gain, delay, muted)
     - Test validate() with valid parameters returns valid: true
     - Test validate() rejects invalid filterShape, filterType, non-integer order, out-of-range order, odd order for LR, non-positive turnFrequency, NaN gain, negative delay
@@ -115,50 +115,50 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Test fromJSON() reconstructs equivalent instance
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12_
 
-  - [ ] 2.10 Write property test for Filter serialization round-trip
+  - [x] 2.10 Write property test for Filter serialization round-trip
     - **Property 1: Filter Serialization Round-Trip**
     - For any valid Filter instance with arbitrary parameters, verify toJSON() then fromJSON() produces identical parameters
     - **Validates: Requirements 2.10, 2.11, 2.12, 9.1, 9.2, 9.3**
 
-  - [ ] 2.11 Write property test for Filter validation correctness
+  - [x] 2.11 Write property test for Filter validation correctness
     - **Property 2: Filter Validation Correctness**
     - For any Filter parameter object, verify validate() returns valid:true iff all constraints are met, and valid:false otherwise
     - **Validates: Requirements 2.4, 2.5, 2.6, 2.7, 2.8, 2.9**
 
-  - [ ] 2.12 Write property test for combined transfer function equals product of sections
+  - [x] 2.12 Write property test for combined transfer function equals product of sections
     - **Property 10: Combined Transfer Function Equals Product of Sections**
     - For any Filter configuration and any frequency, verify combined H(f) (excluding gain/delay) equals product of individual biquad section evaluations
     - **Validates: Requirements 4.1**
 
-  - [ ] 2.13 Write property test for gain scales magnitude
+  - [x] 2.13 Write property test for gain scales magnitude
     - **Property 11: Gain Scales Magnitude**
     - For any Filter configuration and any frequency, verify changing gain from 0 to G dB scales magnitude by 10^(G/20)
     - **Validates: Requirements 4.3**
 
-  - [ ] 2.14 Write property test for delay preserves magnitude
+  - [x] 2.14 Write property test for delay preserves magnitude
     - **Property 12: Delay Preserves Magnitude**
     - For any Filter configuration with delay D > 0 and any frequency, verify |H(f)| is identical with or without delay
     - **Validates: Requirements 4.4**
 
-  - [ ] 2.15 Write property test for mute produces zero output
+  - [x] 2.15 Write property test for mute produces zero output
     - **Property 13: Mute Produces Zero Output**
     - For any Filter configuration with muted=true and any frequency, verify H(f) = {re: 0, im: 0}
     - **Validates: Requirements 4.5**
 
-  - [ ] 2.16 Checkpoint — lint and verify all model/calculator tests
+  - [x] 2.16 Checkpoint — lint and verify all model/calculator tests
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure all tests pass
     - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Circuit solver integration
-  - [ ] 3.1 Add Filter to VCVS handling in CircuitSolver.js
+- [x] 3. Circuit solver integration
+  - [x] 3.1 Add Filter to VCVS handling in CircuitSolver.js
     - In `buildNodeMap()`: include "filter" type alongside "peq" when assigning VCVS branch current indices in `peqCurrentMap`
     - In `solveAllFrequencies()`: include "filter" components in the `peqCache` array (same 4-terminal VCVS structure, same `evaluateTransferFunction` interface)
     - In `buildMNAMatrix()`: handle `component.type === 'filter'` the same as `'peq'` — call `this.stampPEQ(Are, Aim, component, frequency, n)`
     - Filter with fewer than 4 connected terminals: skip and log warning (same as PEQ behavior)
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 3.2 Create tests/unit/Filter-integration.spec.js
+  - [x] 3.2 Create tests/unit/Filter-integration.spec.js
     - Test single Filter (Butterworth LP order 2) in simple circuit: output voltage = input × H(f)
     - Test Filter with unity response (gain 0, low frequency well in passband): output ≈ input
     - Test Filter muted: zero output
@@ -169,13 +169,13 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Test save/load round-trip of circuit containing Filter components
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3_
 
-  - [ ] 3.3 Checkpoint — lint and verify solver integration
+  - [x] 3.3 Checkpoint — lint and verify solver integration
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure all tests pass
     - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. UI: Filter canvas rendering and shared label logic
-  - [ ] 4.1 Add Filter rendering to CircuitEditor.vue
+- [x] 4. UI: Filter canvas rendering and shared label logic
+  - [x] 4.1 Add Filter rendering to CircuitEditor.vue
     - Add `renderFilter(component)` method drawing the same amplifier-style triangle as PEQ but with "H(f)" text inside instead of "PEQ"
     - Render 4 terminal dots at ±2 grid units (same positions as PEQ)
     - Render component label (e.g., "A1") above the symbol
@@ -185,24 +185,24 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Add Filter to the component rendering dispatch
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-  - [ ] 4.2 Update label assignment logic for shared "A" prefix
+  - [x] 4.2 Update label assignment logic for shared "A" prefix
     - Update the label prefix map to include `filter: 'A'`
     - Modify the counter logic so that when prefix is "A", it counts across both "peq" and "filter" component types
     - Find the lowest available number not used by any existing PEQ or Filter component
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [ ] 4.3 Add Filter to ComponentPalette.vue
+  - [x] 4.3 Add Filter to ComponentPalette.vue
     - Add Filter entry to the component palette so users can place it on the canvas
     - Use appropriate icon/label to distinguish from PEQ
     - _Requirements: 6.1_
 
-  - [ ] 4.4 Checkpoint — lint and verify rendering
+  - [x] 4.4 Checkpoint — lint and verify rendering
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure all tests pass
     - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. UI: Filter Tune Dialog
-  - [ ] 5.1 Add Filter Configuration section to TuneDialog.vue
+- [x] 5. UI: Filter Tune Dialog
+  - [x] 5.1 Add Filter Configuration section to TuneDialog.vue
     - Display filter shape selector with options: Butterworth, Linkwitz-Riley, Bessel
     - Display filter type selector with options: Low Pass, High Pass, Bandpass
     - Display filter order spinner (integer 1–40)
@@ -215,13 +215,13 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Emit real-time parameter updates on any change to trigger simulation recalculation
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11_
 
-  - [ ] 5.2 Checkpoint — lint and verify TuneDialog
+  - [x] 5.2 Checkpoint — lint and verify TuneDialog
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure all tests pass
     - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Final integration and verification
-  - [ ] 6.1 End-to-end wiring verification
+- [x] 6. Final integration and verification
+  - [x] 6.1 End-to-end wiring verification
     - Verify Filter appears in component palette and can be placed on canvas
     - Verify shared "A" label assignment works correctly with mixed PEQ and Filter components
     - Verify Filter parameters can be edited in TuneDialog and simulation updates in real time
@@ -229,7 +229,7 @@ Implement an Active Filter component for the crossover network simulator. The Ac
     - Verify circuit files without Filter components load gracefully (backward compatibility)
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 6.2 Final checkpoint — full lint and test suite
+  - [x] 6.2 Final checkpoint — full lint and test suite
     - Run `npm run lint` and fix any errors
     - Run `npm test` to ensure ALL tests pass (zero failures)
     - Verify no `.skip()` or `.only()` left in test files

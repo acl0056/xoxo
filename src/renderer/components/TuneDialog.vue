@@ -500,6 +500,109 @@
 					</button>
 				</div>
 			</div>
+
+			<!-- Filter parameters -->
+			<div
+				v-if="component && component.type === 'filter'"
+				class="parameter-section"
+			>
+				<div class="parameter-row">
+					<label>Filter Shape:</label>
+					<select
+						v-model="localParameters.filterShape"
+						@change="handleFilterShapeChange"
+					>
+						<option value="butterworth">
+							Butterworth
+						</option>
+						<option value="linkwitzRiley">
+							Linkwitz-Riley
+						</option>
+						<option value="bessel">
+							Bessel
+						</option>
+					</select>
+				</div>
+
+				<div class="parameter-row">
+					<label>Filter Type:</label>
+					<select
+						v-model="localParameters.filterType"
+						@change="emitFilterUpdate"
+					>
+						<option value="lowPass">
+							Low Pass
+						</option>
+						<option value="highPass">
+							High Pass
+						</option>
+						<option value="bandpass">
+							Bandpass
+						</option>
+					</select>
+				</div>
+
+				<div class="parameter-row">
+					<label>Order:</label>
+					<input
+						v-model.number="localParameters.filterOrder"
+						type="number"
+						min="1"
+						max="40"
+						:step="localParameters.filterShape === 'linkwitzRiley' ? 2 : 1"
+						@input="handleFilterOrderInput"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>Turn Frequency:</label>
+					<input
+						v-model="filterFrequencyInput"
+						type="text"
+						class="value-input"
+						@blur="parseFilterFrequencyInput"
+						@keyup.enter="parseFilterFrequencyInput"
+					>
+					<span class="unit-label">Hz</span>
+					<span
+						v-if="localParameters.turnFrequency > filterNyquist"
+						class="nyquist-warning"
+						title="Frequency exceeds Nyquist (dspRate / 2)"
+					>⚠</span>
+				</div>
+
+				<div class="parameter-row">
+					<label>Gain (dB):</label>
+					<input
+						v-model.number="localParameters.gain"
+						type="number"
+						step="0.5"
+						@input="emitFilterUpdate"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>Delay (s):</label>
+					<input
+						v-model.number="localParameters.delay"
+						type="number"
+						min="0"
+						step="0.001"
+						@input="emitFilterUpdate"
+					>
+				</div>
+
+				<div class="parameter-row">
+					<label>
+						<input
+							v-model="localParameters.muted"
+							type="checkbox"
+							@change="emitFilterUpdate"
+						>
+						Muted
+					</label>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -525,6 +628,7 @@ export default {
 		return {
 			localParameters: {},
 			valueInput: '',
+			filterFrequencyInput: '',
 			incrementInterval: null,
 			incrementTimeout: null,
 			undoValue: null,
@@ -566,6 +670,10 @@ export default {
 				default:
 					return +(delaySec * 13504).toFixed(4);
 			}
+		},
+		filterNyquist() {
+			const dspRate = this.localParameters.dspRate || 48000;
+			return dspRate / 2;
 		},
 	},
 	watch: {
@@ -639,6 +747,26 @@ export default {
 				}
 			},
 		},
+		'localParameters.filterShape': function filterShape() {
+			if (this.component && this.component.type === 'filter') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.filterType': function filterType() {
+			if (this.component && this.component.type === 'filter') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.filterOrder': function filterOrder() {
+			if (this.component && this.component.type === 'filter') {
+				this.emitUpdate();
+			}
+		},
+		'localParameters.turnFrequency': function turnFrequency() {
+			if (this.component && this.component.type === 'filter') {
+				this.emitUpdate();
+			}
+		},
 	},
 	methods: {
 		setDelayFromDisplay(displayValue) {
@@ -670,6 +798,11 @@ export default {
 			if (this.isPassiveComponent && this.valueParameterName) {
 				const value = this.localParameters[this.valueParameterName];
 				this.valueInput = formatEngineering(value);
+			}
+
+			// Initialize filter frequency input
+			if (this.component.type === 'filter' && this.localParameters.turnFrequency) {
+				this.filterFrequencyInput = formatEngineering(this.localParameters.turnFrequency);
 			}
 
 			this.$nextTick(() => {
@@ -811,6 +944,49 @@ export default {
 			this.emitUpdate();
 		},
 		emitPeqUpdate() {
+			this.emitUpdate();
+		},
+		handleFilterShapeChange() {
+			// When switching to Linkwitz-Riley, enforce even order
+			if (this.localParameters.filterShape === 'linkwitzRiley') {
+				if (this.localParameters.filterOrder % 2 !== 0) {
+					this.localParameters.filterOrder += 1;
+				}
+			}
+			this.emitUpdate();
+		},
+		handleFilterOrderInput() {
+			// Enforce even order for Linkwitz-Riley
+			if (this.localParameters.filterShape === 'linkwitzRiley') {
+				if (this.localParameters.filterOrder % 2 !== 0) {
+					this.localParameters.filterOrder = Math.min(40, this.localParameters.filterOrder + 1);
+				}
+			}
+			// Clamp to valid range
+			if (this.localParameters.filterOrder < 1) {
+				this.localParameters.filterOrder = 1;
+			}
+			if (this.localParameters.filterOrder > 40) {
+				this.localParameters.filterOrder = 40;
+			}
+			this.emitUpdate();
+		},
+		parseFilterFrequencyInput() {
+			try {
+				const parsedValue = parseEngineering(this.filterFrequencyInput);
+				if (parsedValue > 0) {
+					this.localParameters.turnFrequency = parsedValue;
+					this.filterFrequencyInput = formatEngineering(parsedValue);
+				} else {
+					// Revert to previous value if invalid
+					this.filterFrequencyInput = formatEngineering(this.localParameters.turnFrequency);
+				}
+			} catch (error) {
+				// Revert to previous value if parsing fails
+				this.filterFrequencyInput = formatEngineering(this.localParameters.turnFrequency);
+			}
+		},
+		emitFilterUpdate() {
 			this.emitUpdate();
 		},
 		openBiquadExport() {

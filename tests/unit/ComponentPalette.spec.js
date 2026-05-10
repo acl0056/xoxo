@@ -25,7 +25,7 @@ describe('ComponentPalette', () => {
 
 		it('should render all component types', () => {
 			const items = wrapper.findAll('.palette-item');
-			expect(items.length).toBe(7); // resistor, capacitor, inductor, speaker, ground, peq + text annotation
+			expect(items.length).toBe(8); // resistor, capacitor, inductor, speaker, ground, peq, filter + text annotation
 		});
 
 		it('should render component labels correctly', () => {
@@ -41,7 +41,7 @@ describe('ComponentPalette', () => {
 
 		it('should render component icons', () => {
 			const icons = wrapper.findAll('.palette-icon');
-			expect(icons.length).toBe(7);
+			expect(icons.length).toBe(8);
 		});
 	});
 
@@ -121,7 +121,7 @@ describe('ComponentPalette', () => {
 		it('should have correct component type data', () => {
 			const { componentTypes } = wrapper.vm;
 
-			expect(componentTypes).toHaveLength(6);
+			expect(componentTypes).toHaveLength(7);
 
 			const types = componentTypes.map((ct) => ct.type);
 			expect(types).toContain('resistor');
@@ -130,6 +130,7 @@ describe('ComponentPalette', () => {
 			expect(types).toContain('speaker');
 			expect(types).toContain('ground');
 			expect(types).toContain('peq');
+			expect(types).toContain('filter');
 		});
 
 		it('should have labels for all component types', () => {

@@ -68,7 +68,7 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment", "peq"],
+					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment", "peq", "filter"],
 					"description": "Component type"
 				},
 				"label": {
@@ -171,6 +171,16 @@
 					"then": {
 						"properties": {
 							"parameters": { "$ref": "#/definitions/peqParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "filter" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/filterParameters" }
 						}
 					}
 				}
@@ -424,6 +434,46 @@
 						"$ref": "#/definitions/filterSection"
 					},
 					"description": "Array of biquad filter sections"
+				}
+			}
+		},
+		"filterParameters": {
+			"type": "object",
+			"required": ["filterShape", "filterType", "filterOrder", "turnFrequency", "gain", "delay", "muted"],
+			"properties": {
+				"filterShape": {
+					"type": "string",
+					"enum": ["butterworth", "linkwitzRiley", "bessel"],
+					"description": "Filter shape determining pole placement"
+				},
+				"filterType": {
+					"type": "string",
+					"enum": ["lowPass", "highPass", "bandpass"],
+					"description": "Filter passband type"
+				},
+				"filterOrder": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 40,
+					"description": "Filter order (steepness)"
+				},
+				"turnFrequency": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Corner/crossover frequency in Hz"
+				},
+				"gain": {
+					"type": "number",
+					"description": "Global gain in dB"
+				},
+				"delay": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Signal delay in seconds"
+				},
+				"muted": {
+					"type": "boolean",
+					"description": "Mute flag"
 				}
 			}
 		},

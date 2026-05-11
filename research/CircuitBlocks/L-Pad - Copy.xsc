@@ -1,0 +1,75 @@
+L-Pad  just a test
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  dB     //Variable #2
+Attenuation setting for the L-Pad (in dB, positive value)
+  0.677127785953744 //VarValue #2
+  R      //Variable #3
+Operating Impedance of the L-Pad (usually 8 ohms for purchaseable units)
+  8 //VarValue #3
+   //Variable #4
+
+  0 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+rev 1
+  0    //step mpde (0=Log)
+  0    //step mpde (0=Log)
+  0    //step mpde (0=Log)
+  0    //step mpde (0=Log)
+  0    //step mpde (0=Log)
+  0    //step mpde (0=Log)
+2 //Passives
+12 //Lines Per Passive
+ 0 //PartType
+   //Part#
+  1 //Value
+  -1 //ESR
+  10 //Rating
+  0 //position X
+  -1 //position Y
+  T  //Is Horizontal
+  1 //StepMode
+  1 //0short/1val/2open
+R*(1-(10^(-(dB+0.001)/20)))
+10
+ 0 //PartType
+   //Part#
+  20 //Value
+  -1 //ESR
+  10 //Rating
+  3 //position X
+  2 //position Y
+  F  //Is Horizontal
+  1 //StepMode
+  1 //0short/1val/2open
+R*(1/(1-10^(-(dB+0.001)/20)+1e-3)-1)
+10
+0 //Grounds
+2 //Lines Per Ground
+0 //Wires
+4 //Lines Per Wire
+3 //Texts
+5 //Lines Per Text
+In
+  -3 //position X
+  -2 //position Y
+  8 //Size
+  8388608 //color
+Out
+  3 //position X
+  -2 //position Y
+  8 //Size
+  8388608 //color
+Com
+  1 //position X
+  4 //position Y
+  8 //Size
+  8388608 //color

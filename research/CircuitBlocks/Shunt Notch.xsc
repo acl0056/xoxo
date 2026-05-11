@@ -1,0 +1,65 @@
+Shunt Notch
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  f //Variable #2
+notch frequency
+  1000 //VarValue #2
+  Q //Variable #3
+determines notch width
+  1 //VarValue #3
+  R //Variable #4
+determines notch depth
+  0.01 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+3 //Passives
+12 //Lines Per Passive
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.001 //ESR
+  300 //Rating
+  0 //position X
+  -6 //position Y
+  F  //Is Horizontal
+  1 //StepMode
+  1 //0short/1val/2open
+(Q*8)/(6.28*f)
+0.1
+ 1 //PartType
+   //Part#
+  5.6E-6 //Value
+  0.05 //ESR
+  250 //Rating
+  0 //position X
+  0 //position Y
+  F  //Is Horizontal
+  1 //StepMode
+  1 //0short/1val/2open
+1/(6.28*f*8*Q)
+0.01
+ 0 //PartType
+   //Part#
+  10 //Value
+  -1 //ESR
+  10 //Rating
+  0 //position X
+  6 //position Y
+  F  //Is Horizontal
+  1 //StepMode
+  1 //0short/1val/2open
+R*1
+1
+0 //Grounds
+2 //Lines Per Ground
+0 //Wires
+4 //Lines Per Wire
+0 //Texts
+5 //Lines Per Text

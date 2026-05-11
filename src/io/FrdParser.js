@@ -31,7 +31,7 @@ class FrdParser {
 			const trimmedLine = line.trim();
 
 			// Skip empty lines and comments
-			if (trimmedLine === '' || trimmedLine.startsWith('#')) {
+			if (trimmedLine === '' || trimmedLine.startsWith('#') || trimmedLine.startsWith('"')) {
 				continue;
 			}
 

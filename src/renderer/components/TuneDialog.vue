@@ -571,6 +571,21 @@
 					>⚠</span>
 				</div>
 
+				<div
+					v-if="localParameters.filterType === 'bandpass'"
+					class="parameter-row"
+				>
+					<label>Passband Bandwidth:</label>
+					<input
+						v-model.number="localParameters.passbandBandwidth"
+						type="number"
+						min="1"
+						step="10"
+						@input="emitFilterUpdate"
+					>
+					<span class="unit-label">Hz</span>
+				</div>
+
 				<div class="parameter-row">
 					<label>Gain (dB):</label>
 					<input

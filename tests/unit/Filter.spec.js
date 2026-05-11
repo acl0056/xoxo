@@ -108,10 +108,10 @@ describe('Filter Model', () => {
 			it('should have 4 terminals matching PEQ layout', () => {
 				const filter = new Filter(0, 0);
 				expect(filter.terminals).toHaveLength(4);
-				expect(filter.terminals[0]).toEqual({ x: -2, y: -2 }); // +in
-				expect(filter.terminals[1]).toEqual({ x: -2, y: 2 }); // -in
-				expect(filter.terminals[2]).toEqual({ x: 2, y: -2 }); // +out
-				expect(filter.terminals[3]).toEqual({ x: 2, y: 2 }); // -out
+				expect(filter.terminals[0]).toEqual({ x: -3, y: -2 }); // +in
+				expect(filter.terminals[1]).toEqual({ x: -3, y: 2 }); // -in
+				expect(filter.terminals[2]).toEqual({ x: 4, y: -2 }); // +out
+				expect(filter.terminals[3]).toEqual({ x: 4, y: 2 }); // -out
 			});
 		});
 

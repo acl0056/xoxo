@@ -472,6 +472,11 @@
 					"exclusiveMinimum": 0,
 					"description": "Corner/crossover frequency in Hz"
 				},
+				"passbandBandwidth": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Passband bandwidth in Hz (used for bandpass filter type)"
+				},
 				"gain": {
 					"type": "number",
 					"description": "Global gain in dB"

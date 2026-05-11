@@ -50,6 +50,12 @@
 			:component="tuneDialogComponent"
 			@close="closeTuneDialog"
 			@update="handleTuneUpdate"
+			@open-biquad-export="handleOpenBiquadExport"
+		/>
+		<BiquadExportWindow
+			:visible="biquadExportVisible"
+			:parameters="biquadExportParameters"
+			@close="closeBiquadExport"
 		/>
 		<AnnotationDialog
 			:visible="annotationDialogVisible"
@@ -75,6 +81,7 @@ import { TextAnnotation } from '@/models/TextAnnotation';
 import { formatEngineering } from '@/utils/engineeringNotation';
 import ContextMenu from './ContextMenu.vue';
 import TuneDialog from './TuneDialog.vue';
+import BiquadExportWindow from './BiquadExportWindow.vue';
 import AnnotationDialog from './AnnotationDialog.vue';
 
 export default {
@@ -82,6 +89,7 @@ export default {
 	components: {
 		ContextMenu,
 		TuneDialog,
+		BiquadExportWindow,
 		AnnotationDialog,
 	},
 	data() {
@@ -110,6 +118,8 @@ export default {
 			contextMenuTargetType: null,
 			tuneDialogVisible: false,
 			tuneDialogComponent: null,
+			biquadExportVisible: false,
+			biquadExportParameters: null,
 			annotationDialogVisible: false,
 			annotationDialogAnnotation: null,
 			dragPreview: null, // { componentType, gridX, gridY, rotation } for rendering preview during drag
@@ -1009,10 +1019,32 @@ export default {
 		renderPEQ(component) {
 			const { gridSize } = this;
 
-			// Draw outer rectangle (4×4 grid units, from -2 to +2 in both axes)
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
-			this.context.strokeRect(-2 * gridSize, -2 * gridSize, 4 * gridSize, 4 * gridSize);
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
 
 			// Draw amplifier triangle inside the box (pointing right)
 			this.context.beginPath();
@@ -1029,40 +1061,39 @@ export default {
 			this.context.textBaseline = 'middle';
 			this.context.fillText('PEQ', -0.3 * gridSize, 0);
 
-			// Draw +/- labels on left side (input terminals)
-			this.context.font = '12px Arial';
-			this.context.textAlign = 'right';
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			this.context.fillText('+', -2.3 * gridSize, -2 * gridSize); // Top-left (+in)
-			this.context.fillText('−', -2.3 * gridSize, 2 * gridSize); // Bottom-left (-in)
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
 
-			// Draw +/- labels on right side (output terminals)
-			this.context.textAlign = 'left';
-			this.context.fillText('+', 2.3 * gridSize, -2 * gridSize); // Top-right (+out)
-			this.context.fillText('−', 2.3 * gridSize, 2 * gridSize); // Bottom-right (-out)
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
 
-			// Draw terminal connection dots at the 4 corners
+			// Draw terminal connection dots
 			this.context.fillStyle = '#000000';
 			const terminalRadius = 3;
 
-			// Terminal 0: +in (top-left)
+			// Terminal 0: +in (top-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 1: -in (bottom-left)
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 2: +out (top-right)
+			// Terminal 2: +out (top-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 3: -out (bottom-right)
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
 			// Draw component label above the symbol
@@ -1071,7 +1102,7 @@ export default {
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -2.5 * gridSize);
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
 			}
 
 			// Draw muted indicator (red X) when muted
@@ -1081,13 +1112,13 @@ export default {
 
 				// Draw X across the component
 				this.context.beginPath();
-				this.context.moveTo(-2 * gridSize, -2 * gridSize);
-				this.context.lineTo(2 * gridSize, 2 * gridSize);
+				this.context.moveTo(-2 * gridSize, -3 * gridSize);
+				this.context.lineTo(3 * gridSize, 3 * gridSize);
 				this.context.stroke();
 
 				this.context.beginPath();
-				this.context.moveTo(2 * gridSize, -2 * gridSize);
-				this.context.lineTo(-2 * gridSize, 2 * gridSize);
+				this.context.moveTo(3 * gridSize, -3 * gridSize);
+				this.context.lineTo(-2 * gridSize, 3 * gridSize);
 				this.context.stroke();
 			}
 		},
@@ -1095,10 +1126,32 @@ export default {
 		renderFilter(component) {
 			const { gridSize } = this;
 
-			// Draw outer rectangle (4×4 grid units, from -2 to +2 in both axes)
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
-			this.context.strokeRect(-2 * gridSize, -2 * gridSize, 4 * gridSize, 4 * gridSize);
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
 
 			// Draw amplifier triangle inside the box (pointing right)
 			this.context.beginPath();
@@ -1115,40 +1168,39 @@ export default {
 			this.context.textBaseline = 'middle';
 			this.context.fillText('H(f)', -0.3 * gridSize, 0);
 
-			// Draw +/- labels on left side (input terminals)
-			this.context.font = '12px Arial';
-			this.context.textAlign = 'right';
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			this.context.fillText('+', -2.3 * gridSize, -2 * gridSize); // Top-left (+in)
-			this.context.fillText('−', -2.3 * gridSize, 2 * gridSize); // Bottom-left (-in)
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
 
-			// Draw +/- labels on right side (output terminals)
-			this.context.textAlign = 'left';
-			this.context.fillText('+', 2.3 * gridSize, -2 * gridSize); // Top-right (+out)
-			this.context.fillText('−', 2.3 * gridSize, 2 * gridSize); // Bottom-right (-out)
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
 
-			// Draw terminal connection dots at the 4 corners
+			// Draw terminal connection dots
 			this.context.fillStyle = '#000000';
 			const terminalRadius = 3;
 
-			// Terminal 0: +in (top-left)
+			// Terminal 0: +in (top-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 1: -in (bottom-left)
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 2: +out (top-right)
+			// Terminal 2: +out (top-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 3: -out (bottom-right)
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
 			// Draw component label above the symbol
@@ -1157,7 +1209,7 @@ export default {
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -2.5 * gridSize);
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
 			}
 
 			// Draw muted indicator (red X) when muted
@@ -1167,13 +1219,13 @@ export default {
 
 				// Draw X across the component
 				this.context.beginPath();
-				this.context.moveTo(-2 * gridSize, -2 * gridSize);
-				this.context.lineTo(2 * gridSize, 2 * gridSize);
+				this.context.moveTo(-2 * gridSize, -3 * gridSize);
+				this.context.lineTo(3 * gridSize, 3 * gridSize);
 				this.context.stroke();
 
 				this.context.beginPath();
-				this.context.moveTo(2 * gridSize, -2 * gridSize);
-				this.context.lineTo(-2 * gridSize, 2 * gridSize);
+				this.context.moveTo(3 * gridSize, -3 * gridSize);
+				this.context.lineTo(-2 * gridSize, 3 * gridSize);
 				this.context.stroke();
 			}
 		},
@@ -1181,10 +1233,32 @@ export default {
 		renderOpAmp(component) {
 			const { gridSize } = this;
 
-			// Draw outer rectangle (4×4 grid units, from -2 to +2 in both axes)
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
 			this.context.strokeStyle = '#000000';
 			this.context.lineWidth = 2;
-			this.context.strokeRect(-2 * gridSize, -2 * gridSize, 4 * gridSize, 4 * gridSize);
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
 
 			// Draw amplifier triangle inside the box (pointing right)
 			this.context.beginPath();
@@ -1201,40 +1275,39 @@ export default {
 			this.context.textBaseline = 'middle';
 			this.context.fillText('Op', -0.3 * gridSize, 0);
 
-			// Draw +/- labels on left side (input terminals)
-			this.context.font = '12px Arial';
-			this.context.textAlign = 'right';
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
 			this.context.textBaseline = 'middle';
-			this.context.fillText('+', -2.3 * gridSize, -2 * gridSize); // Top-left (+in)
-			this.context.fillText('−', -2.3 * gridSize, 2 * gridSize); // Bottom-left (-in)
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
 
-			// Draw +/- labels on right side (output terminals)
-			this.context.textAlign = 'left';
-			this.context.fillText('+', 2.3 * gridSize, -2 * gridSize); // Top-right (+out)
-			this.context.fillText('−', 2.3 * gridSize, 2 * gridSize); // Bottom-right (-out)
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
 
-			// Draw terminal connection dots at the 4 corners
+			// Draw terminal connection dots
 			this.context.fillStyle = '#000000';
 			const terminalRadius = 3;
 
-			// Terminal 0: +in (top-left)
+			// Terminal 0: +in (top-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 1: -in (bottom-left)
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
 			this.context.beginPath();
-			this.context.arc(-2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 2: +out (top-right)
+			// Terminal 2: +out (top-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
-			// Terminal 3: -out (bottom-right)
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
 			this.context.beginPath();
-			this.context.arc(2 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
 			this.context.fill();
 
 			// Draw component label above the symbol
@@ -1243,7 +1316,7 @@ export default {
 				this.context.font = '12px Arial';
 				this.context.textAlign = 'center';
 				this.context.textBaseline = 'bottom';
-				this.context.fillText(component.label, 0, -2.5 * gridSize);
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
 			}
 		},
 
@@ -1937,6 +2010,16 @@ export default {
 			this.dragMode = null;
 			this.wireStart = null;
 			this.wireSegments = [];
+		},
+
+		handleOpenBiquadExport({ parameters }) {
+			this.biquadExportParameters = parameters;
+			this.biquadExportVisible = true;
+		},
+
+		closeBiquadExport() {
+			this.biquadExportVisible = false;
+			this.biquadExportParameters = null;
 		},
 
 		async handleTuneUpdate({ componentId, parameters }) {

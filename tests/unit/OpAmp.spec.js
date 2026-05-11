@@ -25,10 +25,10 @@ describe('OpAmp Model', () => {
 			it('should have 4 terminals at correct positions', () => {
 				const opamp = new OpAmp(5, 10);
 				expect(opamp.terminals).toHaveLength(4);
-				expect(opamp.terminals[0]).toEqual({ x: -2, y: -2 }); // +in
-				expect(opamp.terminals[1]).toEqual({ x: -2, y: 2 }); // -in
-				expect(opamp.terminals[2]).toEqual({ x: 2, y: -2 }); // +out
-				expect(opamp.terminals[3]).toEqual({ x: 2, y: 2 }); // -out
+				expect(opamp.terminals[0]).toEqual({ x: -3, y: -2 }); // +in
+				expect(opamp.terminals[1]).toEqual({ x: -3, y: 2 }); // -in
+				expect(opamp.terminals[2]).toEqual({ x: 4, y: -2 }); // +out
+				expect(opamp.terminals[3]).toEqual({ x: 4, y: 2 }); // -out
 			});
 
 			it('should set position from constructor arguments', () => {

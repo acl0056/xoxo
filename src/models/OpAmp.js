@@ -23,10 +23,10 @@ export class OpAmp extends Component {
 
 		// Set terminals for an OpAmp (4 differential terminals, same as PEQ)
 		this.terminals = [
-			{ x: -2, y: -2 }, // Terminal 0: +in (top-left)
-			{ x: -2, y: 2 }, // Terminal 1: -in (bottom-left)
-			{ x: 2, y: -2 }, // Terminal 2: +out (top-right)
-			{ x: 2, y: 2 }, // Terminal 3: -out (bottom-right)
+			{ x: -3, y: -2 }, // Terminal 0: +in (top-left, extends 1 grid left of body)
+			{ x: -3, y: 2 }, // Terminal 1: -in (bottom-left, extends 1 grid left of body)
+			{ x: 4, y: -2 }, // Terminal 2: +out (top-right, extends 1 grid right of body)
+			{ x: 4, y: 2 }, // Terminal 3: -out (bottom-right, extends 1 grid right of body)
 		];
 	}
 

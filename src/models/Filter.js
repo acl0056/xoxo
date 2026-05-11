@@ -24,6 +24,7 @@ export class Filter extends Component {
 			filterType: 'lowPass',
 			filterOrder: 2,
 			turnFrequency: 1000, // Hz
+			passbandBandwidth: 1000, // Hz (used for bandpass type)
 			gain: 0, // dB
 			delay: 0, // seconds
 			muted: false,
@@ -31,10 +32,10 @@ export class Filter extends Component {
 
 		// Set terminals for a Filter (4 differential terminals, same as PEQ)
 		this.terminals = [
-			{ x: -2, y: -2 }, // +in (top-left)
-			{ x: -2, y: 2 }, // -in (bottom-left)
-			{ x: 2, y: -2 }, // +out (top-right)
-			{ x: 2, y: 2 }, // -out (bottom-right)
+			{ x: -3, y: -2 }, // +in (top-left, extends 1 grid left of body)
+			{ x: -3, y: 2 }, // -in (bottom-left, extends 1 grid left of body)
+			{ x: 4, y: -2 }, // +out (top-right, extends 1 grid right of body)
+			{ x: 4, y: 2 }, // -out (bottom-right, extends 1 grid right of body)
 		];
 
 		// Coefficient cache
@@ -85,6 +86,13 @@ export class Filter extends Component {
 		// Validate turnFrequency is positive
 		if (typeof this.parameters.turnFrequency !== 'number' || this.parameters.turnFrequency <= 0) {
 			errors.push('turnFrequency must be a positive number');
+		}
+
+		// Validate passbandBandwidth is positive when present
+		if (this.parameters.passbandBandwidth !== undefined) {
+			if (typeof this.parameters.passbandBandwidth !== 'number' || this.parameters.passbandBandwidth <= 0) {
+				errors.push('passbandBandwidth must be a positive number');
+			}
 		}
 
 		// Validate gain is a finite number
@@ -180,6 +188,7 @@ export class Filter extends Component {
 				filterType: this.parameters.filterType,
 				filterOrder: this.parameters.filterOrder,
 				turnFrequency: this.parameters.turnFrequency,
+				passbandBandwidth: this.parameters.passbandBandwidth,
 				gain: this.parameters.gain,
 				delay: this.parameters.delay,
 				muted: this.parameters.muted,
@@ -202,6 +211,7 @@ export class Filter extends Component {
 			filterType: json.parameters.filterType,
 			filterOrder: json.parameters.filterOrder,
 			turnFrequency: json.parameters.turnFrequency,
+			passbandBandwidth: json.parameters.passbandBandwidth || 1000,
 			gain: json.parameters.gain,
 			delay: json.parameters.delay,
 			muted: json.parameters.muted,

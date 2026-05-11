@@ -564,7 +564,7 @@ export class DxoImporter {
 		this.readLine(); // Output R (not used)
 		const scalarGain = parseFloat(this.extractValue(this.readLine()));
 		const turnFrequency = parseFloat(this.extractValue(this.readLine()));
-		this.readLine(); // bandpass bandwidth (not used)
+		const passbandBandwidth = parseFloat(this.extractValue(this.readLine()));
 		this.readLine(); // chebychev error (not used)
 		const filterShape = parseInt(this.extractValue(this.readLine()), 10);
 		const filterType = parseInt(this.extractValue(this.readLine()), 10);
@@ -594,6 +594,7 @@ export class DxoImporter {
 			y,
 			scalarGain,
 			turnFrequency,
+			passbandBandwidth,
 			filterShape,
 			filterType,
 			filterOrder,
@@ -640,8 +641,8 @@ export class DxoImporter {
 		// Biquad type code mapping
 		const biquadTypeMap = {
 			0: 'peaking',
-			1: 'highShelf',
-			2: 'lowShelf',
+			1: 'lowShelf',
+			2: 'highShelf',
 			3: 'lowPass1',
 			4: 'highPass1',
 			5: 'lowPass2',
@@ -732,6 +733,9 @@ export class DxoImporter {
 		filter.parameters.filterOrder = blockData.filterOrder;
 		filter.parameters.turnFrequency = blockData.turnFrequency;
 
+		// Set passband bandwidth
+		filter.parameters.passbandBandwidth = blockData.passbandBandwidth || 1000;
+
 		// Set gain = 0
 		filter.parameters.gain = 0;
 
@@ -807,10 +811,10 @@ export class DxoImporter {
 			terminals.push({ x: x - 1, y: y - 1 });
 			terminals.push({ x: x - 1, y: y + 1 });
 		} else if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
-			terminals.push({ x: x - 2, y: y - 2 });
-			terminals.push({ x: x - 2, y: y + 2 });
-			terminals.push({ x: x + 2, y: y - 2 });
-			terminals.push({ x: x + 2, y: y + 2 });
+			terminals.push({ x: x - 3, y: y - 2 });
+			terminals.push({ x: x - 3, y: y + 2 });
+			terminals.push({ x: x + 4, y: y - 2 });
+			terminals.push({ x: x + 4, y: y + 2 });
 		}
 
 		return terminals;

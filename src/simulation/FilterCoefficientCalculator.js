@@ -15,7 +15,7 @@ export default class FilterCoefficientCalculator {
 	 */
 	static computeFilterCoefficients(params, dspRate) {
 		const {
-			filterShape, filterType, filterOrder, turnFrequency,
+			filterShape, filterType, filterOrder, turnFrequency, passbandBandwidth,
 		} = params;
 
 		// Clamp turn frequency to 95% of Nyquist if it exceeds Nyquist
@@ -48,7 +48,7 @@ export default class FilterCoefficientCalculator {
 
 		// Convert poles to digital biquad coefficients
 		const sections = FilterCoefficientCalculator.convertPolesToBiquads(
-			poles, filterType, clampedFrequency, dspRate,
+			poles, filterType, clampedFrequency, dspRate, passbandBandwidth,
 		);
 
 		return { sections };
@@ -828,9 +828,10 @@ export default class FilterCoefficientCalculator {
 	 * @param {string} filterType - "lowPass", "highPass", or "bandpass"
 	 * @param {number} turnFrequency - Turn frequency in Hz
 	 * @param {number} dspRate - Sample rate in Hz
+	 * @param {number} [passbandBandwidth] - Bandwidth in Hz (for bandpass)
 	 * @returns {Array<{ b0: number, b1: number, b2: number, a1: number, a2: number }>} Digital biquad coefficients
 	 */
-	static convertPolesToBiquads(poles, filterType, turnFrequency, dspRate) {
+	static convertPolesToBiquads(poles, filterType, turnFrequency, dspRate, passbandBandwidth) {
 		// Separate poles into conjugate pairs and real poles
 		const { pairs, realPoles } = FilterCoefficientCalculator.groupPoles(poles);
 
@@ -838,14 +839,19 @@ export default class FilterCoefficientCalculator {
 		const K = Math.tan((Math.PI * turnFrequency) / dspRate);
 
 		if (filterType === 'bandpass') {
+			// For bandpass, compute bandwidth pre-warping constant
+			// BW defines the -3dB bandwidth of the bandpass filter
+			const bw = passbandBandwidth || turnFrequency;
+			const Kbw = Math.tan((Math.PI * bw) / dspRate);
+
 			// For bandpass, each 2nd-order LP section becomes two biquads (4th order)
 			// and each 1st-order section becomes one 2nd-order biquad
 			for (const pair of pairs) {
-				const bpSections = FilterCoefficientCalculator.convertPairToBandpass(pair, K);
+				const bpSections = FilterCoefficientCalculator.convertPairToBandpass(pair, K, Kbw);
 				sections.push(...bpSections);
 			}
 			for (const realPole of realPoles) {
-				const bpSection = FilterCoefficientCalculator.convertRealPoleToBandpass(realPole, K);
+				const bpSection = FilterCoefficientCalculator.convertRealPoleToBandpass(realPole, K, Kbw);
 				sections.push(bpSection);
 			}
 		} else {
@@ -1084,45 +1090,17 @@ export default class FilterCoefficientCalculator {
 	 * LP-to-BP transform doubles the order: each 2nd-order LP section becomes
 	 * two 2nd-order BP sections.
 	 * @param {{ re: number, im: number }} pair - Pole pair
-	 * @param {number} K - Pre-warping constant (K = tan(π×fc/fs))
+	 * @param {number} K - Pre-warping constant for center frequency (K = tan(π×fc/fs))
+	 * @param {number} Kbw - Pre-warping constant for bandwidth (Kbw = tan(π×BW/fs))
 	 * @returns {Array<{ b0: number, b1: number, b2: number, a1: number, a2: number }>}
 	 */
-	static convertPairToBandpass(pair, K) {
+	static convertPairToBandpass(pair, K, Kbw) {
 		// For bandpass, we use the LP-to-BP frequency transformation
-		// s_lp → (s² + ω₀²) / (s × BW)
-		// For a normalized prototype with ω₀ = 1 and BW = 1:
-		// Each conjugate pair in LP becomes two pairs in BP
+		// The bandwidth scaling uses Kbw instead of K for the pole scaling
 
 		const sigma = pair.re; // negative
 		const omega = pair.im; // positive
 		const omegaN2 = sigma * sigma + omega * omega;
-
-		// For the bandpass transform, we compute two biquad sections
-		// using the standard approach: compute the BP biquad directly
-		// from the analog prototype pole pair
-
-		// Method: Use the analog BP prototype poles and apply bilinear transform
-		// The LP pole pair at s = σ ± jω maps to BP poles via:
-		// s_bp = (σ/2) ± j×sqrt(1 - (σ/(2Q))²) for the two resulting pairs
-
-		// Simpler approach: compute the 2nd-order LP section's transfer function
-		// parameters, then use the standard LP-to-BP biquad conversion
-
-		// Standard LP-to-BP for a 2nd-order section with Q and ω_n:
-		// Results in two cascaded biquads
-
-		// First biquad: bandpass section derived from the pole pair
-		// Using direct bilinear transform of the analog BP prototype
-		// H_bp(s) = (s/Q_bp) / (s² + (ω₀/Q_bp)s + ω₀²)
-
-		// For each LP 2nd-order section, the BP equivalent has:
-		// Center frequency at K (pre-warped turn frequency)
-		// The two resulting digital biquads
-
-		// Use the approach: compute analog BP poles from LP poles
-		// LP pole: p = σ + jω
-		// BP transform: s_bp = p/2 ± sqrt((p/2)² - 1) [normalized]
-		// This gives two complex pole pairs for the BP filter
 
 		const pReal = sigma;
 		const pImag = omega;
@@ -1135,9 +1113,7 @@ export default class FilterCoefficientCalculator {
 		const halfP2Real = p2Real / 4;
 		const halfP2Imag = p2Imag / 4;
 
-		// Compute p²/4 - 1 (for normalized BP)
-		// Actually for our case: p/2 ± sqrt((p/2)² - ω₀²)
-		// With ω₀ = 1 (normalized): sqrt(p²/4 - 1)
+		// Compute p²/4 - ω₀² (for normalized BP)
 		const discReal = halfP2Real - omegaN2;
 		const discImag = halfP2Imag;
 
@@ -1158,9 +1134,9 @@ export default class FilterCoefficientCalculator {
 		const bp2Imag = halfPImag - sqrtDiscImag;
 
 		// Convert each BP pole pair to a biquad using bilinear transform
-		// Each BP pole at s = a + jb (with conjugate at a - jb) gives a 2nd-order section
-		const section1 = FilterCoefficientCalculator.convertBPPolePairToBiquad(bp1Real, Math.abs(bp1Imag), K, omegaN2);
-		const section2 = FilterCoefficientCalculator.convertBPPolePairToBiquad(bp2Real, Math.abs(bp2Imag), K, omegaN2);
+		// Use Kbw for bandwidth scaling of the poles
+		const section1 = FilterCoefficientCalculator.convertBPPolePairToBiquad(bp1Real, Math.abs(bp1Imag), K, Kbw, omegaN2);
+		const section2 = FilterCoefficientCalculator.convertBPPolePairToBiquad(bp2Real, Math.abs(bp2Imag), K, Kbw, omegaN2);
 
 		return [section1, section2];
 	}
@@ -1169,19 +1145,21 @@ export default class FilterCoefficientCalculator {
 	 * Convert a single bandpass pole pair to a biquad via bilinear transform.
 	 * @param {number} poleReal - Real part of BP pole (negative for stable)
 	 * @param {number} poleImag - Imaginary part (positive)
-	 * @param {number} K - Pre-warping constant
+	 * @param {number} K - Pre-warping constant for center frequency
+	 * @param {number} Kbw - Pre-warping constant for bandwidth
 	 * @param {number} omegaN2 - Natural frequency squared of original LP section
 	 * @returns {{ b0: number, b1: number, b2: number, a1: number, a2: number }}
 	 */
-	static convertBPPolePairToBiquad(poleReal, poleImag, K, omegaN2) {
+	static convertBPPolePairToBiquad(poleReal, poleImag, K, Kbw, omegaN2) {
 		// Apply bilinear transform to the analog BP section
 		// The analog section has poles at poleReal ± j×poleImag
 		// Denominator: s² - 2×poleReal×s + (poleReal² + poleImag²)
+		// Use Kbw for pole scaling (bandwidth determines the pole spread)
 
 		const sigma = poleReal; // negative for stable
 		const omega = poleImag;
 
-		const sigmaW = sigma * K;
+		const sigmaW = sigma * Kbw;
 		const omegaW = omega * K;
 		const omegaW2 = sigmaW * sigmaW + omegaW * omegaW;
 
@@ -1189,13 +1167,8 @@ export default class FilterCoefficientCalculator {
 		const a1Unnorm = 2 * omegaW2 - 2;
 		const a2Unnorm = 1 + 2 * sigmaW + omegaW2;
 
-		// For bandpass numerator: K × (1 - z^-2) scaled by appropriate gain
-		// The BP numerator is s (for a single bandpass section)
-		// After bilinear: s → (1/K)(1-z^-1)/(1+z^-1)
-		// Numerator becomes: (1/K)(1-z^-1)/(1+z^-1) × gain
-		// For the full section: numerator = K × (1 - z^-2) after simplification
-
-		const numeratorGain = K * Math.sqrt(omegaN2);
+		// For bandpass numerator: Kbw × (1 - z^-2) scaled by appropriate gain
+		const numeratorGain = Kbw * Math.sqrt(omegaN2);
 
 		const b0 = numeratorGain / a0;
 		const b1 = 0;
@@ -1212,19 +1185,20 @@ export default class FilterCoefficientCalculator {
 	 * Convert a real pole to a bandpass biquad section.
 	 * A 1st-order LP section becomes a 2nd-order BP section.
 	 * @param {number} poleReal - Real pole value (negative)
-	 * @param {number} K - Pre-warping constant
+	 * @param {number} K - Pre-warping constant for center frequency
+	 * @param {number} Kbw - Pre-warping constant for bandwidth
 	 * @returns {{ b0: number, b1: number, b2: number, a1: number, a2: number }}
 	 */
-	static convertRealPoleToBandpass(poleReal, K) {
+	static convertRealPoleToBandpass(poleReal, K, Kbw) {
 		// For a real LP pole at s = p (negative), the BP transform gives
 		// a 2nd-order section. The LP section H(s) = |p| / (s + |p|)
 		// becomes a BP section centered at the turn frequency.
+		// Use Kbw for bandwidth scaling.
 
 		const p = Math.abs(poleReal);
-		const pW = p * K;
+		const pW = p * Kbw;
 
-		// BP section from real pole: H(s) = (s×p) / (s² + p×s + 1) [normalized]
-		// After bilinear transform:
+		// BP section from real pole using bandwidth-scaled pre-warping
 		const a0 = 1 + pW + K * K;
 		const a1Unnorm = 2 * (K * K - 1);
 		const a2Unnorm = 1 - pW + K * K;

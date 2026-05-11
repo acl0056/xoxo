@@ -41,10 +41,10 @@ describe('PEQ', () => {
 			const peq = new PEQ(0, 0);
 
 			expect(peq.terminals).toHaveLength(4);
-			expect(peq.terminals[0]).toEqual({ x: -2, y: -2 }); // +in (top-left)
-			expect(peq.terminals[1]).toEqual({ x: -2, y: 2 });  // -in (bottom-left)
-			expect(peq.terminals[2]).toEqual({ x: 2, y: -2 });  // +out (top-right)
-			expect(peq.terminals[3]).toEqual({ x: 2, y: 2 });   // -out (bottom-right)
+			expect(peq.terminals[0]).toEqual({ x: -3, y: -2 }); // +in (top-left)
+			expect(peq.terminals[1]).toEqual({ x: -3, y: 2 });  // -in (bottom-left)
+			expect(peq.terminals[2]).toEqual({ x: 4, y: -2 });  // +out (top-right)
+			expect(peq.terminals[3]).toEqual({ x: 4, y: 2 });   // -out (bottom-right)
 		});
 	});
 
@@ -52,10 +52,10 @@ describe('PEQ', () => {
 		it('should return correct terminal positions at rotation 0', () => {
 			const peq = new PEQ(5, 5);
 
-			expect(peq.getTerminalPosition(0)).toEqual({ x: 3, y: 3 });   // 5 + (-2), 5 + (-2)
-			expect(peq.getTerminalPosition(1)).toEqual({ x: 3, y: 7 });   // 5 + (-2), 5 + 2
-			expect(peq.getTerminalPosition(2)).toEqual({ x: 7, y: 3 });   // 5 + 2, 5 + (-2)
-			expect(peq.getTerminalPosition(3)).toEqual({ x: 7, y: 7 });   // 5 + 2, 5 + 2
+			expect(peq.getTerminalPosition(0)).toEqual({ x: 2, y: 3 });   // 5 + (-3), 5 + (-2)
+			expect(peq.getTerminalPosition(1)).toEqual({ x: 2, y: 7 });   // 5 + (-3), 5 + 2
+			expect(peq.getTerminalPosition(2)).toEqual({ x: 9, y: 3 });   // 5 + 4, 5 + (-2)
+			expect(peq.getTerminalPosition(3)).toEqual({ x: 9, y: 7 });   // 5 + 4, 5 + 2
 		});
 
 		it('should return correct terminal positions at rotation 90', () => {
@@ -63,10 +63,10 @@ describe('PEQ', () => {
 			peq.rotation = 90;
 
 			const pos0 = peq.getTerminalPosition(0);
-			// At 90°: rotatedX = x*cos(90) - y*sin(90) = -2*0 - (-2)*1 = 2
-			//          rotatedY = x*sin(90) + y*cos(90) = -2*1 + (-2)*0 = -2
+			// At 90°: rotatedX = x*cos(90) - y*sin(90) = -3*0 - (-2)*1 = 2
+			//          rotatedY = x*sin(90) + y*cos(90) = -3*1 + (-2)*0 = -3
 			expect(pos0.x).toBeCloseTo(7);
-			expect(pos0.y).toBeCloseTo(3);
+			expect(pos0.y).toBeCloseTo(2);
 		});
 
 		it('should return null for invalid terminal index', () => {

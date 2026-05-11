@@ -8,6 +8,9 @@ import { Ground } from '../models/Ground';
 import { VoltageSource } from '../models/VoltageSource';
 import { WireSegment } from '../models/WireSegment';
 import { Wire } from '../models/Wire';
+import { PEQ } from '../models/PEQ';
+import { Filter } from '../models/Filter';
+import { OpAmp } from '../models/OpAmp';
 
 /**
  * DxoImporter - Imports XSim .dxo files and converts them to internal Circuit format
@@ -521,19 +524,232 @@ export class DxoImporter {
 	 * Parse active blocks section
 	 */
 	parseActiveBlocks() {
-		const count = parseInt(this.extractValue(this.readLine()), 10);
+		// Check if we've reached the end of the file or the active blocks section
+		if (this.lineIndex >= this.lines.length) return;
 
-		if (this.lineIndex < this.lines.length) {
-			const linesPerBlock = parseInt(this.extractValue(this.readLine()), 10);
+		const countLine = this.readLine();
+		const count = parseInt(this.extractValue(countLine), 10);
 
-			if (count > 0) {
-				this.warnings.push(`Active components found (${count}). Skipping - not supported in MVP.`);
-				// Skip active block lines
-				for (let i = 0; i < count * linesPerBlock; i++) {
-					this.readLine();
-				}
-			}
+		if (Number.isNaN(count)) {
+			throw new Error(`Invalid active block count at line ${this.lineIndex - 1}: "${countLine}"`);
 		}
+
+		if (this.lineIndex >= this.lines.length) return;
+
+		const linesPerBlockLine = this.readLine();
+		const linesPerBlock = parseInt(this.extractValue(linesPerBlockLine), 10);
+
+		if (Number.isNaN(linesPerBlock)) {
+			throw new Error(`Invalid lines per active block at line ${this.lineIndex - 1}: "${linesPerBlockLine}"`);
+		}
+
+		if (count === 0) return;
+
+		for (let i = 0; i < count; i++) {
+			this.parseActiveBlock(i);
+		}
+	}
+
+	/**
+	 * Parse a single active block (68 lines) and create the appropriate component
+	 * @param {number} index - Block index for labeling
+	 */
+	parseActiveBlock(index) {
+		// Read all 68 lines of the active block
+		const type = parseInt(this.extractValue(this.readLine()), 10);
+		const x = parseInt(this.extractValue(this.readLine()), 10);
+		const y = parseInt(this.extractValue(this.readLine()), 10);
+		this.readLine(); // Inverted (not used)
+		this.readLine(); // Input R (not used)
+		this.readLine(); // Output R (not used)
+		const scalarGain = parseFloat(this.extractValue(this.readLine()));
+		const turnFrequency = parseFloat(this.extractValue(this.readLine()));
+		this.readLine(); // bandpass bandwidth (not used)
+		this.readLine(); // chebychev error (not used)
+		const filterShape = parseInt(this.extractValue(this.readLine()), 10);
+		const filterType = parseInt(this.extractValue(this.readLine()), 10);
+		const filterOrder = parseInt(this.extractValue(this.readLine()), 10);
+		const adjustableDelay = parseFloat(this.extractValue(this.readLine()));
+		this.readLine(); // Inherent Delay (not used)
+		this.readLine(); // DSP model (not used)
+		const dspRate = parseFloat(this.extractValue(this.readLine()));
+		const biquadCount = parseInt(this.extractValue(this.readLine()), 10);
+
+		// Read biquad sections (5 lines each)
+		const biquads = [];
+		for (let i = 0; i < biquadCount; i++) {
+			const unbypassed = this.parseBoolean(this.extractValue(this.readLine()));
+			const frequency = parseFloat(this.extractValue(this.readLine()));
+			const q = parseFloat(this.extractValue(this.readLine()));
+			const gain = parseFloat(this.extractValue(this.readLine()));
+			const biquadType = parseInt(this.extractValue(this.readLine()), 10);
+			biquads.push({
+				unbypassed, frequency, q, gain, type: biquadType,
+			});
+		}
+
+		const blockData = {
+			type,
+			x,
+			y,
+			scalarGain,
+			turnFrequency,
+			filterShape,
+			filterType,
+			filterOrder,
+			adjustableDelay,
+			dspRate,
+			biquads,
+		};
+
+		// Dispatch to creation method based on type code
+		if (type === 0) {
+			this.createPEQFromBlock(blockData, index);
+		} else if (type === 1) {
+			this.createOpAmpFromBlock(blockData, index);
+		} else if (type === 2) {
+			this.createFilterFromBlock(blockData, index);
+		} else {
+			this.warnings.push(`Unknown active block type ${type} at block index ${index}. Skipping.`);
+		}
+	}
+
+	/**
+	 * Create a PEQ component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createPEQFromBlock(blockData, index) {
+		const peq = new PEQ(blockData.x, blockData.y);
+
+		// Set gain = 0 (DXO scalar gain of 1 = unity = 0 dB)
+		peq.parameters.gain = 0;
+
+		// Set delay (clamp to >= 0)
+		if (blockData.adjustableDelay < 0) {
+			this.warnings.push(`Negative delay (${blockData.adjustableDelay}) for active block ${index}. Clamping to 0.`);
+		}
+		peq.parameters.delay = Math.max(0, blockData.adjustableDelay);
+
+		// Set DSP rate
+		peq.parameters.dspRate = blockData.dspRate;
+
+		// Set muted = false
+		peq.parameters.muted = false;
+
+		// Biquad type code mapping
+		const biquadTypeMap = {
+			0: 'peaking',
+			1: 'highShelf',
+			2: 'lowShelf',
+			3: 'lowPass1',
+			4: 'highPass1',
+			5: 'lowPass2',
+			6: 'highPass2',
+			7: 'allPass',
+		};
+
+		// Filter biquads to only unbypassed ones and map type codes
+		const sections = [];
+		for (const biquad of blockData.biquads) {
+			if (!biquad.unbypassed) continue;
+
+			const filterType = biquadTypeMap[biquad.type];
+			if (filterType === undefined) {
+				this.warnings.push(`Unknown biquad type code ${biquad.type} in active block ${index}. Skipping section.`);
+				continue;
+			}
+
+			sections.push({
+				filterType,
+				frequency: biquad.frequency,
+				q: biquad.q,
+				gain: biquad.gain,
+				bypass: false,
+			});
+		}
+
+		peq.parameters.sections = sections;
+
+		// Set label
+		peq.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(peq, blockData.x, blockData.y);
+		this.circuit.addComponent(peq);
+	}
+
+	/**
+	 * Create an OpAmp component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createOpAmpFromBlock(blockData, index) {
+		const opamp = new OpAmp(blockData.x, blockData.y);
+
+		// Convert scalar gain to dB
+		if (blockData.scalarGain <= 0) {
+			this.warnings.push(`Scalar gain <= 0 (${blockData.scalarGain}) for active block ${index}. Defaulting dcGain to 100 dB.`);
+			opamp.parameters.dcGain = 100;
+		} else {
+			opamp.parameters.dcGain = 20 * Math.log10(blockData.scalarGain);
+		}
+
+		// Set corner frequency from turn frequency
+		opamp.parameters.cornerFrequency = blockData.turnFrequency;
+
+		// Set label
+		opamp.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(opamp, blockData.x, blockData.y);
+		this.circuit.addComponent(opamp);
+	}
+
+	/**
+	 * Create a Filter component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createFilterFromBlock(blockData, index) {
+		const filter = new Filter(blockData.x, blockData.y);
+
+		// Map filter shape
+		const shapeMap = { 0: 'butterworth', 1: 'linkwitzRiley', 2: 'bessel' };
+		if (shapeMap[blockData.filterShape] === undefined) {
+			this.warnings.push(`Unknown filter shape code ${blockData.filterShape} for active block ${index}. Defaulting to butterworth.`);
+		}
+		filter.parameters.filterShape = shapeMap[blockData.filterShape] || 'butterworth';
+
+		// Map filter type
+		const typeMap = { 0: 'lowPass', 1: 'highPass', 2: 'bandpass' };
+		if (typeMap[blockData.filterType] === undefined) {
+			this.warnings.push(`Unknown filter type code ${blockData.filterType} for active block ${index}. Defaulting to lowPass.`);
+		}
+		filter.parameters.filterType = typeMap[blockData.filterType] || 'lowPass';
+
+		// Set filter order and turn frequency
+		filter.parameters.filterOrder = blockData.filterOrder;
+		filter.parameters.turnFrequency = blockData.turnFrequency;
+
+		// Set gain = 0
+		filter.parameters.gain = 0;
+
+		// Set delay (clamp to >= 0)
+		if (blockData.adjustableDelay < 0) {
+			this.warnings.push(`Negative delay (${blockData.adjustableDelay}) for active block ${index}. Clamping to 0.`);
+		}
+		filter.parameters.delay = Math.max(0, blockData.adjustableDelay);
+
+		// Set muted = false
+		filter.parameters.muted = false;
+
+		// Set label
+		filter.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(filter, blockData.x, blockData.y);
+		this.circuit.addComponent(filter);
 	}
 
 	/**
@@ -590,6 +806,11 @@ export class DxoImporter {
 			// Speaker terminals: {x:-1, y:-1} and {x:-1, y:1}
 			terminals.push({ x: x - 1, y: y - 1 });
 			terminals.push({ x: x - 1, y: y + 1 });
+		} else if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
+			terminals.push({ x: x - 2, y: y - 2 });
+			terminals.push({ x: x - 2, y: y + 2 });
+			terminals.push({ x: x + 2, y: y - 2 });
+			terminals.push({ x: x + 2, y: y + 2 });
 		}
 
 		return terminals;

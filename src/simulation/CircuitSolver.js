@@ -148,6 +148,18 @@ class CircuitSolver {
 			}
 		}
 
+		// PEQ/Filter/OpAmp: short the negative input and output terminals together.
+		// These components have 4 physical terminals but the two negative terminals
+		// (-in terminal 1, -out terminal 3) are the same electrical node (ground reference).
+		// This matches XSim behavior where the negative rails act as a wire.
+		for (const component of this.circuit.components) {
+			if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
+				const negIn = `${component.id}_1`;
+				const negOut = `${component.id}_3`;
+				union(negIn, negOut);
+			}
+		}
+
 		// Wire segments are handled as low-resistance components in the MNA matrix
 
 		// Collect unique representative nodes, excluding ground

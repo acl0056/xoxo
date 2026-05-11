@@ -121,17 +121,10 @@ export class Filter extends Component {
 			return { re: 0, im: 0 };
 		}
 
-		// Compute or retrieve cached coefficients
-		if (this._cachedCoefficients === null || this._parametersDirty) {
-			const dspRate = this.parameters.dspRate || 48000;
-			this._cachedCoefficients = FilterCoefficientCalculator.computeFilterCoefficients(
-				this.parameters, dspRate,
-			);
-			this._parametersDirty = false;
-		}
-
 		const dspRate = this.parameters.dspRate || 48000;
-		const { sections } = this._cachedCoefficients;
+		const { sections } = FilterCoefficientCalculator.computeFilterCoefficients(
+			this.parameters, dspRate,
+		);
 
 		// Start with unity
 		let resultRe = 1;

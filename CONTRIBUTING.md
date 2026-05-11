@@ -27,7 +27,8 @@ If your contribution does not follow the Kiro workflow, it may be rejected or re
 ## What You Can Contribute
 
 We welcome:
-- Implementing features that are in XSim but not here.
+- Implementing cool new features
+- Providing resources or documentation that help users understand how to use xoxo
 - Bug fixes
 - Feature improvements
 - Documentation updates

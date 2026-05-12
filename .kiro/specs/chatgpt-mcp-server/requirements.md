@@ -160,3 +160,22 @@ This feature adds a remote MCP (Model Context Protocol) server that bridges the 
 4. THE MCP_Server SHALL enforce per-session data isolation such that one user's Circuit_Layout, Frequency_Response, Impedance_Response, and FRD_Data are not accessible to another user's session
 5. IF the manifest endpoint encounters an internal error, THEN THE MCP_Server SHALL return an MCP error response indicating the manifest is temporarily unavailable
 6. THE MCP_Server source code SHALL reside in a `server/` directory within the existing xoxo repository, sharing JSON Schema files from `src/schemas/` to avoid duplication
+
+### Requirement 11: ChatGPT Menu and Browser Launch
+
+**User Story:** As a user, I want a ChatGPT menu in the app's top menu bar that lets me connect to the MCP server and open my conversation in my default browser, so that I can quickly chat with the AI about my current design.
+
+#### Acceptance Criteria
+
+1. THE Electron_App SHALL include a "ChatGPT" menu in the top menu bar, positioned immediately to the right of the "Circuit Blocks" menu
+2. THE "ChatGPT" menu SHALL contain a "Connect..." menu item that initiates the OAuth 2.1 authentication flow to connect the Electron_App to the MCP_Server
+3. WHEN the user clicks "Connect...", THE Electron_App SHALL open the OAuth authorization URL in the default browser, complete the authorization code exchange, obtain an access token, and establish the WebSocket connection to the MCP_Server
+4. WHEN the Electron_App successfully connects to the MCP_Server, THE "Connect..." menu item SHALL change to "Disconnect" and the "Open Conversation..." menu item SHALL become enabled
+5. THE "ChatGPT" menu SHALL contain an "Open Conversation..." menu item that opens the ChatGPT conversation URL in the user's default system browser
+6. THE "Open Conversation..." menu item SHALL only be enabled when the Electron_App has an active authenticated connection to the MCP_Server
+7. IF the user has not yet authenticated with the MCP_Server, THEN THE "Open Conversation..." menu item SHALL be disabled and indicate that connection is required
+8. THE conversation URL SHALL be configurable via the `config.js` file and point to the ChatGPT interface with the xoxo MCP connector pre-attached, so that ChatGPT has access to the user's live circuit data through the MCP_Server
+9. WHEN the user clicks "Open Conversation...", THE Electron_App SHALL use Electron's `shell.openExternal` API to open the URL in the default browser
+10. WHEN the user clicks "Disconnect", THE Electron_App SHALL close the WebSocket connection, clear the session state, and revert the menu to its disconnected state
+11. IF the WebSocket connection to the MCP_Server drops unexpectedly, THEN THE Electron_App SHALL display a toast error notification informing the user that the ChatGPT connection was lost
+12. IF the OAuth authentication flow fails or the WebSocket connection cannot be established, THEN THE Electron_App SHALL display a toast error notification describing the failure reason

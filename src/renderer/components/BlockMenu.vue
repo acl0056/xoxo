@@ -47,10 +47,14 @@ import { loadBlockRegistry } from '@/blocks/BlockRegistry';
 /**
  * Resolve the path to the circuit-blocks data directory.
  * In development (Vite dev server), process.cwd() is the project root.
- * In production (packaged Electron app), files are in dist/.
+ * In production (packaged Electron app), files are inside the asar archive.
  */
 function resolveBlocksDirectory() {
 	const blocksRelativePath = 'src/data/circuit-blocks';
+	if (process.env.NODE_ENV === 'production') {
+		const appRoot = require('path').join(process.resourcesPath, 'app.asar');
+		return require('path').join(appRoot, blocksRelativePath);
+	}
 	return path.join(process.cwd(), blocksRelativePath);
 }
 

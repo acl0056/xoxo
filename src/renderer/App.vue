@@ -153,7 +153,13 @@ export default {
 			const path = require('path');
 			const { loadBlockRegistry } = await import('@/blocks/BlockRegistry');
 			const { filterActiveVariables } = await import('@/blocks/variableUtils');
-			const blocksDirectory = path.join(process.cwd(), 'src/data/circuit-blocks');
+			let blocksDirectory;
+			if (process.env.NODE_ENV === 'production') {
+				const appRoot = path.join(process.resourcesPath, 'app.asar');
+				blocksDirectory = path.join(appRoot, 'src/data/circuit-blocks');
+			} else {
+				blocksDirectory = path.join(process.cwd(), 'src/data/circuit-blocks');
+			}
 			const registry = loadBlockRegistry(blocksDirectory);
 			const block = registry.getBlock(blockIdentifier);
 

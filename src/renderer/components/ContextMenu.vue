@@ -2,7 +2,7 @@
 	<div
 		v-if="visible"
 		class="context-menu"
-		:style="{ left: `${x}px`, top: `${y}px` }"
+		:style="{ left: `${x - 15}px`, top: `${y - 15}px` }"
 		@click.stop
 	>
 		<div

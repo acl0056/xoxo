@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-05-11T14:05:28.071Z",
-    "modified": "2026-05-12T14:42:20.262Z"
+    "modified": "2026-05-12T15:37:06.248Z"
   },
   "components": [
     {
@@ -31,19 +31,6 @@
         "inductance": 0.0018000000000000002,
         "tolerance": 10,
         "esr": 0.15,
-        "state": "normal"
-      }
-    },
-    {
-      "id": "mp19xsp3-2olq6g8",
-      "type": "resistor",
-      "label": "R1",
-      "x": 20,
-      "y": 63,
-      "rotation": 0,
-      "parameters": {
-        "resistance": 13,
-        "tolerance": 5,
         "state": "normal"
       }
     },

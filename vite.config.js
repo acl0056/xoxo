@@ -29,8 +29,14 @@ export default defineConfig(({ mode }) => {
 							minify: isProduction,
 							rollupOptions: {
 								external: (id) => {
-									// Only externalize electron and Node.js built-ins
-									return id === 'electron' || /^node:/.test(id);
+									// Externalize electron, Node.js built-ins, and native modules
+									if (id === 'electron') return true;
+									if (/^node:/.test(id)) return true;
+									// Node built-in modules without node: prefix
+									const builtins = ['path', 'fs', 'os', 'crypto', 'url', 'util', 'events', 'stream', 'child_process', 'http', 'https', 'net', 'tls', 'dns', 'dgram', 'cluster', 'readline', 'repl', 'vm', 'zlib', 'assert', 'buffer', 'constants', 'domain', 'module', 'process', 'punycode', 'querystring', 'string_decoder', 'sys', 'timers', 'tty', 'v8', 'worker_threads'];
+									if (builtins.includes(id)) return true;
+									// Bundle everything else (including relative requires like ./menu)
+									return false;
 								},
 								output: {
 									format: 'cjs',

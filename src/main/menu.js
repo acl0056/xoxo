@@ -99,6 +99,69 @@ function createApplicationMenu(mainWindow, handlers) {
 			],
 		},
 
+		// Circuit Blocks menu
+		{
+			label: 'Circuit Blocks',
+			submenu: [
+				{
+					label: 'Filters',
+					submenu: [
+						{
+							label: 'Low Pass 1st Order',
+							click: () => handlers.insertCircuitBlock('LowPassFirstOrder'),
+						},
+						{
+							label: 'High Pass 1st Order',
+							click: () => handlers.insertCircuitBlock('HighPassFirstOrder'),
+						},
+						{
+							label: 'Low Pass 2nd Order',
+							click: () => handlers.insertCircuitBlock('LowPass2ndOrderQ'),
+						},
+						{
+							label: 'High Pass 2nd Order',
+							click: () => handlers.insertCircuitBlock('HighPass2ndOrderQ'),
+						},
+					],
+				},
+				{
+					label: 'Phase',
+					submenu: [
+						{
+							label: 'All Pass 1st Order',
+							click: () => handlers.insertCircuitBlock('AllPass1stOrder'),
+						},
+						{
+							label: 'All Pass 2nd Order',
+							click: () => handlers.insertCircuitBlock('AllPass2ndOrder'),
+						},
+					],
+				},
+				{
+					label: 'Attenuators',
+					submenu: [
+						{
+							label: 'L-Pad',
+							click: () => handlers.insertCircuitBlock('L-Pad'),
+						},
+					],
+				},
+				{
+					label: 'Notch Filters',
+					submenu: [
+						{
+							label: 'Series Notch',
+							click: () => handlers.insertCircuitBlock('Series Notch'),
+						},
+						{
+							label: 'Shunt Notch',
+							click: () => handlers.insertCircuitBlock('Shunt Notch'),
+						},
+					],
+				},
+			],
+		},
+
 		// View menu
 		{
 			label: 'View',

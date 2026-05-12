@@ -1,0 +1,178 @@
+All Pass Filter, 2nd Order
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  f      //Variable #2
+undamped responant frequency
+  1000 //VarValue #2
+  Q      //Variable #3
+Q factor
+  1 //VarValue #3
+  Z      //Variable #4
+load resistance
+  8 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+8 //Passives
+12 //Lines Per Passive
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.1 //ESR
+  300 //Rating
+  0 //position X
+  1 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Z/(6.28*f*Q)
+
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  0 //position X
+  -6 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Q/(6.28*f*Z)
+
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.48 //ESR
+  300 //Rating
+  -10 //position X
+  -3 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Q*Z/(6.28*f)
+
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  -10 //position X
+  3 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+1/(6.28*f*Q*Z)
+
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.1 //ESR
+  300 //Rating
+  0 //position X
+  11 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Z/(6.28*f*Q)
+
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  0 //position X
+  4 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Q/(6.28*f*Z)
+
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.48 //ESR
+  300 //Rating
+  10 //position X
+  -3 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Q*Z/(6.28*f)
+
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  10 //position X
+  3 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+1/(6.28*f*Q*Z)
+
+0 //Grounds
+2 //Lines Per Ground
+12 //Wires
+4 //Lines Per Wire
+ -3 //End1 X
+  -6 //End1 Y
+  -3 //End2 X
+  1 //End2 Y
+ 3 //End1 X
+  -6 //End1 Y
+  3 //End2 X
+  1 //End2 Y
+ -3 //End1 X
+  4 //End1 Y
+  -3 //End2 X
+  11 //End2 Y
+ 3 //End1 X
+  4 //End1 Y
+  3 //End2 X
+  11 //End2 Y
+ 3 //End1 X
+  -6 //End1 Y
+  10 //End2 X
+  -6 //End2 Y
+ -10 //End1 X
+  6 //End1 Y
+  3 //End2 X
+  6 //End2 Y
+ 10 //End1 X
+  6 //End1 Y
+  10 //End2 X
+  7 //End2 Y
+ -3 //End1 X
+  7 //End1 Y
+  10 //End2 X
+  7 //End2 Y
+ 10 //End1 X
+  -6 //End1 Y
+  14 //End2 X
+  -6 //End2 Y
+ 3 //End1 X
+  8 //End1 Y
+  14 //End2 X
+  8 //End2 Y
+ -14 //End1 X
+  -6 //End1 Y
+  -3 //End2 X
+  -6 //End2 Y
+ -14 //End1 X
+  8 //End1 Y
+  -3 //End2 X
+  8 //End2 Y
+1 //Texts
+5 //Lines Per Text
+All Pass Filter, 2nd Order
+  -1 //position X
+  -10 //position Y
+  8 //Size
+  8388608 //color

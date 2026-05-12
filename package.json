@@ -4,6 +4,7 @@
 	"description": "loudspeaker crossover modeller",
 	"main": "dist/main/index.js",
 	"scripts": {
+		"predev": "mkdir -p dist/main && cp src/main/menu.js src/main/fileHandlers.js src/main/logger.js dist/main/",
 		"dev": "cross-env NODE_ENV=development vite",
 		"build": "cross-env NODE_ENV=production vite build",
 		"build:win": "npm run build && electron-builder --win",

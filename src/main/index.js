@@ -167,6 +167,7 @@ function updateApplicationMenu() {
 		saveFile: () => mainWindow.webContents.send('menu-save'),
 		saveFileAs: () => mainWindow.webContents.send('menu-save-as'),
 		importDxo: () => mainWindow.webContents.send('menu-import-dxo'),
+		insertCircuitBlock: (blockIdentifier) => mainWindow.webContents.send('menu-insert-circuit-block', blockIdentifier),
 		exit: () => app.quit(),
 		undo: () => mainWindow.webContents.send('menu-undo'),
 		redo: () => mainWindow.webContents.send('menu-redo'),
@@ -174,7 +175,7 @@ function updateApplicationMenu() {
 		openFrequencyResponseWindow: () => createFrequencyResponseWindow(),
 		openImpedanceWindow: () => createImpedanceWindow(),
 		openDocumentation: () => {
-			shell.openExternal('https://github.com/yourusername/xoxo/blob/main/README.md');
+			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/README.md');
 		},
 		getRecentFilesMenu,
 	});

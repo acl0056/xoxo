@@ -55,6 +55,13 @@
 		"graphSettings": {
 			"$ref": "#/definitions/graphSettings",
 			"description": "Scale settings for the frequency response and impedance graphs"
+		},
+		"blockGroups": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/blockGroup"
+			},
+			"default": []
 		}
 	},
 	"definitions": {
@@ -653,6 +660,66 @@
 				}
 			},
 			"default": {}
+		},
+		"blockGroup": {
+			"type": "object",
+			"required": ["id", "blockTitle", "variables", "componentIds", "formulas"],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"blockIdentifier": {
+					"type": "string"
+				},
+				"blockTitle": {
+					"type": "string"
+				},
+				"variables": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["name", "value", "description"],
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"value": {
+								"type": "number"
+							},
+							"description": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"componentIds": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"wireSegmentIds": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"formulas": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"stepModes": {
+					"type": "array",
+					"items": {
+						"type": "integer"
+					},
+					"minItems": 6,
+					"maxItems": 6
+				}
+			}
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: Quality gates for spec task execution including lint, test, and completion checklist requirements
 ---
 
 # Task Execution Quality Gates

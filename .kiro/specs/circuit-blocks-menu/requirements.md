@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Circuit Blocks Menu provides a palette of pre-built passive crossover filter circuit templates that users can insert into their schematic. Rather than building common filter topologies component-by-component, users select a circuit block (e.g., "Low Pass 2nd Order"), provide parametric variable values (frequency, Q, impedance), and the system generates the complete sub-circuit with correctly calculated component values, wiring, and layout. Inserted blocks are grouped entities — their components move together as a unit and retain a parametric link to the block definition, enabling ongoing tuning via the Variable_Dialog. When the user is satisfied with approximate values, they can dissolve the block into independent components for fine-tuning with real-world purchasable values. Circuit block definitions are stored as `.xsc` data files bundled within the project, parsed at runtime by the Block_Registry. This architecture keeps the door open for future extensibility (additional files, user-created blocks) without requiring code changes. The menu UI presents blocks as a clean integrated palette — the file-based nature is an implementation detail, not exposed to the user. Block groups are also persisted in the native DXO project file format: on save, each Block_Group is serialized as a subcircuit (Subckt) definition with its variable state and component formula associations; on load, the importer reconstructs Block_Groups from the Subckt section and component Subckt# fields, preserving the parametric link for continued tuning.
+The Circuit Blocks Menu provides a palette of pre-built passive crossover filter circuit templates that users can insert into their schematic. Rather than building common filter topologies component-by-component, users select a circuit block (e.g., "Low Pass 2nd Order"), provide parametric variable values (frequency, Q, impedance), and the system generates the complete sub-circuit with correctly calculated component values, wiring, and layout. Inserted blocks are grouped entities — their components move together as a unit and retain a parametric link to the block definition, enabling ongoing tuning via the Variable_Dialog. When the user is satisfied with approximate values, they can dissolve the block into independent components for fine-tuning with real-world purchasable values. Circuit block definitions are stored as `.xsc` data files bundled within the project, parsed at runtime by the Block_Registry. This architecture keeps the door open for future extensibility (additional files, user-created blocks) without requiring code changes. The menu UI presents blocks as a clean integrated palette — the file-based nature is an implementation detail, not exposed to the user. Block groups are also reconstructed when importing DXO project files: the importer parses the Subckt section and component Subckt# fields, preserving the parametric link for continued tuning. When saving, Block_Groups persist as part of the native JSON project format.
 
 ## Glossary
 
@@ -23,7 +23,6 @@ The Circuit Blocks Menu provides a palette of pre-built passive crossover filter
 - **DXO_File**: The native project file format for xoxo/xsim crossover designs, containing voltage source, components (passives), subcircuit (block) definitions, grounds, wires, drivers, and simulation setup.
 - **Subckt**: A subcircuit definition within a DXO file that represents a Circuit Block, containing the block title, variable definitions (6 slots with names, values, descriptions), and step modes. Components reference their parent subcircuit via the Subckt# field.
 - **DXO_Importer**: The module responsible for reading a DXO_File and reconstructing the Circuit, including Block_Groups from Subckt definitions and component associations.
-- **DXO_Exporter**: The module responsible for serializing a Circuit into the DXO_File format, including writing Subckt definitions for Block_Groups and setting component subcircuit associations.
 
 ## Requirements
 
@@ -162,15 +161,4 @@ The Circuit Blocks Menu provides a palette of pre-built passive crossover filter
 7. IF no matching Circuit_Block is found in the Block_Registry for a Subckt title, THEN THE DXO_Importer SHALL still reconstruct the Block_Group using the embedded variable definitions and formula data from the DXO_File (the block definition is self-contained in the DXO).
 8. WHEN a Block_Group is reconstructed from a DXO_File, THE DXO_Importer SHALL populate the Block_Group's Variable values from the Subckt variable slots (using the stored current values).
 
-### Requirement 11: DXO Export of Circuit Blocks
 
-**User Story:** As a crossover designer, I want circuit blocks to be correctly saved when I export a DXO project file, so that my parametric block groups persist and can be reopened by xoxo or xsim.
-
-#### Acceptance Criteria
-
-1. WHEN a Circuit containing Block_Groups is exported to a DXO_File, THE DXO_Exporter SHALL serialize each Block_Group as a Subckt entry in the Subckts section, including: title, 6 variable slots (name, value, description), and step modes.
-2. WHEN a Circuit containing Block_Groups is exported to a DXO_File, THE DXO_Exporter SHALL set the Subckt# field on each component belonging to a Block_Group to the zero-based index of that Block_Group's Subckt entry.
-3. WHEN a Circuit containing Block_Groups is exported to a DXO_File, THE DXO_Exporter SHALL write the parametric formula strings in the two subcircuit equation lines for each component belonging to a Block_Group.
-4. WHEN a Circuit containing independent Components is exported to a DXO_File, THE DXO_Exporter SHALL set Subckt# to -1 and write `//No Subckt equation1` and `//No Subckt equation2` placeholders for those components.
-5. THE DXO_Exporter SHALL write the total Subckt count and the fixed 27 lines-per-subckt header at the top of the Subckts section.
-6. FOR ALL Circuits containing Block_Groups, importing a DXO_File then exporting it SHALL produce an equivalent DXO_File (round-trip property: Subckt definitions, component Subckt# assignments, and formula equations are preserved).

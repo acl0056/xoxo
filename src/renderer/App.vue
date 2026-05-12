@@ -64,6 +64,10 @@ export default {
 			await this.handleImportDxo();
 		});
 
+		ipcRenderer.on('menu-insert-circuit-block', (event, blockIdentifier) => {
+			this.handleInsertCircuitBlock(blockIdentifier);
+		});
+
 		ipcRenderer.on('menu-undo', () => {
 			this.$store.dispatch('circuit/undo');
 		});
@@ -135,6 +139,47 @@ export default {
 		});
 	},
 	methods: {
+		/**
+		 * Handle circuit block insertion from the menu.
+		 * Loads the block from the registry and inserts it directly with default values.
+		 * @param {string} blockIdentifier - The block identifier (filename without extension)
+		 */
+		async handleInsertCircuitBlock(blockIdentifier) {
+			if (!this.$store.state.circuit.circuit) {
+				this.toast.warning('Open a circuit first to insert a block');
+				return;
+			}
+
+			const path = require('path');
+			const { loadBlockRegistry } = await import('@/blocks/BlockRegistry');
+			const { filterActiveVariables } = await import('@/blocks/variableUtils');
+			const blocksDirectory = path.join(process.cwd(), 'src/data/circuit-blocks');
+			const registry = loadBlockRegistry(blocksDirectory);
+			const block = registry.getBlock(blockIdentifier);
+
+			if (!block) {
+				this.toast.error(`Circuit block not found: ${blockIdentifier}`);
+				return;
+			}
+
+			// Build variable values from defaults (no dialog)
+			const activeVars = filterActiveVariables(block.variables);
+			const variables = {};
+			for (const variable of activeVars) {
+				variables[variable.name] = variable.defaultValue;
+			}
+
+			const result = await this.$store.dispatch('circuit/insertBlock', {
+				block,
+				variables,
+				insertionPoint: { x: 20, y: 20 },
+			});
+
+			if (!result.success) {
+				this.toast.error(`Failed to insert block: ${result.error}`);
+			}
+		},
+
 		/**
 		 * Restore last opened file on startup
 		 */

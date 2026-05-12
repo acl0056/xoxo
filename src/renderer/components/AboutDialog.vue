@@ -27,6 +27,20 @@
 					<p>Developed by {{ author }}</p>
 					<p>Licensed under {{ license }}</p>
 				</div>
+				<div class="acknowledgements">
+					<h3>Acknowledgements</h3>
+					<p class="acknowledgement-primary">
+						Bill Waslo — for XSim, the free-form loudspeaker crossover and circuit simulator
+						that inspired this project (2013–2024)
+					</p>
+					<h4>XSim Acknowledgements</h4>
+					<ul>
+						<li>Jeff Bagby — for his PCD Xcel-based simulator and inspiration</li>
+						<li>Stewart Hyde — for RFSim99 (basic schematic entry concept)</li>
+						<li>Mark Horridge — for SparSolv (structure of the linear matrix solver)</li>
+						<li>Suavi Ali Demir — for TbcParser (math interpreter used in CircuitBlocks)</li>
+					</ul>
+				</div>
 				<div class="technologies">
 					<h3>Built With</h3>
 					<ul>
@@ -99,7 +113,7 @@ export default {
 		 */
 		openRepository() {
 			const { shell } = require('electron');
-			shell.openExternal('https://github.com/yourusername/xoxo');
+			shell.openExternal('https://github.com/acl0056/xoxo');
 		},
 
 		/**
@@ -107,7 +121,7 @@ export default {
 		 */
 		openDocumentation() {
 			const { shell } = require('electron');
-			shell.openExternal('https://github.com/yourusername/xoxo/blob/main/README.md');
+			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/README.md');
 		},
 	},
 };
@@ -185,15 +199,41 @@ export default {
 }
 
 .credits,
-.technologies {
+.technologies,
+.acknowledgements {
 	margin-bottom: 20px;
 }
 
 .credits h3,
-.technologies h3 {
+.technologies h3,
+.acknowledgements h3 {
 	font-size: 16px;
 	color: #333;
 	margin: 0 0 8px 0;
+}
+
+.acknowledgements h4 {
+	font-size: 13px;
+	color: #555;
+	margin: 12px 0 6px 0;
+}
+
+.acknowledgement-primary {
+	color: #333;
+	font-weight: 500;
+	margin: 4px 0 8px 0;
+}
+
+.acknowledgements ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.acknowledgements li {
+	color: #555;
+	padding: 3px 0;
+	font-size: 13px;
 }
 
 .credits p {

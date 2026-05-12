@@ -1,0 +1,124 @@
+{
+	"$id": "formula-ast.schema.json",
+	"title": "Formula AST Node",
+	"description": "A node in the abstract syntax tree representing a parametric formula expression. Uses a discriminated union on the 'type' field to distinguish between number literals, variable references, binary operations, unary operations, and parenthesized groups.",
+	"oneOf": [
+		{ "$ref": "#/definitions/numberNode" },
+		{ "$ref": "#/definitions/identifierNode" },
+		{ "$ref": "#/definitions/binaryNode" },
+		{ "$ref": "#/definitions/unaryNode" },
+		{ "$ref": "#/definitions/groupNode" }
+	],
+	"definitions": {
+		"formulaNode": {
+			"description": "Any valid formula AST node (recursive reference)",
+			"oneOf": [
+				{ "$ref": "#/definitions/numberNode" },
+				{ "$ref": "#/definitions/identifierNode" },
+				{ "$ref": "#/definitions/binaryNode" },
+				{ "$ref": "#/definitions/unaryNode" },
+				{ "$ref": "#/definitions/groupNode" }
+			]
+		},
+		"numberNode": {
+			"type": "object",
+			"description": "A numeric literal value (e.g., 3.14159, 5.6E-6)",
+			"required": ["type", "value"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"const": "number",
+					"description": "Discriminator indicating a number literal node"
+				},
+				"value": {
+					"type": "number",
+					"description": "The numeric value of the literal"
+				}
+			},
+			"additionalProperties": false
+		},
+		"identifierNode": {
+			"type": "object",
+			"description": "A variable reference (e.g., freq, Q, R) or the special constant 'pi'",
+			"required": ["type", "name"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"const": "identifier",
+					"description": "Discriminator indicating a variable reference node"
+				},
+				"name": {
+					"type": "string",
+					"minLength": 1,
+					"description": "The variable name being referenced"
+				}
+			},
+			"additionalProperties": false
+		},
+		"binaryNode": {
+			"type": "object",
+			"description": "A binary operation (e.g., left + right, left * right)",
+			"required": ["type", "operator", "left", "right"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"const": "binary",
+					"description": "Discriminator indicating a binary operation node"
+				},
+				"operator": {
+					"type": "string",
+					"enum": ["+", "-", "*", "/", "^"],
+					"description": "The binary operator: addition, subtraction, multiplication, division, or exponentiation"
+				},
+				"left": {
+					"$ref": "#/definitions/formulaNode",
+					"description": "The left operand of the binary operation"
+				},
+				"right": {
+					"$ref": "#/definitions/formulaNode",
+					"description": "The right operand of the binary operation"
+				}
+			},
+			"additionalProperties": false
+		},
+		"unaryNode": {
+			"type": "object",
+			"description": "A unary operation (negation)",
+			"required": ["type", "operator", "operand"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"const": "unary",
+					"description": "Discriminator indicating a unary operation node"
+				},
+				"operator": {
+					"type": "string",
+					"enum": ["-"],
+					"description": "The unary operator (currently only negation)"
+				},
+				"operand": {
+					"$ref": "#/definitions/formulaNode",
+					"description": "The operand of the unary operation"
+				}
+			},
+			"additionalProperties": false
+		},
+		"groupNode": {
+			"type": "object",
+			"description": "A parenthesized expression, preserved for printer fidelity so that round-tripping maintains explicit grouping",
+			"required": ["type", "expression"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"const": "group",
+					"description": "Discriminator indicating a parenthesized group node"
+				},
+				"expression": {
+					"$ref": "#/definitions/formulaNode",
+					"description": "The expression contained within the parentheses"
+				}
+			},
+			"additionalProperties": false
+		}
+	}
+}

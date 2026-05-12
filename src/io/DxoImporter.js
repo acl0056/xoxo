@@ -11,6 +11,7 @@ import { Wire } from '../models/Wire';
 import { PEQ } from '../models/PEQ';
 import { Filter } from '../models/Filter';
 import { OpAmp } from '../models/OpAmp';
+import { generateUniqueId } from '../utils/idGenerator';
 
 /**
  * DxoImporter - Imports XSim .dxo files and converts them to internal Circuit format
@@ -50,6 +51,8 @@ export class DxoImporter {
 		this.warnings = [];
 		this.componentMap = new Map(); // Maps grid positions to components
 		this.gridToTerminalMap = new Map(); // Maps grid positions to component terminals
+		this.subcktDefinitions = []; // Parsed Subckt definitions
+		this.componentSubcktData = []; // Per-component subckt association data
 	}
 
 	/**
@@ -68,6 +71,9 @@ export class DxoImporter {
 		this.parseBaffle();
 		this.parseActiveBlocks();
 
+		// Reconstruct Block_Groups from subcircuit data
+		this.reconstructBlockGroups();
+
 		// Translate all coordinates so the voltage source is near the origin
 		this.translateToOrigin();
 
@@ -81,6 +87,70 @@ export class DxoImporter {
 		}
 
 		return this.circuit;
+	}
+
+	/**
+	 * Reconstruct Block_Groups from parsed subcircuit definitions and
+	 * component Subckt# associations.
+	 */
+	reconstructBlockGroups() {
+		if (this.subcktDefinitions.length === 0) return;
+
+		// Ensure blockGroups array exists on the circuit
+		if (!this.circuit.blockGroups) {
+			this.circuit.blockGroups = [];
+		}
+
+		// Group components by their Subckt# value
+		const subcktGroups = new Map(); // subcktNumber → array of component data
+		for (const data of this.componentSubcktData) {
+			if (data.subcktNumber >= 0) {
+				if (!subcktGroups.has(data.subcktNumber)) {
+					subcktGroups.set(data.subcktNumber, []);
+				}
+				subcktGroups.get(data.subcktNumber).push(data);
+			}
+		}
+
+		// For each subckt definition that has associated components, create a BlockGroup
+		for (let i = 0; i < this.subcktDefinitions.length; i++) {
+			const subckt = this.subcktDefinitions[i];
+			const componentDataList = subcktGroups.get(i);
+
+			if (!componentDataList || componentDataList.length === 0) {
+				this.warnings.push(`Subckt "${subckt.title}" (index ${i}) has no associated components.`);
+				continue;
+			}
+
+			// Collect component IDs and formulas
+			const componentIds = componentDataList.map((d) => d.componentId);
+			const formulas = componentDataList.map((d) => d.formula);
+
+			// Filter variables to only include non-empty slots
+			const blockGroupVariables = subckt.variables
+				.filter((variable) => variable.name && variable.name.trim() !== '')
+				.map((variable) => ({
+					name: variable.name,
+					value: variable.value,
+					description: variable.description,
+				}));
+
+			// Attempt to match subckt title against Block_Registry
+			// For now, we use the title as the blockTitle and leave blockIdentifier empty
+			// (registry matching is done at a higher level if a registry is available)
+			const blockGroup = {
+				id: generateUniqueId(),
+				blockIdentifier: '',
+				blockTitle: subckt.title,
+				variables: blockGroupVariables,
+				componentIds,
+				wireSegmentIds: [],
+				formulas,
+				stepModes: subckt.stepModes.slice(0, 6),
+			};
+
+			this.circuit.blockGroups.push(blockGroup);
+		}
 	}
 
 	/**
@@ -187,19 +257,98 @@ export class DxoImporter {
 	}
 
 	/**
-	 * Parse subcircuits section (skip - not supported in MVP)
+	 * Parse subcircuits section — extract Subckt definitions with title,
+	 * 6 variable slots (name, value, description), and step modes.
 	 */
 	parseSubcircuits() {
 		const count = parseInt(this.extractValue(this.readLine()), 10);
-		const linesPerSubckt = parseInt(this.extractValue(this.readLine()), 10);
+		this.readLine(); // linesPerSubckt (always 27, not needed for parsing)
 
-		if (count > 0) {
-			this.warnings.push(`Subcircuits are not supported (${count} found). Skipping.`);
-			// Skip subcircuit lines
-			for (let i = 0; i < count * linesPerSubckt; i++) {
-				this.readLine();
-			}
+		if (count === 0) return;
+
+		for (let i = 0; i < count; i++) {
+			const subckt = this.parseSubcktDefinition();
+			this.subcktDefinitions.push(subckt);
 		}
+	}
+
+	/**
+	 * Parse a single Subckt definition (27 lines).
+	 * Format:
+	 *   Title //Title subckt#N
+	 *   (blank line)
+	 *   (blank line)
+	 *   6 variable slots × 3 lines each (name, value, description)
+	 *   6 step modes × 1 line each
+	 * @returns {object} Parsed subckt definition
+	 */
+	parseSubcktDefinition() {
+		const titleLine = this.readLine();
+		const title = this.extractValue(titleLine);
+
+		// Read two blank lines after title
+		this.readLine();
+		this.readLine();
+
+		// Parse 6 variable slots (each slot is: name line, value line, description line)
+		const variables = [];
+		for (let v = 0; v < 6; v++) {
+			const nameLine = this.readLine();
+			const name = this.extractSubcktVarName(nameLine);
+
+			const valueLine = this.readLine();
+			const value = parseFloat(this.extractValue(valueLine));
+
+			const descriptionLine = this.readLine();
+			const description = this.extractSubcktVarDescription(descriptionLine);
+
+			variables.push({ name, value: Number.isNaN(value) ? 0 : value, description });
+		}
+
+		// Parse 6 step modes
+		const stepModes = [];
+		for (let s = 0; s < 6; s++) {
+			const stepLine = this.readLine();
+			const stepMode = parseInt(this.extractValue(stepLine), 10);
+			stepModes.push(Number.isNaN(stepMode) ? 0 : stepMode);
+		}
+
+		return { title, variables, stepModes };
+	}
+
+	/**
+	 * Extract variable name from a subckt variable name line.
+	 * The format is: "name //Var Name N" or " //Var Name N" (empty name)
+	 * @param {string} line
+	 * @returns {string}
+	 */
+	extractSubcktVarName(line) {
+		const commentIndex = line.indexOf('//');
+		if (commentIndex === -1) {
+			return line.trim();
+		}
+		return line.substring(0, commentIndex).trim();
+	}
+
+	/**
+	 * Extract variable description from a subckt variable description line.
+	 * Description lines have no comment marker — they are plain text.
+	 * However, if the description is empty, the line may just be the next
+	 * variable name line. We detect this by checking if the line contains
+	 * "//Var Name" or "//stepmode" which would indicate we've overshot.
+	 * In the DXO format, the description is simply the raw line content
+	 * (it appears between the value line and the next variable name line).
+	 * @param {string} line
+	 * @param {number} varIndex - Variable slot index (0-5)
+	 * @returns {string}
+	 */
+	extractSubcktVarDescription(line) {
+		// Description lines are plain text with no comment marker
+		// If the line contains "//Var Name" or "//stepmode", it's not a description
+		if (line.includes('//Var Name') || line.includes('//stepmode')) {
+			return '';
+		}
+		return line.trim();
 	}
 
 	/**
@@ -236,8 +385,27 @@ export class DxoImporter {
 		this.readLine(); // StepMode (skip)
 		const state = parseInt(this.extractValue(this.readLine()), 10);
 
-		// Skip remaining lines (9 more: Subckt#, equation1, equation2, IsHighSpec, 4 tolerances, vendor)
-		for (let i = 0; i < 9; i++) {
+		// Read Subckt# field (-1 = independent, 0+ = subcircuit membership)
+		const subcktLine = this.readLine();
+		const subcktNumber = parseInt(this.extractValue(subcktLine), 10);
+
+		// Read the two subcircuit equation lines
+		const equationLine1 = this.readLine();
+		const equationLine2 = this.readLine();
+
+		// Parse formula and scale from equation lines
+		let formula = '';
+		let formulaScale = 0;
+		if (subcktNumber >= 0) {
+			// Component belongs to a subcircuit — read formula and scale
+			formula = this.extractSubcktFormula(equationLine1);
+			const scaleValue = parseFloat(equationLine2.trim());
+			formulaScale = Number.isNaN(scaleValue) ? 0 : scaleValue;
+		}
+		// If subcktNumber is -1, the lines are "//No Subckt equation1" and "//No Subckt equation2"
+
+		// Skip remaining lines (6 more: IsHighSpec, 4 tolerances, vendor)
+		for (let i = 0; i < 6; i++) {
 			this.readLine();
 		}
 
@@ -279,6 +447,28 @@ export class DxoImporter {
 
 		this.circuit.addComponent(component);
 		this.registerComponentPosition(component, x, y);
+
+		// Store subckt association data for later BlockGroup reconstruction
+		this.componentSubcktData.push({
+			componentId: component.id,
+			subcktNumber,
+			formula,
+			formulaScale,
+		});
+	}
+
+	/**
+	 * Extract formula string from a subcircuit equation line.
+	 * If the line is a "//No Subckt equation" placeholder, returns empty string.
+	 * @param {string} line
+	 * @returns {string}
+	 */
+	extractSubcktFormula(line) {
+		const trimmed = line.trim();
+		if (trimmed.startsWith('//No Subckt equation') || trimmed === '') {
+			return '';
+		}
+		return trimmed;
 	}
 
 	/**

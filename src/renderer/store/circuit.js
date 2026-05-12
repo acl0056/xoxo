@@ -1,5 +1,10 @@
 import { Circuit } from '@/models/Circuit';
 import { VoltageSource } from '@/models/VoltageSource';
+import { Resistor } from '@/models/Resistor';
+import { Capacitor } from '@/models/Capacitor';
+import { Inductor } from '@/models/Inductor';
+import { WireSegment } from '@/models/WireSegment';
+import { insertBlock as engineInsertBlock, tuneBlock as engineTuneBlock, dissolveBlock as engineDissolveBlock } from '@/blocks/InsertionEngine';
 
 /**
  * Run simulation immediately whenever circuit changes
@@ -91,6 +96,7 @@ export default {
 		},
 		// Undo/Redo mutations
 		PUSH_UNDO(state, action) {
+			console.log('[PUSH_UNDO]', JSON.stringify(action, null, 2));
 			state.undoStack.push(action);
 		},
 		POP_UNDO(state) {
@@ -106,6 +112,7 @@ export default {
 			return state.redoStack.pop();
 		},
 		CLEAR_REDO(state) {
+			console.log('[CLEAR_REDO] clearing', state.redoStack.length, 'redo entries');
 			state.redoStack = [];
 		},
 		// File operation mutations
@@ -147,6 +154,38 @@ export default {
 				}
 				state.circuit.graphSettings[graphType] = settings;
 				state.isDirty = true;
+			}
+		},
+		// Block_Group mutations
+		ADD_BLOCK_GROUP(state, blockGroup) {
+			if (state.circuit) {
+				if (!state.circuit.blockGroups) {
+					state.circuit.blockGroups = [];
+				}
+				state.circuit.blockGroups.push(blockGroup);
+				state.isDirty = true;
+			}
+		},
+		REMOVE_BLOCK_GROUP(state, blockGroupId) {
+			if (state.circuit && state.circuit.blockGroups) {
+				const index = state.circuit.blockGroups.findIndex((group) => group.id === blockGroupId);
+				if (index !== -1) {
+					state.circuit.blockGroups.splice(index, 1);
+					state.isDirty = true;
+				}
+			}
+		},
+		UPDATE_BLOCK_GROUP_VARIABLES(state, { blockGroupId, variables }) {
+			if (state.circuit && state.circuit.blockGroups) {
+				const blockGroup = state.circuit.blockGroups.find((group) => group.id === blockGroupId);
+				if (blockGroup) {
+					for (const variable of blockGroup.variables) {
+						if (Object.prototype.hasOwnProperty.call(variables, variable.name)) {
+							variable.value = variables[variable.name];
+						}
+					}
+					state.isDirty = true;
+				}
 			}
 		},
 	},
@@ -353,6 +392,103 @@ export default {
 			}
 		},
 
+		/**
+		 * Insert a circuit block into the active circuit.
+		 * Calls InsertionEngine, commits ADD_BLOCK_GROUP, and triggers simulation refresh.
+		 * @param {Object} context - Vuex action context
+		 * @param {Object} payload - { block, variables, insertionPoint }
+		 */
+		insertBlock({ state }, { block, variables, insertionPoint }) {
+			if (!state.circuit) {
+				return { success: false, error: 'No active circuit' };
+			}
+
+			const result = engineInsertBlock(state.circuit, block, variables, insertionPoint);
+			if (!result.success) {
+				return result;
+			}
+
+			// Force Vue reactivity by replacing the components array reference
+			// The InsertionEngine already pushed components to the array, but Vue
+			// may not detect deeply nested array mutations. Trigger reactivity:
+			state.circuit.components = [...state.circuit.components];
+
+			// Same for blockGroups
+			if (state.circuit.blockGroups) {
+				state.circuit.blockGroups = [...state.circuit.blockGroups];
+			}
+
+			state.isDirty = true;
+
+			// Trigger simulation refresh
+			triggerSimulation(this);
+
+			return result;
+		},
+
+		/**
+		 * Tune a block group with new variable values.
+		 * Calls tuning logic, commits UPDATE_BLOCK_GROUP_VARIABLES, and triggers simulation refresh.
+		 * @param {Object} context - Vuex action context
+		 * @param {Object} payload - { blockGroupId, newVariables }
+		 */
+		tuneBlock({ commit, state }, { blockGroupId, newVariables }) {
+			if (!state.circuit) {
+				return { success: false, error: 'No active circuit' };
+			}
+
+			const result = engineTuneBlock(state.circuit, blockGroupId, newVariables);
+			if (!result.success) {
+				return result;
+			}
+
+			// The tuneBlock engine directly mutated component.parameters values,
+			// which Vue's reactivity may not detect. Force reactivity by committing
+			// UPDATE_COMPONENT for each affected component.
+			const blockGroup = state.circuit.blockGroups.find((g) => g.id === blockGroupId);
+			if (blockGroup) {
+				for (const componentId of blockGroup.componentIds) {
+					const component = state.circuit.getComponent(componentId);
+					if (component) {
+						commit('UPDATE_COMPONENT', {
+							componentId,
+							updates: { parameters: { ...component.parameters } },
+						});
+					}
+				}
+			}
+
+			state.isDirty = true;
+
+			// Trigger simulation refresh
+			triggerSimulation(this);
+
+			return result;
+		},
+
+		/**
+		 * Dissolve a block group into independent components.
+		 * Calls dissolution logic and commits REMOVE_BLOCK_GROUP.
+		 * @param {Object} context - Vuex action context
+		 * @param {Object} payload - { blockGroupId }
+		 */
+		dissolveBlock({ state }, { blockGroupId }) {
+			if (!state.circuit) {
+				return { success: false, error: 'No active circuit' };
+			}
+
+			const result = engineDissolveBlock(state.circuit, blockGroupId);
+			if (!result.success) {
+				return result;
+			}
+
+			// The dissolveBlock engine already removed the blockGroup from the circuit.
+			// We just need to mark dirty.
+			state.isDirty = true;
+
+			return result;
+		},
+
 		addWire({ commit }, wire) {
 			const undoAction = {
 				type: 'removeWire',
@@ -434,6 +570,8 @@ export default {
 
 			const action = state.undoStack[state.undoStack.length - 1];
 			commit('POP_UNDO');
+
+			console.log('[UNDO]', action.type, action.type === 'batch' ? `(${action.payload.length} sub-actions)` : '', action.payload);
 
 			// Create the redo action (inverse of the undo action)
 			let redoAction;
@@ -544,6 +682,74 @@ export default {
 					}
 					commit('UPDATE_ANNOTATION', action.payload);
 					// Annotations don't affect simulation
+					break;
+				}
+				case 'batch': {
+					// Batch undo: execute all sub-actions in reverse order
+					const redoSubActions = [];
+					const subActions = [...action.payload].reverse();
+					for (const subAction of subActions) {
+						if (subAction.type === 'addComponent') {
+							// Re-add the component using Circuit.fromJSON's deserialization
+							const componentData = subAction.payload;
+							let comp;
+							switch (componentData.type) {
+								case 'resistor':
+									comp = Resistor.fromJSON(componentData);
+									break;
+								case 'capacitor':
+									comp = Capacitor.fromJSON(componentData);
+									break;
+								case 'inductor':
+									comp = Inductor.fromJSON(componentData);
+									break;
+								case 'wire-segment':
+									comp = WireSegment.fromJSON(componentData);
+									break;
+								default:
+									break;
+							}
+							if (comp) {
+								state.circuit.components.push(comp);
+								redoSubActions.push({ type: 'removeComponent', payload: comp.id });
+							}
+						} else if (subAction.type === 'removeComponent') {
+							const comp = state.circuit.getComponent(subAction.payload);
+							if (comp) {
+								redoSubActions.push({
+									type: 'addComponent',
+									payload: JSON.parse(JSON.stringify(comp.toJSON ? comp.toJSON() : comp)),
+								});
+								state.circuit.removeComponent(subAction.payload);
+							}
+						} else if (subAction.type === 'updateComponent') {
+							const comp = state.circuit.getComponent(subAction.payload.componentId);
+							if (comp) {
+								const currentValues = {};
+								Object.keys(subAction.payload.updates).forEach((key) => {
+									currentValues[key] = JSON.parse(JSON.stringify(comp[key]));
+								});
+								redoSubActions.push({
+									type: 'updateComponent',
+									payload: { componentId: subAction.payload.componentId, updates: currentValues },
+								});
+								state.circuit.updateComponent(subAction.payload.componentId, subAction.payload.updates);
+							}
+						}
+					}
+					redoAction = { type: 'batch', payload: redoSubActions };
+					shouldTriggerSimulation = true;
+					// Force reactivity
+					state.circuit.components = [...state.circuit.components];
+					break;
+				}
+				case 'dissolveBlock': {
+					// Undo dissolution: re-add the block group
+					if (!state.circuit.blockGroups) {
+						state.circuit.blockGroups = [];
+					}
+					state.circuit.blockGroups.push(action.payload);
+					redoAction = { type: 'dissolveBlock', payload: action.payload };
 					break;
 				}
 				default:
@@ -665,6 +871,73 @@ export default {
 					// Annotations don't affect simulation
 					break;
 				}
+				case 'batch': {
+					// Batch redo: execute all sub-actions in order
+					const undoSubActions = [];
+					for (const subAction of action.payload) {
+						if (subAction.type === 'removeComponent') {
+							const comp = state.circuit.getComponent(subAction.payload);
+							if (comp) {
+								undoSubActions.push({
+									type: 'addComponent',
+									payload: JSON.parse(JSON.stringify(comp.toJSON ? comp.toJSON() : comp)),
+								});
+								state.circuit.removeComponent(subAction.payload);
+							}
+						} else if (subAction.type === 'addComponent') {
+							const componentData = subAction.payload;
+							let comp;
+							switch (componentData.type) {
+								case 'resistor':
+									comp = Resistor.fromJSON(componentData);
+									break;
+								case 'capacitor':
+									comp = Capacitor.fromJSON(componentData);
+									break;
+								case 'inductor':
+									comp = Inductor.fromJSON(componentData);
+									break;
+								case 'wire-segment':
+									comp = WireSegment.fromJSON(componentData);
+									break;
+								default:
+									break;
+							}
+							if (comp) {
+								state.circuit.components.push(comp);
+								undoSubActions.push({ type: 'removeComponent', payload: comp.id });
+							}
+						} else if (subAction.type === 'updateComponent') {
+							const comp = state.circuit.getComponent(subAction.payload.componentId);
+							if (comp) {
+								const currentValues = {};
+								Object.keys(subAction.payload.updates).forEach((key) => {
+									currentValues[key] = JSON.parse(JSON.stringify(comp[key]));
+								});
+								undoSubActions.push({
+									type: 'updateComponent',
+									payload: { componentId: subAction.payload.componentId, updates: currentValues },
+								});
+								state.circuit.updateComponent(subAction.payload.componentId, subAction.payload.updates);
+							}
+						}
+					}
+					undoAction = { type: 'batch', payload: undoSubActions };
+					shouldTriggerSimulation = true;
+					state.circuit.components = [...state.circuit.components];
+					break;
+				}
+				case 'dissolveBlock': {
+					// Redo dissolution: remove the block group again
+					if (state.circuit.blockGroups) {
+						const index = state.circuit.blockGroups.findIndex((g) => g.id === action.payload.id);
+						if (index !== -1) {
+							state.circuit.blockGroups.splice(index, 1);
+						}
+					}
+					undoAction = { type: 'dissolveBlock', payload: action.payload };
+					break;
+				}
 				default:
 					break;
 			}
@@ -697,6 +970,29 @@ export default {
 		getCurveColors: (state) => (graphType) => {
 			if (!state.circuit || !state.circuit.curveColors) return {};
 			return state.circuit.curveColors[graphType] || {};
+		},
+		/**
+		 * Get the BlockGroup that contains a given component.
+		 * @param {Object} state - Vuex state
+		 * @returns {Function} Function that takes componentId and returns the BlockGroup or null
+		 */
+		getBlockGroupForComponent: (state) => (componentId) => {
+			if (!state.circuit || !state.circuit.blockGroups) return null;
+			return state.circuit.blockGroups.find(
+				(group) => group.componentIds.includes(componentId)
+					|| group.wireSegmentIds.includes(componentId),
+			) || null;
+		},
+		/**
+		 * Get all component and wire segment IDs in a block group.
+		 * @param {Object} state - Vuex state
+		 * @returns {Function} Function that takes blockGroupId and returns array of IDs
+		 */
+		getBlockGroupComponentIds: (state) => (blockGroupId) => {
+			if (!state.circuit || !state.circuit.blockGroups) return [];
+			const group = state.circuit.blockGroups.find((g) => g.id === blockGroupId);
+			if (!group) return [];
+			return [...group.componentIds, ...group.wireSegmentIds];
 		},
 	},
 };

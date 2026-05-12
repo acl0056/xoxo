@@ -21,6 +21,7 @@ export class Circuit {
 		this.wires = []; // Array of Wire instances
 		this.nodes = []; // Array of Node instances (derived from wires)
 		this.annotations = []; // Array of TextAnnotation instances
+		this.blockGroups = []; // Array of BlockGroup metadata objects
 		this.curveColors = {
 			frequencyResponse: {},
 			impedance: {},
@@ -381,6 +382,11 @@ export class Circuit {
 			};
 		}
 
+		// Only include blockGroups if there are any
+		if (this.blockGroups && this.blockGroups.length > 0) {
+			json.blockGroups = this.blockGroups.map((group) => ({ ...group }));
+		}
+
 		return json;
 	}
 
@@ -446,6 +452,11 @@ export class Circuit {
 				frequencyResponse: json.graphSettings.frequencyResponse || {},
 				impedance: json.graphSettings.impedance || {},
 			};
+		}
+
+		// Deserialize block groups
+		if (json.blockGroups) {
+			circuit.blockGroups = json.blockGroups.map((group) => ({ ...group }));
 		}
 
 		return circuit;

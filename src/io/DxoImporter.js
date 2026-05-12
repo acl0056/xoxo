@@ -8,6 +8,10 @@ import { Ground } from '../models/Ground';
 import { VoltageSource } from '../models/VoltageSource';
 import { WireSegment } from '../models/WireSegment';
 import { Wire } from '../models/Wire';
+import { PEQ } from '../models/PEQ';
+import { Filter } from '../models/Filter';
+import { OpAmp } from '../models/OpAmp';
+import { generateUniqueId } from '../utils/idGenerator';
 
 /**
  * DxoImporter - Imports XSim .dxo files and converts them to internal Circuit format
@@ -47,6 +51,8 @@ export class DxoImporter {
 		this.warnings = [];
 		this.componentMap = new Map(); // Maps grid positions to components
 		this.gridToTerminalMap = new Map(); // Maps grid positions to component terminals
+		this.subcktDefinitions = []; // Parsed Subckt definitions
+		this.componentSubcktData = []; // Per-component subckt association data
 	}
 
 	/**
@@ -65,6 +71,9 @@ export class DxoImporter {
 		this.parseBaffle();
 		this.parseActiveBlocks();
 
+		// Reconstruct Block_Groups from subcircuit data
+		this.reconstructBlockGroups();
+
 		// Translate all coordinates so the voltage source is near the origin
 		this.translateToOrigin();
 
@@ -78,6 +87,70 @@ export class DxoImporter {
 		}
 
 		return this.circuit;
+	}
+
+	/**
+	 * Reconstruct Block_Groups from parsed subcircuit definitions and
+	 * component Subckt# associations.
+	 */
+	reconstructBlockGroups() {
+		if (this.subcktDefinitions.length === 0) return;
+
+		// Ensure blockGroups array exists on the circuit
+		if (!this.circuit.blockGroups) {
+			this.circuit.blockGroups = [];
+		}
+
+		// Group components by their Subckt# value
+		const subcktGroups = new Map(); // subcktNumber → array of component data
+		for (const data of this.componentSubcktData) {
+			if (data.subcktNumber >= 0) {
+				if (!subcktGroups.has(data.subcktNumber)) {
+					subcktGroups.set(data.subcktNumber, []);
+				}
+				subcktGroups.get(data.subcktNumber).push(data);
+			}
+		}
+
+		// For each subckt definition that has associated components, create a BlockGroup
+		for (let i = 0; i < this.subcktDefinitions.length; i++) {
+			const subckt = this.subcktDefinitions[i];
+			const componentDataList = subcktGroups.get(i);
+
+			if (!componentDataList || componentDataList.length === 0) {
+				this.warnings.push(`Subckt "${subckt.title}" (index ${i}) has no associated components.`);
+				continue;
+			}
+
+			// Collect component IDs and formulas
+			const componentIds = componentDataList.map((d) => d.componentId);
+			const formulas = componentDataList.map((d) => d.formula);
+
+			// Filter variables to only include non-empty slots
+			const blockGroupVariables = subckt.variables
+				.filter((variable) => variable.name && variable.name.trim() !== '')
+				.map((variable) => ({
+					name: variable.name,
+					value: variable.value,
+					description: variable.description,
+				}));
+
+			// Attempt to match subckt title against Block_Registry
+			// For now, we use the title as the blockTitle and leave blockIdentifier empty
+			// (registry matching is done at a higher level if a registry is available)
+			const blockGroup = {
+				id: generateUniqueId(),
+				blockIdentifier: '',
+				blockTitle: subckt.title,
+				variables: blockGroupVariables,
+				componentIds,
+				wireSegmentIds: [],
+				formulas,
+				stepModes: subckt.stepModes.slice(0, 6),
+			};
+
+			this.circuit.blockGroups.push(blockGroup);
+		}
 	}
 
 	/**
@@ -184,19 +257,98 @@ export class DxoImporter {
 	}
 
 	/**
-	 * Parse subcircuits section (skip - not supported in MVP)
+	 * Parse subcircuits section — extract Subckt definitions with title,
+	 * 6 variable slots (name, value, description), and step modes.
 	 */
 	parseSubcircuits() {
 		const count = parseInt(this.extractValue(this.readLine()), 10);
-		const linesPerSubckt = parseInt(this.extractValue(this.readLine()), 10);
+		this.readLine(); // linesPerSubckt (always 27, not needed for parsing)
 
-		if (count > 0) {
-			this.warnings.push(`Subcircuits are not supported (${count} found). Skipping.`);
-			// Skip subcircuit lines
-			for (let i = 0; i < count * linesPerSubckt; i++) {
-				this.readLine();
-			}
+		if (count === 0) return;
+
+		for (let i = 0; i < count; i++) {
+			const subckt = this.parseSubcktDefinition();
+			this.subcktDefinitions.push(subckt);
 		}
+	}
+
+	/**
+	 * Parse a single Subckt definition (27 lines).
+	 * Format:
+	 *   Title //Title subckt#N
+	 *   (blank line)
+	 *   (blank line)
+	 *   6 variable slots × 3 lines each (name, value, description)
+	 *   6 step modes × 1 line each
+	 * @returns {object} Parsed subckt definition
+	 */
+	parseSubcktDefinition() {
+		const titleLine = this.readLine();
+		const title = this.extractValue(titleLine);
+
+		// Read two blank lines after title
+		this.readLine();
+		this.readLine();
+
+		// Parse 6 variable slots (each slot is: name line, value line, description line)
+		const variables = [];
+		for (let v = 0; v < 6; v++) {
+			const nameLine = this.readLine();
+			const name = this.extractSubcktVarName(nameLine);
+
+			const valueLine = this.readLine();
+			const value = parseFloat(this.extractValue(valueLine));
+
+			const descriptionLine = this.readLine();
+			const description = this.extractSubcktVarDescription(descriptionLine);
+
+			variables.push({ name, value: Number.isNaN(value) ? 0 : value, description });
+		}
+
+		// Parse 6 step modes
+		const stepModes = [];
+		for (let s = 0; s < 6; s++) {
+			const stepLine = this.readLine();
+			const stepMode = parseInt(this.extractValue(stepLine), 10);
+			stepModes.push(Number.isNaN(stepMode) ? 0 : stepMode);
+		}
+
+		return { title, variables, stepModes };
+	}
+
+	/**
+	 * Extract variable name from a subckt variable name line.
+	 * The format is: "name //Var Name N" or " //Var Name N" (empty name)
+	 * @param {string} line
+	 * @returns {string}
+	 */
+	extractSubcktVarName(line) {
+		const commentIndex = line.indexOf('//');
+		if (commentIndex === -1) {
+			return line.trim();
+		}
+		return line.substring(0, commentIndex).trim();
+	}
+
+	/**
+	 * Extract variable description from a subckt variable description line.
+	 * Description lines have no comment marker — they are plain text.
+	 * However, if the description is empty, the line may just be the next
+	 * variable name line. We detect this by checking if the line contains
+	 * "//Var Name" or "//stepmode" which would indicate we've overshot.
+	 * In the DXO format, the description is simply the raw line content
+	 * (it appears between the value line and the next variable name line).
+	 * @param {string} line
+	 * @param {number} varIndex - Variable slot index (0-5)
+	 * @returns {string}
+	 */
+	extractSubcktVarDescription(line) {
+		// Description lines are plain text with no comment marker
+		// If the line contains "//Var Name" or "//stepmode", it's not a description
+		if (line.includes('//Var Name') || line.includes('//stepmode')) {
+			return '';
+		}
+		return line.trim();
 	}
 
 	/**
@@ -233,8 +385,27 @@ export class DxoImporter {
 		this.readLine(); // StepMode (skip)
 		const state = parseInt(this.extractValue(this.readLine()), 10);
 
-		// Skip remaining lines (9 more: Subckt#, equation1, equation2, IsHighSpec, 4 tolerances, vendor)
-		for (let i = 0; i < 9; i++) {
+		// Read Subckt# field (-1 = independent, 0+ = subcircuit membership)
+		const subcktLine = this.readLine();
+		const subcktNumber = parseInt(this.extractValue(subcktLine), 10);
+
+		// Read the two subcircuit equation lines
+		const equationLine1 = this.readLine();
+		const equationLine2 = this.readLine();
+
+		// Parse formula and scale from equation lines
+		let formula = '';
+		let formulaScale = 0;
+		if (subcktNumber >= 0) {
+			// Component belongs to a subcircuit — read formula and scale
+			formula = this.extractSubcktFormula(equationLine1);
+			const scaleValue = parseFloat(equationLine2.trim());
+			formulaScale = Number.isNaN(scaleValue) ? 0 : scaleValue;
+		}
+		// If subcktNumber is -1, the lines are "//No Subckt equation1" and "//No Subckt equation2"
+
+		// Skip remaining lines (6 more: IsHighSpec, 4 tolerances, vendor)
+		for (let i = 0; i < 6; i++) {
 			this.readLine();
 		}
 
@@ -276,6 +447,28 @@ export class DxoImporter {
 
 		this.circuit.addComponent(component);
 		this.registerComponentPosition(component, x, y);
+
+		// Store subckt association data for later BlockGroup reconstruction
+		this.componentSubcktData.push({
+			componentId: component.id,
+			subcktNumber,
+			formula,
+			formulaScale,
+		});
+	}
+
+	/**
+	 * Extract formula string from a subcircuit equation line.
+	 * If the line is a "//No Subckt equation" placeholder, returns empty string.
+	 * @param {string} line
+	 * @returns {string}
+	 */
+	extractSubcktFormula(line) {
+		const trimmed = line.trim();
+		if (trimmed.startsWith('//No Subckt equation') || trimmed === '') {
+			return '';
+		}
+		return trimmed;
 	}
 
 	/**
@@ -521,19 +714,236 @@ export class DxoImporter {
 	 * Parse active blocks section
 	 */
 	parseActiveBlocks() {
-		const count = parseInt(this.extractValue(this.readLine()), 10);
+		// Check if we've reached the end of the file or the active blocks section
+		if (this.lineIndex >= this.lines.length) return;
 
-		if (this.lineIndex < this.lines.length) {
-			const linesPerBlock = parseInt(this.extractValue(this.readLine()), 10);
+		const countLine = this.readLine();
+		const count = parseInt(this.extractValue(countLine), 10);
 
-			if (count > 0) {
-				this.warnings.push(`Active components found (${count}). Skipping - not supported in MVP.`);
-				// Skip active block lines
-				for (let i = 0; i < count * linesPerBlock; i++) {
-					this.readLine();
-				}
-			}
+		if (Number.isNaN(count)) {
+			throw new Error(`Invalid active block count at line ${this.lineIndex - 1}: "${countLine}"`);
 		}
+
+		if (this.lineIndex >= this.lines.length) return;
+
+		const linesPerBlockLine = this.readLine();
+		const linesPerBlock = parseInt(this.extractValue(linesPerBlockLine), 10);
+
+		if (Number.isNaN(linesPerBlock)) {
+			throw new Error(`Invalid lines per active block at line ${this.lineIndex - 1}: "${linesPerBlockLine}"`);
+		}
+
+		if (count === 0) return;
+
+		for (let i = 0; i < count; i++) {
+			this.parseActiveBlock(i);
+		}
+	}
+
+	/**
+	 * Parse a single active block (68 lines) and create the appropriate component
+	 * @param {number} index - Block index for labeling
+	 */
+	parseActiveBlock(index) {
+		// Read all 68 lines of the active block
+		const type = parseInt(this.extractValue(this.readLine()), 10);
+		const x = parseInt(this.extractValue(this.readLine()), 10);
+		const y = parseInt(this.extractValue(this.readLine()), 10);
+		this.readLine(); // Inverted (not used)
+		this.readLine(); // Input R (not used)
+		this.readLine(); // Output R (not used)
+		const scalarGain = parseFloat(this.extractValue(this.readLine()));
+		const turnFrequency = parseFloat(this.extractValue(this.readLine()));
+		const passbandBandwidth = parseFloat(this.extractValue(this.readLine()));
+		this.readLine(); // chebychev error (not used)
+		const filterShape = parseInt(this.extractValue(this.readLine()), 10);
+		const filterType = parseInt(this.extractValue(this.readLine()), 10);
+		const filterOrder = parseInt(this.extractValue(this.readLine()), 10);
+		const adjustableDelay = parseFloat(this.extractValue(this.readLine()));
+		this.readLine(); // Inherent Delay (not used)
+		this.readLine(); // DSP model (not used)
+		const dspRate = parseFloat(this.extractValue(this.readLine()));
+		const biquadCount = parseInt(this.extractValue(this.readLine()), 10);
+
+		// Read biquad sections (5 lines each)
+		const biquads = [];
+		for (let i = 0; i < biquadCount; i++) {
+			const unbypassed = this.parseBoolean(this.extractValue(this.readLine()));
+			const frequency = parseFloat(this.extractValue(this.readLine()));
+			const q = parseFloat(this.extractValue(this.readLine()));
+			const gain = parseFloat(this.extractValue(this.readLine()));
+			const biquadType = parseInt(this.extractValue(this.readLine()), 10);
+			biquads.push({
+				unbypassed, frequency, q, gain, type: biquadType,
+			});
+		}
+
+		const blockData = {
+			type,
+			x,
+			y,
+			scalarGain,
+			turnFrequency,
+			passbandBandwidth,
+			filterShape,
+			filterType,
+			filterOrder,
+			adjustableDelay,
+			dspRate,
+			biquads,
+		};
+
+		// Dispatch to creation method based on type code
+		if (type === 0) {
+			this.createPEQFromBlock(blockData, index);
+		} else if (type === 1) {
+			this.createOpAmpFromBlock(blockData, index);
+		} else if (type === 2) {
+			this.createFilterFromBlock(blockData, index);
+		} else {
+			this.warnings.push(`Unknown active block type ${type} at block index ${index}. Skipping.`);
+		}
+	}
+
+	/**
+	 * Create a PEQ component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createPEQFromBlock(blockData, index) {
+		const peq = new PEQ(blockData.x, blockData.y);
+
+		// Set gain = 0 (DXO scalar gain of 1 = unity = 0 dB)
+		peq.parameters.gain = 0;
+
+		// Set delay (clamp to >= 0)
+		if (blockData.adjustableDelay < 0) {
+			this.warnings.push(`Negative delay (${blockData.adjustableDelay}) for active block ${index}. Clamping to 0.`);
+		}
+		peq.parameters.delay = Math.max(0, blockData.adjustableDelay);
+
+		// Set DSP rate
+		peq.parameters.dspRate = blockData.dspRate;
+
+		// Set muted = false
+		peq.parameters.muted = false;
+
+		// Biquad type code mapping
+		const biquadTypeMap = {
+			0: 'peaking',
+			1: 'lowShelf',
+			2: 'highShelf',
+			3: 'lowPass1',
+			4: 'highPass1',
+			5: 'lowPass2',
+			6: 'highPass2',
+			7: 'allPass',
+		};
+
+		// Filter biquads to only unbypassed ones and map type codes
+		const sections = [];
+		for (const biquad of blockData.biquads) {
+			if (!biquad.unbypassed) continue;
+
+			const filterType = biquadTypeMap[biquad.type];
+			if (filterType === undefined) {
+				this.warnings.push(`Unknown biquad type code ${biquad.type} in active block ${index}. Skipping section.`);
+				continue;
+			}
+
+			sections.push({
+				filterType,
+				frequency: biquad.frequency,
+				q: biquad.q,
+				gain: biquad.gain,
+				bypass: false,
+			});
+		}
+
+		peq.parameters.sections = sections;
+
+		// Set label
+		peq.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(peq, blockData.x, blockData.y);
+		this.circuit.addComponent(peq);
+	}
+
+	/**
+	 * Create an OpAmp component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createOpAmpFromBlock(blockData, index) {
+		const opamp = new OpAmp(blockData.x, blockData.y);
+
+		// Convert scalar gain to dB
+		if (blockData.scalarGain <= 0) {
+			this.warnings.push(`Scalar gain <= 0 (${blockData.scalarGain}) for active block ${index}. Defaulting dcGain to 100 dB.`);
+			opamp.parameters.dcGain = 100;
+		} else {
+			opamp.parameters.dcGain = 20 * Math.log10(blockData.scalarGain);
+		}
+
+		// Set corner frequency from turn frequency
+		opamp.parameters.cornerFrequency = blockData.turnFrequency;
+
+		// Set label
+		opamp.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(opamp, blockData.x, blockData.y);
+		this.circuit.addComponent(opamp);
+	}
+
+	/**
+	 * Create a Filter component from parsed active block data
+	 * @param {Object} blockData - Parsed block fields
+	 * @param {number} index - Block index for labeling
+	 */
+	createFilterFromBlock(blockData, index) {
+		const filter = new Filter(blockData.x, blockData.y);
+
+		// Map filter shape
+		const shapeMap = { 0: 'butterworth', 1: 'linkwitzRiley', 2: 'bessel' };
+		if (shapeMap[blockData.filterShape] === undefined) {
+			this.warnings.push(`Unknown filter shape code ${blockData.filterShape} for active block ${index}. Defaulting to butterworth.`);
+		}
+		filter.parameters.filterShape = shapeMap[blockData.filterShape] || 'butterworth';
+
+		// Map filter type
+		const typeMap = { 0: 'lowPass', 1: 'highPass', 2: 'bandpass' };
+		if (typeMap[blockData.filterType] === undefined) {
+			this.warnings.push(`Unknown filter type code ${blockData.filterType} for active block ${index}. Defaulting to lowPass.`);
+		}
+		filter.parameters.filterType = typeMap[blockData.filterType] || 'lowPass';
+
+		// Set filter order and turn frequency
+		filter.parameters.filterOrder = blockData.filterOrder;
+		filter.parameters.turnFrequency = blockData.turnFrequency;
+
+		// Set passband bandwidth
+		filter.parameters.passbandBandwidth = blockData.passbandBandwidth || 1000;
+
+		// Set gain = 0
+		filter.parameters.gain = 0;
+
+		// Set delay (clamp to >= 0)
+		if (blockData.adjustableDelay < 0) {
+			this.warnings.push(`Negative delay (${blockData.adjustableDelay}) for active block ${index}. Clamping to 0.`);
+		}
+		filter.parameters.delay = Math.max(0, blockData.adjustableDelay);
+
+		// Set muted = false
+		filter.parameters.muted = false;
+
+		// Set label
+		filter.label = `A${index}`;
+
+		// Register position and add to circuit
+		this.registerComponentPosition(filter, blockData.x, blockData.y);
+		this.circuit.addComponent(filter);
 	}
 
 	/**
@@ -590,6 +1000,11 @@ export class DxoImporter {
 			// Speaker terminals: {x:-1, y:-1} and {x:-1, y:1}
 			terminals.push({ x: x - 1, y: y - 1 });
 			terminals.push({ x: x - 1, y: y + 1 });
+		} else if (component.type === 'peq' || component.type === 'filter' || component.type === 'opamp') {
+			terminals.push({ x: x - 3, y: y - 2 });
+			terminals.push({ x: x - 3, y: y + 2 });
+			terminals.push({ x: x + 4, y: y - 2 });
+			terminals.push({ x: x + 4, y: y + 2 });
 		}
 
 		return terminals;

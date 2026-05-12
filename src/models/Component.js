@@ -8,14 +8,14 @@ import { generateUniqueId } from '@/utils/idGenerator';
 export class Component {
 	/**
 	 * Create a new component
-	 * @param {string} type - Component type ('resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source')
+	 * @param {string} type - Component type ('resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source', 'peq', 'filter', 'opamp')
 	 * @param {number} x - Grid position X coordinate
 	 * @param {number} y - Grid position Y coordinate
 	 */
 	constructor(type, x, y) {
 		this.id = generateUniqueId();
-		this.type = type; // 'resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source'
-		this.label = ''; // Auto-assigned (R1, C1, L1, S1, etc.)
+		this.type = type; // 'resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source', 'peq', 'filter', 'opamp'
+		this.label = ''; // Auto-assigned (R1, C1, L1, S1, A0, etc.)
 		this.x = x; // Grid position X
 		this.y = y; // Grid position Y
 		this.rotation = 0; // 0, 90, 180, 270 degrees
@@ -81,7 +81,7 @@ export class Component {
 		}
 
 		// Validate type
-		const validTypes = ['resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source'];
+		const validTypes = ['resistor', 'capacitor', 'inductor', 'speaker', 'ground', 'source', 'peq', 'filter', 'opamp'];
 		if (this.type && !validTypes.includes(this.type)) {
 			errors.push(`Invalid component type: ${this.type}`);
 		}

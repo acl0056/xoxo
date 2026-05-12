@@ -1,0 +1,65 @@
+High Pass 1st Order
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  freq //Variable #2
+frequency [Hz]
+  1000 //VarValue #2
+  R //Variable #3
+resistance [Ohms]
+  8 //VarValue #3
+   //Variable #4
+
+  0 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+1 //Passives
+12 //Lines Per Passive
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  0 //position X
+  2 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+1/(2*pi*freq*R)
+
+0 //Grounds
+2 //Lines Per Ground
+1 //Wires
+4 //Lines Per Wire
+ -3 //End1 X
+  5 //End1 Y
+  3 //End2 X
+  5 //End2 Y
+4 //Texts
+5 //Lines Per Text
+High Pass 1st Order
+  0 //position X
+  -3 //position Y
+  8 //Size
+  8388608 //color
+(just a capacitor)
+  0 //position X
+  -2 //position Y
+  8 //Size
+  8388608 //color
+in
+  -3 //position X
+  4 //position Y
+  8 //Size
+  8388608 //color
+out
+  3 //position X
+  4 //position Y
+  8 //Size
+  8388608 //color

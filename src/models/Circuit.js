@@ -7,6 +7,9 @@ import { Speaker } from './Speaker';
 import { VoltageSource } from './VoltageSource';
 import { Ground } from './Ground';
 import { WireSegment } from './WireSegment';
+import { PEQ } from './PEQ';
+import { Filter } from './Filter';
+import { OpAmp } from './OpAmp';
 
 /**
  * Circuit class represents a complete crossover network design
@@ -18,6 +21,7 @@ export class Circuit {
 		this.wires = []; // Array of Wire instances
 		this.nodes = []; // Array of Node instances (derived from wires)
 		this.annotations = []; // Array of TextAnnotation instances
+		this.blockGroups = []; // Array of BlockGroup metadata objects
 		this.curveColors = {
 			frequencyResponse: {},
 			impedance: {},
@@ -378,6 +382,11 @@ export class Circuit {
 			};
 		}
 
+		// Only include blockGroups if there are any
+		if (this.blockGroups && this.blockGroups.length > 0) {
+			json.blockGroups = this.blockGroups.map((group) => ({ ...group }));
+		}
+
 		return json;
 	}
 
@@ -412,6 +421,12 @@ export class Circuit {
 					return Ground.fromJSON(componentData);
 				case 'wire-segment':
 					return WireSegment.fromJSON(componentData);
+				case 'peq':
+					return PEQ.fromJSON(componentData);
+				case 'filter':
+					return Filter.fromJSON(componentData);
+				case 'opamp':
+					return OpAmp.fromJSON(componentData);
 				default:
 					throw new Error(`Unknown component type: ${componentData.type}`);
 			}
@@ -437,6 +452,11 @@ export class Circuit {
 				frequencyResponse: json.graphSettings.frequencyResponse || {},
 				impedance: json.graphSettings.impedance || {},
 			};
+		}
+
+		// Deserialize block groups
+		if (json.blockGroups) {
+			circuit.blockGroups = json.blockGroups.map((group) => ({ ...group }));
 		}
 
 		return circuit;

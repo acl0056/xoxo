@@ -1,0 +1,130 @@
+All Pass Filter, First Order
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  TC     //Variable #2
+time constant, seconds
+  0.0001 //VarValue #2
+  Z      //Variable #3
+assumed load resistance, ohms
+  8 //VarValue #3
+   //Variable #4
+
+  0 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+4 //Passives
+12 //Lines Per Passive
+ 1 //PartType
+   //Part#
+  6.8E-6 //Value
+  0.05 //ESR
+  250 //Rating
+  5 //position X
+  -2 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+TC/Z
+50e-3
+ 1 //PartType
+   //Part#
+  1E-5 //Value
+  0.05 //ESR
+  250 //Rating
+  -2 //position X
+  5 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+TC/Z
+50e-3
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.48 //ESR
+  300 //Rating
+  -2 //position X
+  -2 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Z*TC
+Z*TC*50
+ 2 //PartType
+   //Part#
+  0.001 //Value
+  0.48 //ESR
+  300 //Rating
+  5 //position X
+  5 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Z*TC
+Z*TC*50
+0 //Grounds
+2 //Lines Per Ground
+12 //Wires
+4 //Lines Per Wire
+ -2 //End1 X
+  -5 //End1 Y
+  9 //End2 X
+  -5 //End2 Y
+ -2 //End1 X
+  8 //End1 Y
+  9 //End2 X
+  8 //End2 Y
+ 5 //End1 X
+  1 //End1 Y
+  5 //End2 X
+  2 //End2 Y
+ -2 //End1 X
+  1 //End1 Y
+  -2 //End2 X
+  2 //End2 Y
+ -5 //End1 X
+  1 //End1 Y
+  -2 //End2 X
+  1 //End2 Y
+ -5 //End1 X
+  -5 //End1 Y
+  -5 //End2 X
+  1 //End2 Y
+ -8 //End1 X
+  -5 //End1 Y
+  -5 //End2 X
+  -5 //End2 Y
+ 2 //End1 X
+  2 //End1 Y
+  5 //End2 X
+  2 //End2 Y
+ 2 //End1 X
+  2 //End1 Y
+  2 //End2 X
+  3 //End2 Y
+ -5 //End1 X
+  3 //End1 Y
+  2 //End2 X
+  3 //End2 Y
+ -5 //End1 X
+  3 //End1 Y
+  -5 //End2 X
+  8 //End2 Y
+ -8 //End1 X
+  8 //End1 Y
+  -5 //End2 X
+  8 //End2 Y
+1 //Texts
+5 //Lines Per Text
+All Pass Filter, Order 1
+  0 //position X
+  -6 //position Y
+  8 //Size
+  8388608 //color

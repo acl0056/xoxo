@@ -1,0 +1,76 @@
+General Low Pass, 2nd Order
+
+
+   //Variable #0
+
+  0 //VarValue #0
+   //Variable #1
+
+  0 //VarValue #1
+  freq //Variable #2
+filter break frequency, [Hz]
+  1000 //VarValue #2
+  Q //Variable #3
+Q
+  1 //VarValue #3
+  R //Variable #4
+Load resistance [ohms]
+  8 //VarValue #4
+   //Variable #5
+
+  0 //VarValue #5
+2 //Passives
+12 //Lines Per Passive
+ 2 //PartType
+   //Part#
+  0.0012 //Value
+  0.48 //ESR
+  300 //Rating
+  -4 //position X
+  0 //position Y
+  T  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+R /(2*pi*freq*Q)
+0.35
+ 1 //PartType
+   //Part#
+  8.2E-6 //Value
+  0.05 //ESR
+  250 //Rating
+  1 //position X
+  3 //position Y
+  F  //Is Horizontal
+  2 //StepMode
+  1 //0short/1val/2open
+Q /(2*pi*freq*R)
+0.005
+0 //Grounds
+2 //Lines Per Ground
+2 //Wires
+4 //Lines Per Wire
+ -1 //End1 X
+  0 //End1 Y
+  6 //End2 X
+  0 //End2 Y
+ -7 //End1 X
+  6 //End1 Y
+  6 //End2 X
+  6 //End2 Y
+3 //Texts
+5 //Lines Per Text
+In
+  -6 //position X
+  3 //position Y
+  8 //Size
+  8388608 //color
+out
+  5 //position X
+  3 //position Y
+  8 //Size
+  8388608 //color
+General Low Pass, 2nd Order
+  0 //position X
+  -5 //position Y
+  8 //Size
+  8388608 //color

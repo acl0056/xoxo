@@ -50,12 +50,26 @@
 			:component="tuneDialogComponent"
 			@close="closeTuneDialog"
 			@update="handleTuneUpdate"
+			@open-biquad-export="handleOpenBiquadExport"
+		/>
+		<BiquadExportWindow
+			:visible="biquadExportVisible"
+			:parameters="biquadExportParameters"
+			@close="closeBiquadExport"
 		/>
 		<AnnotationDialog
 			:visible="annotationDialogVisible"
 			:annotation="annotationDialogAnnotation"
 			@close="closeAnnotationDialog"
 			@update="handleAnnotationUpdate"
+		/>
+		<VariableDialog
+			:visible="blockTuneDialogVisible"
+			:block="blockTuneBlock"
+			:block-group="blockTuneBlockGroup"
+			mode="tune"
+			@confirm="handleBlockTuneConfirm"
+			@cancel="closeBlockTuneDialog"
 		/>
 	</div>
 </template>
@@ -68,18 +82,25 @@ import { Capacitor } from '@/models/Capacitor';
 import { Inductor } from '@/models/Inductor';
 import { Speaker } from '@/models/Speaker';
 import { Ground } from '@/models/Ground';
+import { PEQ } from '@/models/PEQ';
+import { Filter } from '@/models/Filter';
+import { OpAmp } from '@/models/OpAmp';
 import { TextAnnotation } from '@/models/TextAnnotation';
 import { formatEngineering } from '@/utils/engineeringNotation';
 import ContextMenu from './ContextMenu.vue';
 import TuneDialog from './TuneDialog.vue';
+import BiquadExportWindow from './BiquadExportWindow.vue';
 import AnnotationDialog from './AnnotationDialog.vue';
+import VariableDialog from './VariableDialog.vue';
 
 export default {
 	name: 'CircuitEditor',
 	components: {
 		ContextMenu,
 		TuneDialog,
+		BiquadExportWindow,
 		AnnotationDialog,
+		VariableDialog,
 	},
 	data() {
 		return {
@@ -107,8 +128,13 @@ export default {
 			contextMenuTargetType: null,
 			tuneDialogVisible: false,
 			tuneDialogComponent: null,
+			biquadExportVisible: false,
+			biquadExportParameters: null,
 			annotationDialogVisible: false,
 			annotationDialogAnnotation: null,
+			blockTuneDialogVisible: false,
+			blockTuneBlock: null,
+			blockTuneBlockGroup: null,
 			dragPreview: null, // { componentType, gridX, gridY, rotation } for rendering preview during drag
 		};
 	},
@@ -289,6 +315,15 @@ export default {
 						break;
 					case 'wire-segment':
 						this.renderWireSegment(component);
+						break;
+					case 'peq':
+						this.renderPEQ(component);
+						break;
+					case 'filter':
+						this.renderFilter(component);
+						break;
+					case 'opamp':
+						this.renderOpAmp(component);
 						break;
 					default:
 						break;
@@ -994,6 +1029,310 @@ export default {
 			this.context.lineCap = 'butt';
 		},
 
+		renderPEQ(component) {
+			const { gridSize } = this;
+
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw amplifier triangle inside the box (pointing right)
+			this.context.beginPath();
+			this.context.moveTo(-1.5 * gridSize, -1.5 * gridSize); // Top-left of triangle
+			this.context.lineTo(1.5 * gridSize, 0); // Right point (center)
+			this.context.lineTo(-1.5 * gridSize, 1.5 * gridSize); // Bottom-left of triangle
+			this.context.closePath();
+			this.context.stroke();
+
+			// Draw "PEQ" text inside the triangle
+			this.context.fillStyle = '#000000';
+			this.context.font = 'bold 10px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('PEQ', -0.3 * gridSize, 0);
+
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
+
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
+
+			// Draw terminal connection dots
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Terminal 0: +in (top-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 2: +out (top-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw component label above the symbol
+			if (component.label) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '12px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'bottom';
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
+			}
+
+			// Draw muted indicator (red X) when muted
+			if (component.parameters && component.parameters.muted) {
+				this.context.strokeStyle = '#ff0000';
+				this.context.lineWidth = 3;
+
+				// Draw X across the component
+				this.context.beginPath();
+				this.context.moveTo(-2 * gridSize, -3 * gridSize);
+				this.context.lineTo(3 * gridSize, 3 * gridSize);
+				this.context.stroke();
+
+				this.context.beginPath();
+				this.context.moveTo(3 * gridSize, -3 * gridSize);
+				this.context.lineTo(-2 * gridSize, 3 * gridSize);
+				this.context.stroke();
+			}
+		},
+
+		renderFilter(component) {
+			const { gridSize } = this;
+
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw amplifier triangle inside the box (pointing right)
+			this.context.beginPath();
+			this.context.moveTo(-1.5 * gridSize, -1.5 * gridSize); // Top-left of triangle
+			this.context.lineTo(1.5 * gridSize, 0); // Right point (center)
+			this.context.lineTo(-1.5 * gridSize, 1.5 * gridSize); // Bottom-left of triangle
+			this.context.closePath();
+			this.context.stroke();
+
+			// Draw "H(f)" text inside the triangle
+			this.context.fillStyle = '#000000';
+			this.context.font = 'bold 10px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('H(f)', -0.3 * gridSize, 0);
+
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
+
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
+
+			// Draw terminal connection dots
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Terminal 0: +in (top-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 2: +out (top-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw component label above the symbol
+			if (component.label) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '12px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'bottom';
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
+			}
+
+			// Draw muted indicator (red X) when muted
+			if (component.parameters && component.parameters.muted) {
+				this.context.strokeStyle = '#ff0000';
+				this.context.lineWidth = 3;
+
+				// Draw X across the component
+				this.context.beginPath();
+				this.context.moveTo(-2 * gridSize, -3 * gridSize);
+				this.context.lineTo(3 * gridSize, 3 * gridSize);
+				this.context.stroke();
+
+				this.context.beginPath();
+				this.context.moveTo(3 * gridSize, -3 * gridSize);
+				this.context.lineTo(-2 * gridSize, 3 * gridSize);
+				this.context.stroke();
+			}
+		},
+
+		renderOpAmp(component) {
+			const { gridSize } = this;
+
+			// Draw outer rectangle (5×6 grid units, from -2 to +3 horizontal, -3 to +3 vertical)
+			this.context.strokeStyle = '#000000';
+			this.context.lineWidth = 2;
+			this.context.strokeRect(-2 * gridSize, -3 * gridSize, 5 * gridSize, 6 * gridSize);
+
+			// Draw stub lines from rectangle left edge to input terminals (1 grid left)
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, -2 * gridSize);
+			this.context.lineTo(-3 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(-2 * gridSize, 2 * gridSize);
+			this.context.lineTo(-3 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw stub lines from rectangle right edge to output terminals (1 grid right)
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, -2 * gridSize);
+			this.context.lineTo(4 * gridSize, -2 * gridSize);
+			this.context.stroke();
+
+			this.context.beginPath();
+			this.context.moveTo(3 * gridSize, 2 * gridSize);
+			this.context.lineTo(4 * gridSize, 2 * gridSize);
+			this.context.stroke();
+
+			// Draw amplifier triangle inside the box (pointing right)
+			this.context.beginPath();
+			this.context.moveTo(-1.5 * gridSize, -1.5 * gridSize); // Top-left of triangle
+			this.context.lineTo(1.5 * gridSize, 0); // Right point (center)
+			this.context.lineTo(-1.5 * gridSize, 1.5 * gridSize); // Bottom-left of triangle
+			this.context.closePath();
+			this.context.stroke();
+
+			// Draw "Op" text inside the triangle
+			this.context.fillStyle = '#000000';
+			this.context.font = 'bold 10px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('Op', -0.3 * gridSize, 0);
+
+			// Draw +/- labels on left side (input terminals) inside rectangle
+			this.context.font = '18px Arial';
+			this.context.textAlign = 'center';
+			this.context.textBaseline = 'middle';
+			this.context.fillText('+', -1 * gridSize, -2 * gridSize); // Top-left (+in)
+			this.context.fillText('−', -1 * gridSize, 2 * gridSize); // Bottom-left (-in)
+
+			// Draw +/- labels on right side (output terminals) inside rectangle
+			this.context.fillText('+', 2 * gridSize, -2 * gridSize); // Top-right (+out)
+			this.context.fillText('−', 2 * gridSize, 2 * gridSize); // Bottom-right (-out)
+
+			// Draw terminal connection dots
+			this.context.fillStyle = '#000000';
+			const terminalRadius = 3;
+
+			// Terminal 0: +in (top-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 1: -in (bottom-left, 1 grid left of body)
+			this.context.beginPath();
+			this.context.arc(-3 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 2: +out (top-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, -2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Terminal 3: -out (bottom-right, 1 grid right of body)
+			this.context.beginPath();
+			this.context.arc(4 * gridSize, 2 * gridSize, terminalRadius, 0, 2 * Math.PI);
+			this.context.fill();
+
+			// Draw component label above the symbol
+			if (component.label) {
+				this.context.fillStyle = '#000000';
+				this.context.font = '12px Arial';
+				this.context.textAlign = 'center';
+				this.context.textBaseline = 'bottom';
+				this.context.fillText(component.label, 0.5 * gridSize, -3.5 * gridSize);
+			}
+		},
+
 		renderAnnotations() {
 			const circuit = this.$store.state.circuit?.circuit;
 			if (!circuit || !circuit.annotations) return;
@@ -1038,19 +1377,54 @@ export default {
 
 			if (!selectedComponent) return;
 
-			// Use getComponentBounds for consistent hit area / selection highlight
-			const bounds = this.getComponentBounds(selectedComponent);
-			const padding = this.gridSize * 0.5;
+			// Check if this component belongs to a BlockGroup
+			const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](this.selectedComponentId);
 
 			this.context.strokeStyle = '#ff6600';
 			this.context.lineWidth = 2;
 			this.context.setLineDash([5, 5]);
-			this.context.strokeRect(
-				bounds.left - padding,
-				bounds.top - padding,
-				(bounds.right - bounds.left) + 2 * padding,
-				(bounds.bottom - bounds.top) + 2 * padding,
-			);
+
+			if (blockGroup) {
+				// Draw one bounding rectangle encompassing all block group members
+				const allIds = [...blockGroup.componentIds, ...blockGroup.wireSegmentIds];
+				let minLeft = Infinity;
+				let minTop = Infinity;
+				let maxRight = -Infinity;
+				let maxBottom = -Infinity;
+
+				for (const memberId of allIds) {
+					const member = circuit.components.find((c) => c.id === memberId);
+					if (member) {
+						const bounds = this.getComponentBounds(member);
+						if (bounds.left < minLeft) minLeft = bounds.left;
+						if (bounds.top < minTop) minTop = bounds.top;
+						if (bounds.right > maxRight) maxRight = bounds.right;
+						if (bounds.bottom > maxBottom) maxBottom = bounds.bottom;
+					}
+				}
+
+				if (minLeft !== Infinity) {
+					const padding = this.gridSize * 0.5;
+					this.context.strokeRect(
+						minLeft - padding,
+						minTop - padding,
+						(maxRight - minLeft) + 2 * padding,
+						(maxBottom - minTop) + 2 * padding,
+					);
+				}
+			} else {
+				// Single component highlight
+				const bounds = this.getComponentBounds(selectedComponent);
+				const padding = this.gridSize * 0.5;
+
+				this.context.strokeRect(
+					bounds.left - padding,
+					bounds.top - padding,
+					(bounds.right - bounds.left) + 2 * padding,
+					(bounds.bottom - bounds.top) + 2 * padding,
+				);
+			}
+
 			this.context.setLineDash([]);
 		},
 
@@ -1091,6 +1465,15 @@ export default {
 					break;
 				case 'ground':
 					this.renderGround(mockComponent);
+					break;
+				case 'peq':
+					this.renderPEQ(mockComponent);
+					break;
+				case 'filter':
+					this.renderFilter(mockComponent);
+					break;
+				case 'opamp':
+					this.renderOpAmp(mockComponent);
 					break;
 				case 'text':
 					this.context.fillStyle = '#000000';
@@ -1223,10 +1606,30 @@ export default {
 				const gridX = Math.round(snapped.x / this.gridSize - fracX) + fracX;
 				const gridY = Math.round(snapped.y / this.gridSize - fracY) + fracY;
 
-				this.$store.commit('circuit/UPDATE_COMPONENT', {
-					componentId: this.selectedComponentId,
-					updates: { x: gridX, y: gridY },
-				});
+				// Check if this component belongs to a BlockGroup — if so, move all group members together
+				const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](this.selectedComponentId);
+				if (blockGroup) {
+					const moveDeltaX = gridX - component.x;
+					const moveDeltaY = gridY - component.y;
+
+					if (moveDeltaX !== 0 || moveDeltaY !== 0) {
+						const allIds = [...blockGroup.componentIds, ...blockGroup.wireSegmentIds];
+						for (const memberId of allIds) {
+							const member = this.$store.state.circuit.circuit?.getComponent(memberId);
+							if (member) {
+								this.$store.commit('circuit/UPDATE_COMPONENT', {
+									componentId: memberId,
+									updates: { x: member.x + moveDeltaX, y: member.y + moveDeltaY },
+								});
+							}
+						}
+					}
+				} else {
+					this.$store.commit('circuit/UPDATE_COMPONENT', {
+						componentId: this.selectedComponentId,
+						updates: { x: gridX, y: gridY },
+					});
+				}
 
 				this.renderCircuit();
 			} else if (this.dragMode === 'move-annotation' && this.selectedAnnotation) {
@@ -1315,19 +1718,82 @@ export default {
 			if (this.dragMode === 'move' && this.selectedComponentId && this.dragStartPosition) {
 				const component = this.$store.state.circuit.circuit?.getComponent(this.selectedComponentId);
 				if (component && (component.x !== this.dragStartPosition.x || component.y !== this.dragStartPosition.y)) {
-					// Push undo to restore original position
-					this.$store.commit('circuit/PUSH_UNDO', {
-						type: 'updateComponent',
-						payload: {
-							componentId: this.selectedComponentId,
-							updates: { x: this.dragStartPosition.x, y: this.dragStartPosition.y },
-						},
-					});
-					this.$store.commit('circuit/CLEAR_REDO');
-					this.$store.commit('circuit/SET_DIRTY', true);
+					const moveDeltaX = component.x - this.dragStartPosition.x;
+					const moveDeltaY = component.y - this.dragStartPosition.y;
+
+					// Capture undo stack length before wire connection updates
+					const undoStackBefore = this.$store.state.circuit.undoStack.length;
 
 					// Check for broken/new wire connections after move
-					this.updateWireConnections(this.selectedComponentId);
+					const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](this.selectedComponentId);
+					if (blockGroup) {
+						const allIds = [...blockGroup.componentIds, ...blockGroup.wireSegmentIds];
+						for (const memberId of allIds) {
+							this.updateWireConnections(memberId);
+						}
+					} else {
+						this.updateWireConnections(this.selectedComponentId);
+					}
+
+					// Collect any wire undo entries that were pushed by updateWireConnections
+					const wireUndoEntries = this.$store.state.circuit.undoStack.splice(undoStackBefore);
+
+					// Build the combined undo entry
+					if (blockGroup) {
+						const allIds = [...blockGroup.componentIds, ...blockGroup.wireSegmentIds];
+						const undoSubActions = [];
+
+						// Add position restore for all group members
+						for (const memberId of allIds) {
+							const member = this.$store.state.circuit.circuit?.getComponent(memberId);
+							if (member) {
+								undoSubActions.push({
+									type: 'updateComponent',
+									payload: {
+										componentId: memberId,
+										updates: { x: member.x - moveDeltaX, y: member.y - moveDeltaY },
+									},
+								});
+							}
+						}
+
+						// Add wire undo entries to the batch
+						for (const wireUndo of wireUndoEntries) {
+							undoSubActions.push(wireUndo);
+						}
+
+						this.$store.commit('circuit/PUSH_UNDO', {
+							type: 'batch',
+							payload: undoSubActions,
+						});
+					} else {
+						// Single component move
+						const undoSubActions = [{
+							type: 'updateComponent',
+							payload: {
+								componentId: this.selectedComponentId,
+								updates: { x: this.dragStartPosition.x, y: this.dragStartPosition.y },
+							},
+						}];
+
+						// Include wire changes if any
+						for (const wireUndo of wireUndoEntries) {
+							undoSubActions.push(wireUndo);
+						}
+
+						if (undoSubActions.length === 1) {
+							// No wire changes — use simple undo entry
+							this.$store.commit('circuit/PUSH_UNDO', undoSubActions[0]);
+						} else {
+							// Wire changes too — use batch
+							this.$store.commit('circuit/PUSH_UNDO', {
+								type: 'batch',
+								payload: undoSubActions,
+							});
+						}
+					}
+					this.$store.commit('circuit/CLEAR_REDO');
+					this.$store.commit('circuit/SET_DIRTY', true);
 				}
 				this.dragStartPosition = null;
 			} else if (this.dragMode === 'move-annotation' && this.selectedAnnotation && this.dragStartPosition) {
@@ -1389,12 +1855,30 @@ export default {
 						// Create new wire segment
 						const wireSegment = new WireSegment(centerX, centerY, length, rotation);
 
+						// Capture undo stack before adding component and connections
+						const undoStackBefore = this.$store.state.circuit.undoStack.length;
+
 						// Add to circuit
 						this.$store.dispatch('circuit/addComponent', wireSegment);
 
 						// Create Wire objects for any terminal overlaps
 						this.$nextTick(() => {
 							this.createWireConnectionsForComponent(wireSegment.id);
+
+							// Collect all undo entries pushed since before (addComponent + wire connections)
+							const allEntries = this.$store.state.circuit.undoStack.splice(undoStackBefore);
+
+							if (allEntries.length > 1) {
+								// Bundle into a single batch undo
+								this.$store.commit('circuit/PUSH_UNDO', {
+									type: 'batch',
+									payload: allEntries,
+								});
+							} else if (allEntries.length === 1) {
+								// Just one entry, put it back as-is
+								this.$store.commit('circuit/PUSH_UNDO', allEntries[0]);
+							}
+
 							this.renderCircuit();
 						});
 					});
@@ -1502,12 +1986,20 @@ export default {
 			// Build menu items based on component type
 			const menuItems = [];
 
-			// Wire segments have minimal menu (no tune option)
-			if (component.type === 'wire-segment') {
+			// Check if this component belongs to a BlockGroup
+			const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](component.id);
+
+			if (blockGroup) {
+				// Block group members ONLY get block-specific actions
+				menuItems.push({ label: 'Tune Block', action: 'tune-block' });
+				menuItems.push({ label: 'Change Block to separate parts', action: 'dissolve-block' });
+				menuItems.push({ label: 'Delete Block', action: 'delete-block' });
+			} else if (component.type === 'wire-segment') {
+				// Wire segments have minimal menu
 				menuItems.push({ label: 'Rotate', action: 'rotate' });
 				menuItems.push({ label: 'Delete', action: 'delete' });
 			} else {
-				// Tune option for all components except ground and wire-segment
+				// Regular individual component menu
 				if (component.type !== 'ground') {
 					menuItems.push({ label: 'Tune', action: 'tune' });
 				}
@@ -1519,7 +2011,6 @@ export default {
 				if (component.type === 'resistor' || component.type === 'capacitor' || component.type === 'inductor') {
 					const currentState = component.parameters.state || 'normal';
 
-					// Add submenu-style state options
 					if (currentState !== 'normal') {
 						menuItems.push({ label: 'State: Normal', action: 'state-normal' });
 					}
@@ -1612,6 +2103,15 @@ export default {
 				case 'tune':
 					this.openTuneDialog(component);
 					break;
+				case 'tune-block':
+					this.openBlockTuneDialog(component);
+					break;
+				case 'dissolve-block':
+					this.dissolveBlock(component);
+					break;
+				case 'delete-block':
+					this.deleteBlock(component);
+					break;
 				case 'rotate':
 					this.rotateComponent(component);
 					break;
@@ -1675,6 +2175,116 @@ export default {
 			this.dragMode = null;
 			this.wireStart = null;
 			this.wireSegments = [];
+		},
+
+		openBlockTuneDialog(component) {
+			const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](component.id);
+			if (!blockGroup) return;
+
+			// Build a block-like object for the VariableDialog from the blockGroup data
+			// The dialog needs: title, variables (with name, description, defaultValue)
+			const block = {
+				title: blockGroup.blockTitle,
+				variables: blockGroup.variables.map((variable) => ({
+					name: variable.name,
+					description: variable.description,
+					defaultValue: variable.value,
+				})),
+			};
+
+			// Pad to 6 slots if needed (VariableDialog filters by non-empty name)
+			while (block.variables.length < 6) {
+				block.variables.push({ name: '', description: '', defaultValue: 0 });
+			}
+
+			this.blockTuneBlock = block;
+			this.blockTuneBlockGroup = blockGroup;
+			this.blockTuneDialogVisible = true;
+		},
+
+		closeBlockTuneDialog() {
+			this.blockTuneDialogVisible = false;
+			this.blockTuneBlock = null;
+			this.blockTuneBlockGroup = null;
+		},
+
+		async handleBlockTuneConfirm({ variables }) {
+			if (!this.blockTuneBlockGroup) return;
+
+			await this.$store.dispatch('circuit/tuneBlock', {
+				blockGroupId: this.blockTuneBlockGroup.id,
+				newVariables: variables,
+			});
+		},
+
+		dissolveBlock(component) {
+			const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](component.id);
+			if (!blockGroup) return;
+
+			// Save block group data for undo before dissolving
+			const blockGroupSnapshot = JSON.parse(JSON.stringify(blockGroup));
+
+			this.$store.dispatch('circuit/dissolveBlock', {
+				blockGroupId: blockGroup.id,
+			});
+
+			// Push undo entry to restore the block group
+			this.$store.commit('circuit/PUSH_UNDO', {
+				type: 'dissolveBlock',
+				payload: blockGroupSnapshot,
+			});
+			this.$store.commit('circuit/CLEAR_REDO');
+		},
+
+		deleteBlock(component) {
+			const blockGroup = this.$store.getters['circuit/getBlockGroupForComponent'](component.id);
+			if (!blockGroup) return;
+
+			const { circuit } = this.$store.state.circuit;
+			if (!circuit) return;
+
+			// Collect all component data for a single undo entry before removing
+			const allIds = [...blockGroup.componentIds, ...blockGroup.wireSegmentIds];
+			const removedComponents = [];
+			for (const memberId of allIds) {
+				const member = circuit.getComponent(memberId);
+				if (member) {
+					removedComponents.push(JSON.parse(JSON.stringify(member.toJSON ? member.toJSON() : member)));
+				}
+			}
+
+			// Push a single batch undo entry
+			this.$store.commit('circuit/PUSH_UNDO', {
+				type: 'batch',
+				payload: removedComponents.map((comp) => ({
+					type: 'addComponent',
+					payload: comp,
+				})),
+			});
+			this.$store.commit('circuit/CLEAR_REDO');
+
+			// Remove all components directly (without individual undo entries)
+			for (const memberId of allIds) {
+				this.$store.commit('circuit/REMOVE_COMPONENT', memberId);
+			}
+
+			// Remove the block group itself
+			this.$store.commit('circuit/REMOVE_BLOCK_GROUP', blockGroup.id);
+
+			// Clear selection and re-render
+			this.$store.commit('ui/SET_SELECTED_COMPONENT', null);
+			this.$store.commit('circuit/SET_DIRTY', true);
+			this.renderCircuit();
+		},
+
+		handleOpenBiquadExport({ parameters }) {
+			this.biquadExportParameters = parameters;
+			this.biquadExportVisible = true;
+		},
+
+		closeBiquadExport() {
+			this.biquadExportVisible = false;
+			this.biquadExportParameters = null;
 		},
 
 		async handleTuneUpdate({ componentId, parameters }) {
@@ -1753,24 +2363,51 @@ export default {
 		},
 
 		rotateComponent(component) {
-			// Rotate component by 90 degrees clockwise
-			component.rotate(90);
+			const previousRotation = component.rotation;
+			console.log('[ROTATE]', component.label, 'from', previousRotation, 'to', (previousRotation + 90) % 360);
 
-			// For wire segments, also update terminals after rotation
+			// Calculate new rotation without mutating the component first
+			const newRotation = (previousRotation + 90) % 360;
+
+			// For wire segments, we need new terminal positions
+			let newTerminals = component.terminals;
 			if (component.type === 'wire-segment') {
+				// Temporarily rotate to compute new terminals, then restore
+				const savedRotation = component.rotation;
+				component.rotation = newRotation;
+				component.updateTerminals();
+				newTerminals = component.terminals.map((t) => ({ ...t }));
+				component.rotation = savedRotation;
 				component.updateTerminals();
 			}
 
+			// Capture undo stack before dispatching (updateComponent pushes an undo entry)
+			const undoStackBefore = this.$store.state.circuit.undoStack.length;
+
+			// Dispatch updateComponent — this will capture the CURRENT (old) rotation as undo
+			// and apply the new rotation
 			this.$store.dispatch('circuit/updateComponent', {
 				componentId: component.id,
 				updates: {
-					rotation: component.rotation,
-					terminals: component.terminals,
+					rotation: newRotation,
+					terminals: newTerminals,
 				},
 			});
 
 			// Update wire connections — rotation changes terminal positions
 			this.updateWireConnections(component.id);
+
+			// Collect all undo entries (rotation + wire changes) and batch them
+			const allEntries = this.$store.state.circuit.undoStack.splice(undoStackBefore);
+			if (allEntries.length > 1) {
+				this.$store.commit('circuit/PUSH_UNDO', {
+					type: 'batch',
+					payload: allEntries,
+				});
+			} else if (allEntries.length === 1) {
+				this.$store.commit('circuit/PUSH_UNDO', allEntries[0]);
+			}
+
 			this.renderCircuit();
 		},
 
@@ -2047,6 +2684,18 @@ export default {
 					ComponentClass = Ground;
 					break;
 				}
+				case 'peq': {
+					ComponentClass = PEQ;
+					break;
+				}
+				case 'filter': {
+					ComponentClass = Filter;
+					break;
+				}
+				case 'opamp': {
+					ComponentClass = OpAmp;
+					break;
+				}
 				default:
 					console.error(`Unknown component type: ${componentType}`);
 					return;
@@ -2056,20 +2705,24 @@ export default {
 			const component = new ComponentClass(gridX, gridY);
 			component.rotation = rotation;
 
-			// Auto-generate label (R1, R2, C1, L1, S1, etc.)
+			// Auto-generate label (R1, R2, C1, L1, S1, A0, A1, etc.)
 			const circuit = this.$store.state.circuit?.circuit;
 			if (circuit && componentType !== 'ground') {
 				const prefix = {
-					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S',
+					resistor: 'R', capacitor: 'C', inductor: 'L', speaker: 'S', peq: 'A', filter: 'A', opamp: 'A',
 				}[componentType] || '';
 				if (prefix) {
+					// For shared "A" prefix, count across peq, filter, and opamp types
+					const typesToCount = prefix === 'A' ? ['peq', 'filter', 'opamp'] : [componentType];
 					const existingNumbers = circuit.components
-						.filter((c) => c.type === componentType && c.label)
+						.filter((c) => typesToCount.includes(c.type) && c.label)
 						.map((c) => {
 							const match = c.label.match(new RegExp(`^${prefix}(\\d+)$`));
-							return match ? parseInt(match[1], 10) : 0;
-						});
-					const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+							return match ? parseInt(match[1], 10) : -1;
+						})
+						.filter((n) => n >= 0);
+					const startNumber = prefix === 'A' ? 0 : 1;
+					const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : startNumber;
 					component.label = `${prefix}${nextNumber}`;
 				}
 			}
@@ -2113,6 +2766,46 @@ export default {
 				x: Math.round(x / this.gridSize) * this.gridSize,
 				y: Math.round(y / this.gridSize) * this.gridSize,
 			};
+		},
+
+		/**
+		 * Check if a point lies on a line segment (within tolerance).
+		 * Works for horizontal, vertical, and diagonal segments.
+		 * @param {{ x: number, y: number }} point - The point to test
+		 * @param {{ x: number, y: number }} p1 - Start of line segment
+		 * @param {{ x: number, y: number }} p2 - End of line segment
+		 * @param {number} tolerance - Distance tolerance
+		 * @returns {boolean}
+		 */
+		isPointOnLineSegment(point, p1, p2, tolerance) {
+			// Check if point is within the bounding box of the segment (with tolerance)
+			const minX = Math.min(p1.x, p2.x) - tolerance;
+			const maxX = Math.max(p1.x, p2.x) + tolerance;
+			const minY = Math.min(p1.y, p2.y) - tolerance;
+			const maxY = Math.max(p1.y, p2.y) + tolerance;
+
+			if (point.x < minX || point.x > maxX || point.y < minY || point.y > maxY) {
+				return false;
+			}
+
+			// Calculate distance from point to line segment
+			const dx = p2.x - p1.x;
+			const dy = p2.y - p1.y;
+			const lengthSquared = dx * dx + dy * dy;
+
+			if (lengthSquared === 0) {
+				// p1 and p2 are the same point
+				const dist = Math.sqrt((point.x - p1.x) ** 2 + (point.y - p1.y) ** 2);
+				return dist <= tolerance;
+			}
+
+			// Project point onto the line, clamped to segment
+			const t = Math.max(0, Math.min(1, ((point.x - p1.x) * dx + (point.y - p1.y) * dy) / lengthSquared));
+			const projX = p1.x + t * dx;
+			const projY = p1.y + t * dy;
+
+			const dist = Math.sqrt((point.x - projX) ** 2 + (point.y - projY) ** 2);
+			return dist <= tolerance;
 		},
 
 		screenToWorld(screenX, screenY) {
@@ -2183,6 +2876,10 @@ export default {
 				const length = component.parameters.length * gridSize;
 				width = length;
 				height = gridSize; // Small height for hit detection
+			} else if (component.type === 'peq') {
+				// PEQ: 4×4 grid units box with terminals at ±2
+				width = 4 * gridSize;
+				height = 4 * gridSize;
 			}
 
 			// Account for rotation
@@ -2361,6 +3058,47 @@ export default {
 								);
 								this.$store.dispatch('circuit/addWire', newWire);
 							}
+						}
+					}
+				}
+			}
+
+			// 3. Create new wires where moved component terminals lie on the body of a wire segment
+			const wireSegments = allComponents.filter((c) => c.type === 'wire-segment');
+
+			for (let ti = 0; ti < movedTerminals.length; ti++) {
+				const movedPos = movedTerminals[ti];
+
+				for (const wireSegment of wireSegments) {
+					const wsTerminals = this.getComponentTerminals(wireSegment);
+					if (wsTerminals.length < 2) continue;
+
+					const p1 = wsTerminals[0];
+					const p2 = wsTerminals[1];
+
+					// Check if movedPos lies on the line segment between p1 and p2
+					if (this.isPointOnLineSegment(movedPos, p1, p2, 0.1)) {
+						// Connect to the nearest terminal of the wire segment (terminal 0 or 1)
+						const dist0 = Math.sqrt((movedPos.x - p1.x) ** 2 + (movedPos.y - p1.y) ** 2);
+						const dist1 = Math.sqrt((movedPos.x - p2.x) ** 2 + (movedPos.y - p2.y) ** 2);
+						const nearestTerminal = dist0 <= dist1 ? 0 : 1;
+
+						// Check if this connection already exists
+						const alreadyConnected = circuit.wires.some((w) => (w.startNode.componentId === movedComponentId
+								&& w.startNode.terminal === ti
+								&& w.endNode.componentId === wireSegment.id
+								&& w.endNode.terminal === nearestTerminal)
+							|| (w.startNode.componentId === wireSegment.id
+								&& w.startNode.terminal === nearestTerminal
+								&& w.endNode.componentId === movedComponentId
+								&& w.endNode.terminal === ti));
+
+						if (!alreadyConnected) {
+							const newWire = new Wire(
+								{ componentId: movedComponentId, terminal: ti },
+								{ componentId: wireSegment.id, terminal: nearestTerminal },
+							);
+							this.$store.dispatch('circuit/addWire', newWire);
 						}
 					}
 				}

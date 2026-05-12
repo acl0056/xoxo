@@ -39,3 +39,4 @@ coverage/
 *.electron/
 
 research/transition/
+temporary-test.js

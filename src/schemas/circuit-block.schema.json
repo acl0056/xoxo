@@ -1,0 +1,178 @@
+{
+"$schema": "http://json-schema.org/draft-07/schema#",
+"$id": "circuit-block.schema.json",
+"title": "Circuit Block",
+"description": "A pre-defined template representing a common passive crossover filter topology, parsed from a .xsc file. Contains component definitions, parametric variable declarations, value formulas, and wiring information.",
+"type": "object",
+"required": ["title", "identifier", "variables", "components", "grounds", "wires", "texts"],
+"properties": {
+"title": {
+"type": "string",
+"description": "Display name of the circuit block (line 1 of .xsc file)"
+},
+"identifier": {
+"type": "string",
+"description": "Unique identifier derived from the source filename (without extension)"
+},
+"variables": {
+"type": "array",
+"description": "Exactly 6 variable slots. Unused slots have empty name and description with defaultValue of 0.",
+"items": {
+"$ref": "#/definitions/variable"
+},
+"minItems": 6,
+"maxItems": 6
+},
+"components": {
+"type": "array",
+"description": "Passive component definitions with formulas for parametric value calculation",
+"items": {
+"$ref": "#/definitions/component"
+}
+},
+"grounds": {
+"type": "array",
+"description": "Ground connection positions relative to the block origin",
+"items": {
+"$ref": "#/definitions/gridPosition"
+}
+},
+"wires": {
+"type": "array",
+"description": "Wire segments connecting components within the block",
+"items": {
+"$ref": "#/definitions/wire"
+}
+},
+"texts": {
+"type": "array",
+"description": "Text annotations for labeling the block layout",
+"items": {
+"$ref": "#/definitions/text"
+}
+}
+},
+"definitions": {
+"variable": {
+"type": "object",
+"required": ["name", "description", "defaultValue"],
+"properties": {
+"name": {
+"type": "string",
+"description": "Variable name (may be empty for unused slots)"
+},
+"description": {
+"type": "string",
+"description": "Human-readable description of the variable (may be empty)"
+},
+"defaultValue": {
+"type": "number",
+"description": "Default numeric value for the variable"
+}
+},
+"description": "A parametric variable slot. The .xsc format always has 6 slots; unused slots have empty name and description."
+},
+"component": {
+"type": "object",
+"required": ["partType", "defaultValue", "esr", "rating", "position", "isHorizontal", "stepMode", "bypassMode", "formula", "formulaScale"],
+"properties": {
+"partType": {
+"type": "integer",
+"enum": [0, 1, 2],
+"description": "Component type: 0=resistor, 1=capacitor, 2=inductor"
+},
+"defaultValue": {
+"type": "number",
+"description": "Default component value (ohms, farads, or henries depending on partType)"
+},
+"esr": {
+"type": "number",
+"description": "Equivalent series resistance in ohms"
+},
+"rating": {
+"type": "number",
+"description": "Power or voltage rating of the component"
+},
+"position": {
+"$ref": "#/definitions/gridPosition",
+"description": "Relative grid position within the block layout"
+},
+"isHorizontal": {
+"type": "boolean",
+"description": "Orientation: true=horizontal, false=vertical"
+},
+"stepMode": {
+"type": "integer",
+"description": "Step mode for simulation stepping"
+},
+"bypassMode": {
+"type": "integer",
+"enum": [0, 1, 2],
+"description": "Bypass mode: 0=short, 1=value, 2=open"
+},
+"formula": {
+"type": "string",
+"description": "Parametric formula string for calculating component value from variables"
+},
+"formulaScale": {
+"type": "number",
+"description": "Scale factor applied after formula evaluation"
+}
+},
+"description": "A passive component definition within the circuit block"
+},
+"gridPosition": {
+"type": "object",
+"required": ["x", "y"],
+"properties": {
+"x": {
+"type": "integer",
+"description": "Horizontal grid coordinate"
+},
+"y": {
+"type": "integer",
+"description": "Vertical grid coordinate"
+}
+},
+"description": "A position on the schematic grid"
+},
+"wire": {
+"type": "object",
+"required": ["start", "end"],
+"properties": {
+"start": {
+"$ref": "#/definitions/gridPosition",
+"description": "Starting point of the wire segment"
+},
+"end": {
+"$ref": "#/definitions/gridPosition",
+"description": "Ending point of the wire segment"
+}
+},
+"description": "A wire segment connecting two grid positions"
+},
+"text": {
+"type": "object",
+"required": ["label", "position", "size", "color"],
+"properties": {
+"label": {
+"type": "string",
+"description": "Text content to display"
+},
+"position": {
+"$ref": "#/definitions/gridPosition",
+"description": "Position of the text annotation on the grid"
+},
+"size": {
+"type": "integer",
+"description": "Font size for the text annotation"
+},
+"color": {
+"type": "integer",
+"description": "Color value for the text annotation (integer representation)"
+}
+},
+"description": "A text annotation displayed on the schematic"
+}
+}
+}

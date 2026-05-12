@@ -55,6 +55,13 @@
 		"graphSettings": {
 			"$ref": "#/definitions/graphSettings",
 			"description": "Scale settings for the frequency response and impedance graphs"
+		},
+		"blockGroups": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/blockGroup"
+			},
+			"default": []
 		}
 	},
 	"definitions": {
@@ -68,7 +75,7 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment"],
+					"enum": ["resistor", "capacitor", "inductor", "speaker", "ground", "source", "wire-segment", "peq", "filter", "opamp"],
 					"description": "Component type"
 				},
 				"label": {
@@ -161,6 +168,36 @@
 					"then": {
 						"properties": {
 							"parameters": { "$ref": "#/definitions/wireSegmentParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "peq" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/peqParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "filter" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/filterParameters" }
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": { "type": { "const": "opamp" } }
+					},
+					"then": {
+						"properties": {
+							"parameters": { "$ref": "#/definitions/opampParameters" }
 						}
 					}
 				}
@@ -355,6 +392,130 @@
 				}
 			}
 		},
+		"filterSection": {
+			"type": "object",
+			"required": ["filterType", "frequency", "q", "bypass"],
+			"properties": {
+				"filterType": {
+					"type": "string",
+					"enum": ["peaking", "highShelf", "lowShelf", "lowPass1", "highPass1", "lowPass2", "highPass2", "allPass"],
+					"description": "Filter type"
+				},
+				"frequency": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Center/corner frequency in Hz"
+				},
+				"q": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Quality factor"
+				},
+				"gain": {
+					"type": "number",
+					"description": "Section gain in dB (used for peaking, highShelf, lowShelf)"
+				},
+				"bypass": {
+					"type": "boolean",
+					"description": "Bypass flag for this section"
+				}
+			}
+		},
+		"peqParameters": {
+			"type": "object",
+			"required": ["gain", "delay", "dspRate", "sections", "muted"],
+			"properties": {
+				"gain": {
+					"type": "number",
+					"description": "Global gain in dB"
+				},
+				"delay": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Signal delay in seconds"
+				},
+				"dspRate": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "DSP sample rate in samples per second"
+				},
+				"muted": {
+					"type": "boolean",
+					"description": "Mute flag"
+				},
+				"sections": {
+					"type": "array",
+					"minItems": 1,
+					"maxItems": 10,
+					"items": {
+						"$ref": "#/definitions/filterSection"
+					},
+					"description": "Array of biquad filter sections"
+				}
+			}
+		},
+		"filterParameters": {
+			"type": "object",
+			"required": ["filterShape", "filterType", "filterOrder", "turnFrequency", "gain", "delay", "muted"],
+			"properties": {
+				"filterShape": {
+					"type": "string",
+					"enum": ["butterworth", "linkwitzRiley", "bessel"],
+					"description": "Filter shape determining pole placement"
+				},
+				"filterType": {
+					"type": "string",
+					"enum": ["lowPass", "highPass", "bandpass"],
+					"description": "Filter passband type"
+				},
+				"filterOrder": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 40,
+					"description": "Filter order (steepness)"
+				},
+				"turnFrequency": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Corner/crossover frequency in Hz"
+				},
+				"passbandBandwidth": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"description": "Passband bandwidth in Hz (used for bandpass filter type)"
+				},
+				"gain": {
+					"type": "number",
+					"description": "Global gain in dB"
+				},
+				"delay": {
+					"type": "number",
+					"minimum": 0,
+					"description": "Signal delay in seconds"
+				},
+				"muted": {
+					"type": "boolean",
+					"description": "Mute flag"
+				}
+			}
+		},
+		"opampParameters": {
+			"type": "object",
+			"required": ["dcGain", "cornerFrequency"],
+			"properties": {
+				"dcGain": {
+					"type": "number",
+					"default": 100,
+					"description": "Open-loop DC gain in decibels"
+				},
+				"cornerFrequency": {
+					"type": "number",
+					"exclusiveMinimum": 0,
+					"default": 50,
+					"description": "Open-loop corner frequency in hertz (3 dB point)"
+				}
+			}
+		},
 		"wire": {
 			"type": "object",
 			"required": ["id", "startNode", "endNode"],
@@ -499,6 +660,66 @@
 				}
 			},
 			"default": {}
+		},
+		"blockGroup": {
+			"type": "object",
+			"required": ["id", "blockTitle", "variables", "componentIds", "formulas"],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"blockIdentifier": {
+					"type": "string"
+				},
+				"blockTitle": {
+					"type": "string"
+				},
+				"variables": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["name", "value", "description"],
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"value": {
+								"type": "number"
+							},
+							"description": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"componentIds": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"wireSegmentIds": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"formulas": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"stepModes": {
+					"type": "array",
+					"items": {
+						"type": "integer"
+					},
+					"minItems": 6,
+					"maxItems": 6
+				}
+			}
 		}
 	}
 }

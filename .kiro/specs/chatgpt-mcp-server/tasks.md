@@ -116,6 +116,13 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - frequencies, impedances, and phases arrays all have the same length
     - **Validates: Requirements 6.1, 6.2**
 
+  - [ ] 5.8 Create server/mcp/tools/getUserLoadedFrds.js
+    - Return all user-loaded FRD measurement data currently in the graph
+    - Each entry includes label, frequency/magnitude/phase arrays conforming to frd-data.schema.json, and metadata (angle, description)
+    - Return empty list (not error) if no FRD files loaded
+    - Electron app pushes user-loaded FRD data via `state:userFrds` message when files are loaded or removed
+    - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
+
 - [ ] 6. Implement MCP write tools
   - [ ] 6.1 Create server/mcp/tools/optimizeComponent.js
     - Validate component ID exists in current layout

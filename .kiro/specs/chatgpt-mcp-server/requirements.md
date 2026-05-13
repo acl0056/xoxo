@@ -184,6 +184,7 @@ This feature adds a remote MCP (Model Context Protocol) server that bridges the 
    - If no driver in a multi-way system has a delay parameter set, this is likely a user error because drivers at different physical depths typically require time-alignment
    - When suggesting component values, prefer standard component value series (E12, E24, E48) so that the user can purchase real-world components
    - A new empty document contains only a power amplifier (voltage source component) and nothing else; when the AI sees this state, it should ask the user what kind of crossover they want to design (e.g., 2-way, 3-way, active, passive) rather than making assumptions
+   - After an initial design is complete, users often take real-world acoustic measurements and load them as FRD files into the graph to compare against the simulation; the AI should help identify discrepancies between simulation and measurement, and suggest fine-tuning adjustments that optimize real-world acoustic response (even if this makes the simulation look less ideal)
 3. THE domain knowledge resource SHALL be stored as a markdown or plain text file in the `server/` directory and served as an MCP resource with MIME type text/plain or text/markdown
 4. THE domain knowledge resource SHALL be annotated with a description indicating it contains loudspeaker crossover design guidance for interpreting circuit data
 5. THE domain knowledge resource content SHALL be maintainable independently of the application code, allowing new guidance to be added without code changes
@@ -234,3 +235,16 @@ This feature adds a remote MCP (Model Context Protocol) server that bridges the 
 6. IF `end_edit_group` is not received within 60 seconds of `begin_edit_group`, THEN THE Electron_App SHALL automatically close the edit group to prevent undo stack corruption
 7. THE user SHALL be able to undo the entire grouped edit with a single undo operation (Cmd+Z / Ctrl+Z)
 8. THE domain knowledge resource SHALL instruct ChatGPT to always wrap multi-step edits in begin_edit_group/end_edit_group so the user can undo the full change atomically
+
+### Requirement 16: Get User-Loaded FRD Measurements Tool
+
+**User Story:** As a user, I want ChatGPT to see the additional FRD measurement files I've loaded into the graph, so that it can compare my real-world acoustic measurements against the simulation and help me fine-tune the crossover.
+
+#### Acceptance Criteria
+
+1. THE MCP_Server SHALL expose a `get_user_loaded_frds` tool that returns all user-loaded FRD measurement data currently displayed in the graph
+2. THE `get_user_loaded_frds` tool response SHALL include for each loaded FRD: the filename or label, the frequency/magnitude/phase data arrays, and any metadata (e.g., measurement angle, description) the user has associated with it
+3. THE `get_user_loaded_frds` tool response data SHALL conform to frd-data.schema.json for each FRD entry
+4. IF no user-loaded FRD files are present in the graph, THEN THE tool SHALL return an empty list (not an error)
+5. THE Electron_App SHALL push user-loaded FRD data to the MCP_Server when FRD files are loaded or removed from the graph
+6. THE domain knowledge resource SHALL include guidance about the measurement-comparison workflow: after initial design, users take acoustic measurements, load them into the graph to compare against the simulation, and fine-tune the crossover to optimize real-world response (which may make the simulation look less ideal but improves actual acoustic performance)

@@ -135,7 +135,8 @@ server/
 │   │   ├── removeWire.js
 │   │   ├── moveComponent.js
 │   │   ├── beginEditGroup.js
-│   │   └── endEditGroup.js
+│   │   ├── endEditGroup.js
+│   │   └── getUserLoadedFrds.js
 │   └── resources/
 │       ├── schemas.js        # Schema resource definitions
 │       └── domainKnowledge.js # Domain knowledge resource
@@ -200,6 +201,7 @@ A versioned markdown file containing loudspeaker crossover design guidance. Serv
 - Standard component value series (E12, E24, E48) for suggesting real-world purchasable values
 - Empty document state guidance (only a voltage source present → ask user what kind of crossover they want)
 - Instruction to wrap multi-step edits in `begin_edit_group` / `end_edit_group`
+- Measurement-comparison workflow: after initial design, users take acoustic measurements, load them as FRD files into the graph to compare against the simulation, and fine-tune the crossover to optimize real-world response (even if this makes the simulation look less ideal); the AI should use `get_user_loaded_frds` to see these measurements and help identify discrepancies
 
 This file is maintainable independently of application code — new guidance can be added without code changes.
 
@@ -243,6 +245,7 @@ Uses `@modelcontextprotocol/sdk` to create the MCP server instance:
   - `add_wire` — add a wire to the layout
   - `remove_wire` — remove a wire from the layout
   - `move_component` — change a component's position
+  - `get_user_loaded_frds` — read user-loaded FRD measurement data
   - `begin_edit_group` — start a batch undo group
   - `end_edit_group` — end a batch undo group
 - Registers resources:
@@ -325,6 +328,8 @@ Each tool follows the same pattern:
 **`move_component`** — Validates component ID exists and coordinates are integers, forwards to Electron app. Returns updated component object on success.
 
 **`begin_edit_group`** — Accepts optional `description` string. Signals Electron app to save current state as undo checkpoint. Marks session as in-edit-group with timestamp.
+
+**`get_user_loaded_frds`** — Returns all user-loaded FRD measurement data currently displayed in the graph. Each entry includes filename/label, frequency/magnitude/phase arrays (conforming to frd-data.schema.json), and any associated metadata (e.g., measurement angle). Returns an empty list if no FRD files are loaded. No input parameters.
 
 **`end_edit_group`** — Signals Electron app to finalize the undo group. Marks session as not-in-edit-group.
 
@@ -440,6 +445,11 @@ A new module in the Electron app manages the server connection:
 		15: { /* simulation-results.schema.json */ },
 		30: { /* simulation-results.schema.json */ },
 	},
+	userLoadedFrds: [
+		// Array of user-loaded FRD measurement data (each conforming to frd-data.schema.json)
+		{ label: 'on-axis-measurement.frd', angle: 0, frequencies: [...], magnitudes: [...], phases: [...] },
+		{ label: '30deg-measurement.frd', angle: 30, frequencies: [...], magnitudes: [...], phases: [...] },
+	],
 	wsConnection: WebSocket, // Active Electron app connection
 	mcpSessionId: 'uuid-string',
 	connectedAt: '2025-01-01T00:00:00Z',
@@ -466,6 +476,7 @@ Messages between Electron app and server use a simple envelope:
 **Electron → Server messages:**
 - `state:circuit` — Full circuit layout push
 - `state:simulation` — Simulation results push (includes angle)
+- `state:userFrds` — User-loaded FRD measurement data push (all currently loaded FRDs)
 - `response:optimize` — Response to an optimize_component request
 - `response:setCircuitLayout` — Response to a set_circuit_layout request
 - `response:addComponent` — Response to add_component
@@ -562,6 +573,8 @@ Messages between Electron app and server use a simple envelope:
 ```
 
 **end_edit_group** — No input parameters
+
+**get_user_loaded_frds** — No input parameters
 
 
 

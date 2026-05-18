@@ -561,13 +561,17 @@ export default {
 					const saved = await this.handleSaveFile();
 					if (saved) {
 						ipcRenderer.send('window-can-close');
+					} else {
+						ipcRenderer.send('window-close-cancelled');
 					}
 					// If save failed or was cancelled, don't close
 				} else if (response === 1) {
 					// Don't save, just close
 					ipcRenderer.send('window-can-close');
+				} else {
+					ipcRenderer.send('window-close-cancelled');
 				}
-				// If response === 2 (Cancel), do nothing - window stays open
+				// If response === 2 (Cancel), notify main so future close requests can prompt again.
 			} else {
 				// No unsaved changes, close immediately
 				ipcRenderer.send('window-can-close');

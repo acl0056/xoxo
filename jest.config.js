@@ -1,12 +1,14 @@
 module.exports = {
 	testEnvironment: 'jsdom',
 	moduleFileExtensions: ['js', 'json', 'vue'],
+	modulePaths: ['<rootDir>/server/node_modules'],
 	transform: {
 		'^.+\\.vue$': '@vue/vue3-jest',
 		'^.+\\.js$': 'babel-jest',
 	},
 	moduleNameMapper: {
 		'\\.(svg|png|jpg|jpeg|gif)$': '<rootDir>/tests/__mocks__/fileMock.js',
+		'^@schemas/(.*)$': '<rootDir>/server/schemas/$1',
 		'^@/(.*)$': '<rootDir>/src/$1',
 	},
 	testMatch: [

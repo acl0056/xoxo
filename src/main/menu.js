@@ -4,9 +4,11 @@ const { Menu } = require('electron');
  * Create and return the application menu template
  * @param {Object} mainWindow - The main BrowserWindow instance
  * @param {Object} handlers - Object containing menu action handlers
+ * @param {Object} [options] - Additional options
+ * @param {boolean} [options.chatgptConnected=false] - Whether the ChatGPT connection is active
  * @returns {Menu} The application menu
  */
-function createApplicationMenu(mainWindow, handlers) {
+function createApplicationMenu(mainWindow, handlers, { chatgptConnected = false } = {}) {
 	const isMac = process.platform === 'darwin';
 
 	const template = [
@@ -158,6 +160,26 @@ function createApplicationMenu(mainWindow, handlers) {
 							click: () => handlers.insertCircuitBlock('Shunt Notch'),
 						},
 					],
+				},
+			],
+		},
+
+		// ChatGPT menu
+		{
+			label: 'ChatGPT',
+			submenu: [
+				{
+					id: 'chatgpt-connect',
+					label: chatgptConnected ? 'Disconnect ChatGPT' : 'Connect to ChatGPT',
+					click: () => (chatgptConnected
+						? handlers.chatgptDisconnect()
+						: handlers.chatgptConnect()),
+				},
+				{
+					id: 'chatgpt-open-conversation',
+					label: 'Open Conversation...',
+					enabled: chatgptConnected,
+					click: () => handlers.chatgptOpenConversation(),
 				},
 			],
 		},

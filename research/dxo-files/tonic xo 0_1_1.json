@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-05-01T03:12:25.900Z"
+    "modified": "2026-05-15T13:50:42.828Z"
   },
   "components": [
     {
@@ -54,7 +54,7 @@
       "label": "C2",
       "x": 44,
       "y": 58,
-      "rotation": 90,
+      "rotation": 270,
       "parameters": {
         "capacitance": 0.000022,
         "tolerance": 10,
@@ -105,7 +105,7 @@
       "id": "mo4n6bx0-1vgokep",
       "type": "resistor",
       "label": "R4",
-      "x": 47,
+      "x": 41,
       "y": 61,
       "rotation": 0,
       "parameters": {
@@ -190,7 +190,7 @@
       "id": "mo4n6bx0-jqwyq9j",
       "type": "ground",
       "label": "",
-      "x": 50,
+      "x": 38,
       "y": 61,
       "rotation": 0,
       "parameters": {}
@@ -229,15 +229,18 @@
         "muted": false,
         "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 0.frd",
         "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/tweeter.zma",
-        "phaseSource": "measured",
+        "frdPhaseSource": "measured",
+        "zmaPhaseSource": "measured",
         "offAxisFiles": [
           {
             "angle": 30,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 30.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 30.frd",
+            "phaseSource": "measured"
           },
           {
             "angle": 60,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 60.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/tweeter 60.frd",
+            "phaseSource": "measured"
           }
         ]
       },
@@ -6942,15 +6945,18 @@
         "muted": false,
         "frdFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 0.frd",
         "zmaFile": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic zma/woofer.zma",
-        "phaseSource": "measured",
+        "frdPhaseSource": "measured",
+        "zmaPhaseSource": "measured",
         "offAxisFiles": [
           {
             "angle": 30,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 30.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 30.frd",
+            "phaseSource": "measured"
           },
           {
             "angle": 60,
-            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 60.frd"
+            "frdPath": "/Users/adamlockhart/Documents/adam/xoxo/research/xoxo/tonic/woofer 60.frd",
+            "phaseSource": "measured"
           }
         ]
       },
@@ -13755,34 +13761,10 @@
       "segments": []
     },
     {
-      "id": "mo4n6bx4-mc0de0a",
-      "startNode": {
-        "componentId": "mo4n6bwz-36pra54",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
       "id": "mo4n6bx4-p8s8wx1",
       "startNode": {
         "componentId": "mo4n6bwz-36pra54",
         "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-viwnaat",
-      "startNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
-        "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bx3-cwrgbue",
@@ -14079,26 +14061,50 @@
       "segments": []
     },
     {
-      "id": "momc7ary-oikvqhl",
-      "startNode": {
-        "componentId": "mo4n6bx0-1vgokep",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "momc7gvg-1z860tt",
+      "id": "mp6z63r1-5zxhsec",
       "startNode": {
         "componentId": "mo4n6bx0-jqwyq9j",
         "terminal": 0
       },
       "endNode": {
         "componentId": "mo4n6bx0-1vgokep",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mp6z685v-9x7iz6n",
+      "startNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx0-1vgokep",
         "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mp6z688e-fjzw5yq",
+      "startNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bwz-36pra54",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mp6z68b0-buj7run",
+      "startNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-cwrgbue",
+        "terminal": 0
       },
       "segments": []
     }

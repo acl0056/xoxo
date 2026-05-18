@@ -6,6 +6,30 @@
 			:visible="showAboutDialog"
 			@close="showAboutDialog = false"
 		/>
+		<div v-if="showPairingDialog" class="pairing-overlay">
+			<div class="pairing-dialog">
+				<h2>Connect to ChatGPT</h2>
+				<p v-if="!pairingExpired">Enter this code in the ChatGPT authorization page:</p>
+				<p v-else class="pairing-expired-message">Code expired.</p>
+				<div
+					v-if="!pairingExpired"
+					class="pairing-code"
+					@click="copyPairingCode"
+				>
+					{{ pairingCode }}
+					<span v-if="pairingCopied" class="pairing-copied">Copied to clipboard</span>
+				</div>
+				<p v-if="pairingCountdown && !pairingExpired" class="pairing-countdown">
+					Expires in {{ Math.floor(pairingCountdown / 60) }}:{{ String(pairingCountdown % 60).padStart(2, '0') }}
+				</p>
+				<button v-if="pairingExpired" class="pairing-button" @click="requestNewCode">
+					Generate New Code
+				</button>
+				<button class="pairing-button pairing-cancel" @click="cancelPairing">
+					Cancel
+				</button>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -13,6 +37,9 @@
 import ComponentPalette from './components/ComponentPalette.vue';
 import CircuitEditor from './components/CircuitEditor.vue';
 import AboutDialog from './components/AboutDialog.vue';
+import { useToast } from 'vue-toastification';
+import { Circuit } from '@/models/Circuit';
+import { Wire } from '@/models/Wire';
 
 export default {
 	name: 'App',
@@ -21,9 +48,18 @@ export default {
 		CircuitEditor,
 		AboutDialog,
 	},
+	setup() {
+		const toast = useToast();
+		return { toast };
+	},
 	data() {
 		return {
 			showAboutDialog: false,
+			showPairingDialog: false,
+			pairingCode: null,
+			pairingCountdown: null,
+			pairingExpired: false,
+			pairingCopied: false,
 		};
 	},
 	mounted() {
@@ -76,6 +112,157 @@ export default {
 			this.$store.dispatch('circuit/redo');
 		});
 
+		// ChatGPT data request handlers
+		ipcRenderer.on('chatgpt:get-circuit-layout', () => {
+			try {
+				const circuit = this.$store.getters['circuit/getCircuit'];
+				if (!circuit) {
+					console.log('[ChatGPT IPC] get-circuit-layout: no circuit loaded');
+					ipcRenderer.send('chatgpt:get-circuit-layout:response', null);
+					return;
+				}
+				const layout = JSON.parse(JSON.stringify(circuit.toJSON()));
+				console.log('[ChatGPT IPC] get-circuit-layout: sending layout with', layout.components?.length, 'components');
+				ipcRenderer.send('chatgpt:get-circuit-layout:response', layout);
+			} catch (error) {
+				console.error('[ChatGPT IPC] get-circuit-layout error:', error);
+				ipcRenderer.send('chatgpt:get-circuit-layout:response', null);
+			}
+		});
+
+		ipcRenderer.on('chatgpt:get-simulation-results', () => {
+			const frequencyResponse = this.$store.getters['simulation/getFrequencyResponse'];
+			const impedanceResponse = this.$store.getters['simulation/getImpedanceResponse'];
+			if (frequencyResponse || impedanceResponse) {
+				const data = {
+					frequencyResponse,
+					impedanceResponse,
+					timestamp: new Date().toISOString(),
+				};
+				ipcRenderer.send('chatgpt:get-simulation-results:response', JSON.parse(JSON.stringify(data)));
+			} else {
+				ipcRenderer.send('chatgpt:get-simulation-results:response', null);
+			}
+		});
+
+		ipcRenderer.on('chatgpt:get-user-loaded-frds', () => {
+			const frds = this.$store.state.simulation.userLoadedFrds || null;
+			ipcRenderer.send('chatgpt:get-user-loaded-frds:response', frds);
+		});
+
+		// Auto-accept edit requests from ChatGPT (no confirmation dialog)
+		let editGroupActions = null; // Collects actions during an edit group
+
+		ipcRenderer.on('chatgpt:edit-request', (event, { type, payload, requestId }) => {
+			console.log('[ChatGPT IPC] edit-request:', type, requestId);
+			try {
+				const responseType = type.replace('request:', 'response:');
+				let result = { success: true };
+
+				if (type === 'request:beginEditGroup') {
+					editGroupActions = [];
+				} else if (type === 'request:endEditGroup') {
+					if (editGroupActions && editGroupActions.length > 0) {
+						// Replace individual undo entries with a single batch entry
+						// Pop the individual entries that were pushed during the group
+						for (let i = 0; i < editGroupActions.length; i++) {
+							this.$store.state.circuit.undoStack.pop();
+						}
+						// Push a single batch undo entry
+						this.$store.commit('circuit/PUSH_UNDO', {
+							type: 'batch',
+							payload: editGroupActions,
+						});
+					}
+					editGroupActions = null;
+				} else if (type === 'request:optimize') {
+					const { componentId, parameters } = payload;
+					// Capture previous values for the batch undo
+					if (editGroupActions !== null) {
+						const circuit = this.$store.getters['circuit/getCircuit'];
+						const component = circuit ? circuit.getComponent(componentId) : null;
+						if (component) {
+							const previousValues = {};
+							Object.keys(parameters).forEach((key) => {
+								previousValues[key] = component.parameters[key];
+							});
+							editGroupActions.push({
+								type: 'updateComponent',
+								payload: { componentId, updates: { parameters: previousValues } },
+							});
+						}
+					}
+					this.$store.dispatch('circuit/updateComponent', {
+						componentId,
+						updates: { parameters },
+					});
+				} else if (type === 'request:addComponent') {
+					const componentData = payload.component || payload;
+					const component = Circuit.deserializeComponent(componentData);
+					if (editGroupActions !== null) {
+						editGroupActions.push({ type: 'removeComponent', payload: component.id });
+					}
+					this.$store.dispatch('circuit/addComponent', component);
+					// Auto-create wire connections for overlapping terminals
+					this.$nextTick(() => {
+						this.createWireConnectionsForComponent(component.id);
+					});
+				} else if (type === 'request:removeComponent') {
+					if (editGroupActions !== null) {
+						const circuit = this.$store.getters['circuit/getCircuit'];
+						const component = circuit ? circuit.getComponent(payload.componentId) : null;
+						if (component) {
+							editGroupActions.push({
+								type: 'addComponent',
+								payload: JSON.parse(JSON.stringify(component.toJSON())),
+							});
+						}
+					}
+					this.$store.dispatch('circuit/removeComponent', payload.componentId);
+				} else if (type === 'request:addWire') {
+					const wireData = payload.wire || payload;
+					const wire = Wire.fromJSON(wireData);
+					if (editGroupActions !== null) {
+						editGroupActions.push({ type: 'removeWire', payload: wire.id });
+					}
+					this.$store.dispatch('circuit/addWire', wire);
+				} else if (type === 'request:removeWire') {
+					if (editGroupActions !== null) {
+						const circuit = this.$store.getters['circuit/getCircuit'];
+						const wire = circuit ? circuit.getWire(payload.wireId) : null;
+						if (wire) {
+							editGroupActions.push({
+								type: 'addWire',
+								payload: JSON.parse(JSON.stringify(wire.toJSON())),
+							});
+						}
+					}
+					this.$store.dispatch('circuit/removeWire', payload.wireId);
+				} else if (type === 'request:moveComponent') {
+					const { componentId, x, y } = payload;
+					this.$store.dispatch('circuit/updateComponent', {
+						componentId,
+						updates: { x, y },
+					});
+				} else if (type === 'request:setCircuitLayout') {
+					this.$store.dispatch('circuit/loadFromJSON', payload.layout || payload);
+				} else {
+					console.warn('[ChatGPT IPC] Unhandled edit request type:', type);
+					result = { success: false, error: `Unhandled request type: ${type}` };
+				}
+
+				ipcRenderer.send('chatgpt:edit-response', { responseType, payload: result, requestId });
+			} catch (error) {
+				console.error('[ChatGPT IPC] edit-request error:', error);
+				const responseType = type.replace('request:', 'response:');
+				ipcRenderer.send('chatgpt:edit-response', {
+					responseType,
+					payload: { success: false, error: error.message },
+					requestId,
+				});
+			}
+		});
+
 		// Update menu undo/redo enabled state when stacks change
 		this.$store.subscribe((mutation) => {
 			const undoMutations = ['circuit/PUSH_UNDO', 'circuit/POP_UNDO', 'circuit/CLEAR_UNDO',
@@ -85,6 +272,23 @@ export default {
 					canUndo: this.$store.state.circuit.undoStack.length > 0,
 					canRedo: this.$store.state.circuit.redoStack.length > 0,
 				});
+			}
+
+			// Push circuit layout to server on any circuit-modifying mutation
+			const circuitMutations = [
+				'circuit/ADD_COMPONENT', 'circuit/REMOVE_COMPONENT', 'circuit/UPDATE_COMPONENT',
+				'circuit/ADD_WIRE', 'circuit/REMOVE_WIRE', 'circuit/SET_CIRCUIT',
+			];
+			if (circuitMutations.includes(mutation.type)) {
+				const circuit = this.$store.getters['circuit/getCircuit'];
+				if (circuit) {
+					try {
+						const layout = JSON.parse(JSON.stringify(circuit.toJSON()));
+						ipcRenderer.send('chatgpt:circuit-layout-changed', layout);
+					} catch (error) {
+						// Ignore serialization errors
+					}
+				}
 			}
 		});
 
@@ -137,8 +341,117 @@ export default {
 		ipcRenderer.on('update-graph-settings', (event, { graphType, settings }) => {
 			this.$store.commit('circuit/SET_GRAPH_SETTINGS', { graphType, settings });
 		});
+
+		// ChatGPT pairing flow
+		ipcRenderer.on('chatgpt:pairing-code', (event, { code }) => {
+			this.pairingCode = code;
+			this.pairingExpired = false;
+			this.showPairingDialog = true;
+		});
+
+		ipcRenderer.on('chatgpt:pairing-countdown', (event, { remainingSeconds }) => {
+			this.pairingCountdown = remainingSeconds;
+		});
+
+		ipcRenderer.on('chatgpt:pairing-expired', () => {
+			this.pairingExpired = true;
+			this.pairingCountdown = null;
+		});
+
+		ipcRenderer.on('chatgpt:pairing-success', () => {
+			this.showPairingDialog = false;
+			this.pairingCode = null;
+			this.toast.success('ChatGPT connected successfully');
+		});
+
+		ipcRenderer.on('chatgpt:disconnected', () => {
+			this.showPairingDialog = false;
+			this.pairingCode = null;
+		});
 	},
 	methods: {
+		/**
+		 * Close the pairing dialog without cancelling the pairing flow.
+		 */
+		cancelPairing() {
+			this.showPairingDialog = false;
+			this.pairingCopied = false;
+		},
+		/**
+		 * Auto-create wire connections for a component based on terminal position overlap.
+		 * Mirrors the logic in CircuitEditor.createWireConnectionsForComponent.
+		 */
+		createWireConnectionsForComponent(componentId) {
+			const circuit = this.$store.state.circuit?.circuit;
+			if (!circuit) return;
+
+			const component = circuit.getComponent(componentId);
+			if (!component) return;
+
+			const getTerminals = (comp) => comp.terminals.map((terminal, index) => {
+				const pos = comp.getTerminalPosition(index);
+				return pos;
+			}).filter(Boolean);
+
+			const componentTerminals = getTerminals(component);
+			const allOtherComponents = circuit.components.filter((c) => c.id !== componentId);
+
+			for (let ti = 0; ti < componentTerminals.length; ti++) {
+				const termPos = componentTerminals[ti];
+
+				for (const otherComponent of allOtherComponents) {
+					const otherTerminals = getTerminals(otherComponent);
+
+					for (let oi = 0; oi < otherTerminals.length; oi++) {
+						const otherPos = otherTerminals[oi];
+
+						const distance = Math.sqrt(
+							(termPos.x - otherPos.x) ** 2 + (termPos.y - otherPos.y) ** 2,
+						);
+
+						if (distance <= 0.1) {
+							const alreadyConnected = circuit.wires.some((w) => (w.startNode.componentId === componentId
+									&& w.startNode.terminal === ti
+									&& w.endNode.componentId === otherComponent.id
+									&& w.endNode.terminal === oi)
+								|| (w.startNode.componentId === otherComponent.id
+									&& w.startNode.terminal === oi
+									&& w.endNode.componentId === componentId
+									&& w.endNode.terminal === ti));
+
+							if (!alreadyConnected) {
+								const newWire = new Wire(
+									{ componentId, terminal: ti },
+									{ componentId: otherComponent.id, terminal: oi },
+								);
+								this.$store.dispatch('circuit/addWire', newWire);
+							}
+						}
+					}
+				}
+			}
+		},
+		/**
+		 * Copy the pairing code to clipboard and show confirmation.
+		 */
+		copyPairingCode() {
+			if (!this.pairingCode) return;
+			navigator.clipboard.writeText(this.pairingCode);
+			const selection = window.getSelection();
+			const range = document.createRange();
+			range.selectNodeContents(event.currentTarget);
+			selection.removeAllRanges();
+			selection.addRange(range);
+			this.pairingCopied = true;
+			setTimeout(() => { this.pairingCopied = false; }, 2000);
+		},
+		/**
+		 * Request a new pairing code after expiration.
+		 */
+		requestNewCode() {
+			const { ipcRenderer } = require('electron');
+			ipcRenderer.send('chatgpt:request-new-code');
+		},
 		/**
 		 * Handle circuit block insertion from the menu.
 		 * Loads the block from the registry and inserts it directly with default values.
@@ -527,5 +840,93 @@ export default {
 	height: 100vh;
 	overflow: hidden;
 	background-color: #f5f5f5;
+}
+
+.pairing-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+}
+
+.pairing-dialog {
+	background: #fff;
+	border-radius: 8px;
+	padding: 32px;
+	text-align: center;
+	min-width: 320px;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.pairing-dialog h2 {
+	margin: 0 0 12px;
+}
+
+.pairing-code {
+	font-size: 36px;
+	font-weight: bold;
+	font-family: monospace;
+	letter-spacing: 4px;
+	margin: 20px 0;
+	padding: 16px;
+	background: #f0f0f0;
+	border-radius: 6px;
+	cursor: pointer;
+	position: relative;
+	user-select: all;
+}
+
+.pairing-code:hover {
+	background: #e4e4e4;
+}
+
+.pairing-copied {
+	display: block;
+	font-size: 12px;
+	font-weight: normal;
+	letter-spacing: normal;
+	color: #2a7d2a;
+	margin-top: 8px;
+}
+
+.pairing-countdown {
+	color: #666;
+	margin: 8px 0 16px;
+}
+
+.pairing-expired-message {
+	color: #c00;
+	font-weight: bold;
+}
+
+.pairing-button {
+	display: block;
+	width: 100%;
+	padding: 10px 20px;
+	margin-top: 12px;
+	border: none;
+	border-radius: 4px;
+	font-size: 14px;
+	cursor: pointer;
+	background: #4a90d9;
+	color: #fff;
+}
+
+.pairing-button:hover {
+	background: #357abd;
+}
+
+.pairing-cancel {
+	background: #999;
+}
+
+.pairing-cancel:hover {
+	background: #777;
 }
 </style>

@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { Circuit } from '../models/Circuit';
-import circuitSchema from '../schemas/circuit.schema.json';
+import circuitSchema from '@schemas/circuit.schema.json';
 
 /**
  * JsonSerializer class handles serialization and deserialization of Circuit objects

@@ -33,6 +33,10 @@
 						Bill Waslo — for XSim, the free-form loudspeaker crossover and circuit simulator
 						that inspired this project (2013–2024)
 					</p>
+					<p class="acknowledgement-primary">
+						Javad Shadzi — who taught me how to use Xsim, which helped me provide
+						domain knowledge context for the ChatGPT integration.
+					</p>
 					<h4>XSim Acknowledgements</h4>
 					<ul>
 						<li>Jeff Bagby — for his PCD Xcel-based simulator and inspiration</li>

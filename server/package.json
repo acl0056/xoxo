@@ -1,0 +1,29 @@
+{
+	"name": "xoxo-mcp-server",
+	"version": "1.0.0",
+	"description": "MCP server bridging the xoxo Electron app with ChatGPT",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"keywords": [],
+	"author": "Adam Lockhart <adamlockhart12@gmail.com>",
+	"license": "MIT",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.1",
+		"ajv": "^8.17.1",
+		"ajv-formats": "^3.0.1",
+		"dotenv": "^17.4.2",
+		"express": "^4.21.2",
+		"jsonwebtoken": "^9.0.2",
+		"socket.io": "^4.8.1",
+		"zod": "^3.25.0"
+	},
+	"devDependencies": {
+		"ssh2": "^1.11.0",
+		"ssh2-sftp-client": "^10.0.3"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

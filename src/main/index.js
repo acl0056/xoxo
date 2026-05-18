@@ -6,6 +6,7 @@ const fs = require('fs');
 const { createApplicationMenu } = require('./menu');
 const FileHandlers = require('./fileHandlers');
 const logger = require('./logger');
+const { setupChatgptIntegration } = require('./chatgpt-integration');
 
 // Set app name for macOS menu bar (overrides "Electron" in dev mode)
 app.name = 'xoxo';
@@ -14,6 +15,7 @@ let mainWindow;
 let frequencyResponseWindow;
 let impedanceWindow;
 let fileHandlers;
+let chatgptIntegration;
 let recentFiles = [];
 let lastOpenedFile = null;
 const MAX_RECENT_FILES = 10;
@@ -161,7 +163,9 @@ function setupCrashRecovery() {
  * Update the application menu
  */
 function updateApplicationMenu() {
-	const menu = createApplicationMenu(mainWindow, {
+	const chatgptConnected = chatgptIntegration ? chatgptIntegration.isConnected() : false;
+
+	const handlers = {
 		newFile: () => mainWindow.webContents.send('menu-new'),
 		openFile: () => mainWindow.webContents.send('menu-open'),
 		saveFile: () => mainWindow.webContents.send('menu-save'),
@@ -178,7 +182,15 @@ function updateApplicationMenu() {
 			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/README.md');
 		},
 		getRecentFilesMenu,
-	});
+		chatgptConnect: () => {
+			console.log('[Menu] chatgptConnect clicked, integration exists:', !!chatgptIntegration);
+			if (chatgptIntegration) chatgptIntegration.chatgptConnect();
+		},
+		chatgptDisconnect: () => chatgptIntegration && chatgptIntegration.chatgptDisconnect(),
+		chatgptOpenConversation: () => chatgptIntegration && chatgptIntegration.chatgptOpenConversation(),
+	};
+
+	const menu = createApplicationMenu(mainWindow, handlers, { chatgptConnected });
 	Menu.setApplicationMenu(menu);
 }
 
@@ -264,6 +276,9 @@ function createWindow() {
 	// Initialize file handlers
 	fileHandlers = new FileHandlers(mainWindow);
 
+	// Initialize ChatGPT integration
+	chatgptIntegration = setupChatgptIntegration(mainWindow, updateApplicationMenu);
+
 	// Load recent files and last opened file
 	loadRecentFiles();
 	loadLastOpenedFile();
@@ -280,9 +295,17 @@ function createWindow() {
 		// In production, load from built files
 		mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 	}
+	let isQuitting = false;
+	app.on('before-quit', () => {
+		isQuitting = true;
+	});
+
 
 	// Handle window close event
 	mainWindow.on('close', (event) => {
+		if (isQuitting) {
+			//return;
+		}
 		// Ask renderer if there are unsaved changes
 		event.preventDefault();
 		mainWindow.webContents.send('window-closing');
@@ -308,6 +331,27 @@ ipcMain.on('simulation-results', (event, results) => {
 	}
 	if (impedanceWindow && !impedanceWindow.isDestroyed()) {
 		impedanceWindow.webContents.send('simulation-results', results);
+	}
+	if (chatgptIntegration && chatgptIntegration.isConnected()) {
+		console.log('[Main] Forwarding simulation-results to ChatGPT client, angle:', results.currentAngle);
+		// Strip fields not in the simulation-results schema (additionalProperties: false)
+		const {
+			frequencyResponse, impedanceResponse, timestamp, currentAngle,
+		} = results;
+		chatgptIntegration.pushSimulationResults({
+			frequencyResponse, impedanceResponse, timestamp, angle: currentAngle || 0,
+		});
+	} else {
+		console.log('[Main] simulation-results received but ChatGPT not connected:', !!chatgptIntegration, chatgptIntegration && chatgptIntegration.isConnected());
+	}
+});
+
+/**
+ * Forward circuit layout changes to the ChatGPT server
+ */
+ipcMain.on('chatgpt:circuit-layout-changed', (event, layout) => {
+	if (chatgptIntegration && chatgptIntegration.isConnected()) {
+		chatgptIntegration.pushCircuitLayout(layout);
 	}
 });
 

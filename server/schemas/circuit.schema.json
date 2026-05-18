@@ -83,11 +83,11 @@
 					"description": "Component label (e.g., R1, C2, L3)"
 				},
 				"x": {
-					"type": "integer",
+					"type": "number",
 					"description": "Grid position X coordinate"
 				},
 				"y": {
-					"type": "integer",
+					"type": "number",
 					"description": "Grid position Y coordinate"
 				},
 				"rotation": {

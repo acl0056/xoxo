@@ -1,5 +1,5 @@
-const { createApplicationMenu } = require('../../../src/main/menu');
 const { Menu } = require('electron');
+const { createApplicationMenu } = require('../../../src/main/menu');
 
 // Mock electron Menu
 jest.mock('electron', () => ({
@@ -31,6 +31,9 @@ describe('createApplicationMenu', () => {
 			showAbout: jest.fn(),
 			openDocumentation: jest.fn(),
 			getRecentFilesMenu: jest.fn(() => []),
+			chatgptConnect: jest.fn(),
+			chatgptDisconnect: jest.fn(),
+			chatgptOpenConversation: jest.fn(),
 		};
 
 		jest.clearAllMocks();
@@ -262,5 +265,126 @@ describe('createApplicationMenu', () => {
 		docItem.click();
 
 		expect(mockHandlers.openDocumentation).toHaveBeenCalled();
+	});
+
+	describe('ChatGPT menu', () => {
+		it('should include ChatGPT menu positioned after Circuit Blocks and before View', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers);
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const labels = template.map((item) => item.label);
+			const circuitBlocksIndex = labels.indexOf('Circuit Blocks');
+			const chatgptIndex = labels.indexOf('ChatGPT');
+			const viewIndex = labels.indexOf('View');
+
+			expect(chatgptIndex).toBeGreaterThan(circuitBlocksIndex);
+			expect(chatgptIndex).toBeLessThan(viewIndex);
+		});
+
+		it('should show "Connect..." label when disconnected', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers);
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const connectItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-connect');
+
+			expect(connectItem.label).toBe('Connect to ChatGPT');
+		});
+
+		it('should show "Disconnect ChatGPT" label when connected', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers, { chatgptConnected: true });
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const connectItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-connect');
+
+			expect(connectItem.label).toBe('Disconnect ChatGPT');
+		});
+
+		it('should disable "Open Conversation..." when disconnected', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers);
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const openConversationItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-open-conversation');
+
+			expect(openConversationItem.enabled).toBe(false);
+		});
+
+		it('should enable "Open Conversation..." when connected', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers, { chatgptConnected: true });
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const openConversationItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-open-conversation');
+
+			expect(openConversationItem.enabled).toBe(true);
+		});
+
+		it('should call chatgptConnect handler when "Connect..." is clicked', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers);
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const connectItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-connect');
+
+			connectItem.click();
+
+			expect(mockHandlers.chatgptConnect).toHaveBeenCalled();
+		});
+
+		it('should call chatgptDisconnect handler when "Disconnect" is clicked', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers, { chatgptConnected: true });
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const connectItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-connect');
+
+			connectItem.click();
+
+			expect(mockHandlers.chatgptDisconnect).toHaveBeenCalled();
+		});
+
+		it('should call chatgptOpenConversation handler when "Open Conversation..." is clicked', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers, { chatgptConnected: true });
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const openConversationItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-open-conversation');
+
+			openConversationItem.click();
+
+			expect(mockHandlers.chatgptOpenConversation).toHaveBeenCalled();
+		});
+
+		it('should default to disconnected state when no options provided', () => {
+			Menu.buildFromTemplate.mockReturnValue({});
+
+			createApplicationMenu(mockWindow, mockHandlers);
+
+			const template = Menu.buildFromTemplate.mock.calls[0][0];
+			const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+			const connectItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-connect');
+			const openConversationItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-open-conversation');
+
+			expect(connectItem.label).toBe('Connect to ChatGPT');
+			expect(openConversationItem.enabled).toBe(false);
+		});
 	});
 });

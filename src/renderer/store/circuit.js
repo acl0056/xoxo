@@ -690,25 +690,9 @@ export default {
 					const subActions = [...action.payload].reverse();
 					for (const subAction of subActions) {
 						if (subAction.type === 'addComponent') {
-							// Re-add the component using Circuit.fromJSON's deserialization
+							// Re-add the component using Circuit.deserializeComponent
 							const componentData = subAction.payload;
-							let comp;
-							switch (componentData.type) {
-								case 'resistor':
-									comp = Resistor.fromJSON(componentData);
-									break;
-								case 'capacitor':
-									comp = Capacitor.fromJSON(componentData);
-									break;
-								case 'inductor':
-									comp = Inductor.fromJSON(componentData);
-									break;
-								case 'wire-segment':
-									comp = WireSegment.fromJSON(componentData);
-									break;
-								default:
-									break;
-							}
+							const comp = Circuit.deserializeComponent(componentData);
 							if (comp) {
 								state.circuit.components.push(comp);
 								redoSubActions.push({ type: 'removeComponent', payload: comp.id });
@@ -886,23 +870,7 @@ export default {
 							}
 						} else if (subAction.type === 'addComponent') {
 							const componentData = subAction.payload;
-							let comp;
-							switch (componentData.type) {
-								case 'resistor':
-									comp = Resistor.fromJSON(componentData);
-									break;
-								case 'capacitor':
-									comp = Capacitor.fromJSON(componentData);
-									break;
-								case 'inductor':
-									comp = Inductor.fromJSON(componentData);
-									break;
-								case 'wire-segment':
-									comp = WireSegment.fromJSON(componentData);
-									break;
-								default:
-									break;
-							}
+							const comp = Circuit.deserializeComponent(componentData);
 							if (comp) {
 								state.circuit.components.push(comp);
 								undoSubActions.push({ type: 'removeComponent', payload: comp.id });

@@ -8,20 +8,20 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
 
 ## Tasks
 
-- [ ] 1. Set up server project structure and dependencies
-  - [ ] 1.1 Create server directory with package.json and install dependencies
+- [x] 1. Set up server project structure and dependencies
+  - [x] 1.1 Create server directory with package.json and install dependencies
     - Create `server/package.json` with dependencies: `@modelcontextprotocol/sdk`, `express`, `socket.io`, `ajv`, `ajv-formats`, `jsonwebtoken`, `jwks-rsa`
     - Create `server/pm2-config.json` for pm2 process management
     - Create `server/index.js` entry point (placeholder)
     - _Requirements: 1.6, 10.6_
 
-  - [ ] 1.2 Create server/config.js with all configuration values
+  - [x] 1.2 Create server/config.js with all configuration values
     - Sensitive values (OAuth secrets, JWKS URI) read from `process.env`
     - Non-sensitive values hardcoded: port, host, timeouts, `chatgptConversationUrl`, schema paths, domain knowledge path
     - Follow the config structure from the design document
     - _Requirements: 1.6, 11.8_
 
-  - [ ] 1.3 Create server/validation/validator.js — AJV schema validation wrapper
+  - [x] 1.3 Create server/validation/validator.js — AJV schema validation wrapper
     - Import and compile circuit.schema.json, simulation-results.schema.json, frd-data.schema.json from `../../src/schemas/`
     - Export validation functions: `validateCircuitLayout`, `validateSimulationResults`, `validateFrdData`, `validateComponent`, `validateWire`
     - Use `allErrors: true` for descriptive error messages
@@ -33,13 +33,13 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - **Property 12: Granular Tool Input Validation** — valid component/wire inputs pass, invalid inputs produce errors
     - **Validates: Requirements 4.1, 4.2, 4.3, 13.1, 13.2, 14.1, 14.3, 14.4, 14.5, 14.6, 14.7**
 
-- [ ] 2. Implement session management
-  - [ ] 2.1 Create server/session/store.js — in-memory session store
+- [x] 2. Implement session management
+  - [x] 2.1 Create server/session/store.js — in-memory session store
     - Map keyed by userId storing: circuitLayout, simulationResults, wsConnection, editGroup state, mcpSessionId, connectedAt
     - Methods: `create`, `get`, `update`, `delete`, `getAll` (for concurrency count)
     - _Requirements: 1.7, 10.3, 10.4_
 
-  - [ ] 2.2 Create server/session/manager.js — session manager interface
+  - [x] 2.2 Create server/session/manager.js — session manager interface
     - `getSession(userId)`, `updateCircuitLayout(userId, layout)`, `updateSimulationResults(userId, results)`
     - `getElectronConnection(userId)`, `beginEditGroup(userId, description)`, `endEditGroup(userId)`
     - `isEditGroupActive(userId)`, `checkEditGroupTimeout(userId)`
@@ -56,15 +56,15 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - For any begin_edit_group not followed by end_edit_group within 60 seconds, the group auto-closes
     - **Validates: Requirements 15.6**
 
-- [ ] 3. Implement authentication
-  - [ ] 3.1 Create server/auth/middleware.js — token validation middleware
+- [x] 3. Implement authentication
+  - [x] 3.1 Create server/auth/middleware.js — token validation middleware
     - Verify JWT signature against JWKS endpoint
     - Check token expiry (max 60 minutes)
     - Validate issuer and audience claims
     - Return categorized errors: malformed, expired, unrecognized
     - _Requirements: 2.2, 2.5, 2.6_
 
-  - [ ] 3.2 Create server/auth/oauth.js — OAuth 2.1 flow helpers
+  - [x] 3.2 Create server/auth/oauth.js — OAuth 2.1 flow helpers
     - Token exchange (authorization code → access token)
     - Token refresh support (within 30-day refresh token lifetime)
     - PKCE support
@@ -75,23 +75,23 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Valid tokens are accepted; invalid tokens produce correctly categorized 401 responses (malformed, expired, unrecognized)
     - **Validates: Requirements 2.2, 2.5**
 
-- [ ] 4. Checkpoint
+- [x] 4. Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement MCP read tools
-  - [ ] 5.1 Create server/mcp/tools/getCircuitLayout.js
+- [x] 5. Implement MCP read tools
+  - [x] 5.1 Create server/mcp/tools/getCircuitLayout.js
     - Extract userId from authenticated MCP session
     - Retrieve circuit layout from session manager
     - Return full layout or error if no data available
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 5.2 Create server/mcp/tools/getFrequencyResponse.js
+  - [x] 5.2 Create server/mcp/tools/getFrequencyResponse.js
     - Handle no-parameter (on-axis), `angle` parameter (off-axis), and `listAngles: true` (list available angles)
     - Compute available angles as intersection of all speakers' FRD angles
     - Return error listing available angles if requested angle unavailable
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
 
-  - [ ] 5.3 Create server/mcp/tools/getImpedanceResponse.js
+  - [x] 5.3 Create server/mcp/tools/getImpedanceResponse.js
     - Return impedance response (frequencies, impedances, phases as equal-length arrays)
     - Return error if no simulation results available
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
@@ -116,53 +116,53 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - frequencies, impedances, and phases arrays all have the same length
     - **Validates: Requirements 6.1, 6.2**
 
-  - [ ] 5.8 Create server/mcp/tools/getUserLoadedFrds.js
+  - [x] 5.8 Create server/mcp/tools/getUserLoadedFrds.js
     - Return all user-loaded FRD measurement data currently in the graph
     - Each entry includes label, frequency/magnitude/phase arrays conforming to frd-data.schema.json, and metadata (angle, description)
     - Return empty list (not error) if no FRD files loaded
     - Electron app pushes user-loaded FRD data via `state:userFrds` message when files are loaded or removed
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
 
-- [ ] 6. Implement MCP write tools
-  - [ ] 6.1 Create server/mcp/tools/optimizeComponent.js
+- [x] 6. Implement MCP write tools
+  - [x] 6.1 Create server/mcp/tools/optimizeComponent.js
     - Validate component ID exists in current layout
     - Validate new parameters against schema constraints for the component type
     - Forward to Electron app via WebSocket, wait for response (30s timeout)
     - Return full updated component object on success
     - _Requirements: 8.1, 8.2, 8.3, 8.5, 8.6, 8.7, 8.8_
 
-  - [ ] 6.2 Create server/mcp/tools/setCircuitLayout.js
+  - [x] 6.2 Create server/mcp/tools/setCircuitLayout.js
     - Validate full layout against circuit.schema.json
     - Forward to Electron app, wait for response (30s timeout)
     - Return applied layout on success
     - _Requirements: 13.1, 13.2, 13.5, 13.6_
 
-  - [ ] 6.3 Create server/mcp/tools/addComponent.js
+  - [x] 6.3 Create server/mcp/tools/addComponent.js
     - Validate component object against circuit.schema.json component definition
     - Forward to Electron app, return added component on success
     - _Requirements: 14.1, 14.6, 14.7, 14.9_
 
-  - [ ] 6.4 Create server/mcp/tools/removeComponent.js
+  - [x] 6.4 Create server/mcp/tools/removeComponent.js
     - Validate component ID exists in current layout
     - Forward to Electron app, return removed component ID and affected wire IDs
     - _Requirements: 14.2, 14.6, 14.7, 14.9_
 
-  - [ ] 6.5 Create server/mcp/tools/addWire.js
+  - [x] 6.5 Create server/mcp/tools/addWire.js
     - Validate wire object against circuit.schema.json wire definition
     - Forward to Electron app, return added wire on success
     - _Requirements: 14.3, 14.6, 14.7, 14.9_
 
-  - [ ] 6.6 Create server/mcp/tools/removeWire.js
+  - [x] 6.6 Create server/mcp/tools/removeWire.js
     - Validate wire ID exists in current layout
     - Forward to Electron app, return removed wire ID on success
     - _Requirements: 14.4, 14.6, 14.7, 14.9_
 
-  - [ ] 6.7 Create server/mcp/tools/moveComponent.js
+  - [x] 6.7 Create server/mcp/tools/moveComponent.js
     - Validate component ID exists and coordinates are integers
     - Forward to Electron app, return updated component on success
     - _Requirements: 14.5, 14.6, 14.7, 14.9_
 
-  - [ ] 6.8 Create server/mcp/tools/beginEditGroup.js and endEditGroup.js
+  - [x] 6.8 Create server/mcp/tools/beginEditGroup.js and endEditGroup.js
     - beginEditGroup: accept optional description, signal Electron app, mark session in-edit-group with timestamp
     - endEditGroup: signal Electron app, mark session not-in-edit-group
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
@@ -182,29 +182,29 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Removing a component returns exactly the wire IDs whose startNode or endNode references the removed component
     - **Validates: Requirements 14.2**
 
-- [ ] 7. Checkpoint
+- [x] 7. Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement MCP resources and server setup
-  - [ ] 8.1 Create server/mcp/resources/schemas.js — schema resource definitions
+- [x] 8. Implement MCP resources and server setup
+  - [x] 8.1 Create server/mcp/resources/schemas.js — schema resource definitions
     - Expose circuit.schema.json, simulation-results.schema.json, frd-data.schema.json as MCP resources
     - URIs: `resource://schema/circuit.schema.json`, `resource://schema/simulation-results.schema.json`, `resource://schema/frd-data.schema.json`
     - MIME type: application/json
     - Descriptions: ≥20 characters, referencing crossover design domain concepts
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
 
-  - [ ] 8.2 Create server/domain-knowledge.md — versioned domain knowledge resource
+  - [x] 8.2 Create server/domain-knowledge.md — versioned domain knowledge resource
     - Semver version at top of document
     - Guidance: delays in multi-way systems, standard component value series (E12/E24/E48), empty document state, edit group wrapping instruction
     - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6_
 
-  - [ ] 8.3 Create server/mcp/resources/domainKnowledge.js — domain knowledge resource handler
+  - [x] 8.3 Create server/mcp/resources/domainKnowledge.js — domain knowledge resource handler
     - Serve domain-knowledge.md as MCP resource at `resource://crossover-domain-knowledge`
     - MIME type: text/markdown
     - Description referencing loudspeaker crossover design guidance
     - _Requirements: 12.1, 12.3, 12.4_
 
-  - [ ] 8.4 Create server/mcp/server.js — MCP server setup
+  - [x] 8.4 Create server/mcp/server.js — MCP server setup
     - Use `@modelcontextprotocol/sdk` to create MCP server instance
     - Register all 12 tools with input schemas
     - Register all 4 resources
@@ -222,13 +222,13 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Valid JSON-RPC 2.0 MCP messages are processed; malformed/non-conforming messages return appropriate error codes
     - **Validates: Requirements 1.3, 1.4**
 
-- [ ] 9. Implement WebSocket handler
-  - [ ] 9.1 Create server/ws/messages.js — message type definitions
+- [x] 9. Implement WebSocket handler
+  - [x] 9.1 Create server/ws/messages.js — message type definitions
     - Define all message types: `state:circuit`, `state:simulation`, `request:*`, `response:*`, `error:validation`
     - Define message envelope structure: `{ type, payload, requestId }`
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 9.2 Create server/ws/handler.js — WebSocket connection handler using socket.io
+  - [x] 9.2 Create server/ws/handler.js — WebSocket connection handler using socket.io
     - Authenticate on connection (validate token)
     - Handle incoming state pushes (circuit layout, simulation results) with schema validation
     - Forward tool requests to connected Electron app with 30s timeout and requestId correlation
@@ -237,8 +237,8 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Send `error:validation` on invalid state pushes
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.8, 8.1, 8.8, 13.6, 14.9_
 
-- [ ] 10. Wire server entry point together
-  - [ ] 10.1 Complete server/index.js — HTTP + WebSocket server startup
+- [x] 10. Wire server entry point together
+  - [x] 10.1 Complete server/index.js — HTTP + WebSocket server startup
     - Create Express HTTP server
     - Mount MCP Streamable HTTP handler at `/mcp`
     - Attach socket.io WebSocket server at `/ws`
@@ -252,18 +252,18 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Verify auth middleware is applied
     - _Requirements: 1.1, 1.2_
 
-- [ ] 11. Checkpoint
+- [x] 11. Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Implement Electron app ChatGPT menu and connection
-  - [ ] 12.1 Add ChatGPT menu to src/main/menu.js
+- [x] 12. Implement Electron app ChatGPT menu and connection
+  - [x] 12.1 Add ChatGPT menu to src/main/menu.js
     - Position after "Circuit Blocks" menu (before "View")
     - "Connect..." item (initiates OAuth flow)
     - "Open Conversation..." item (disabled by default)
     - Menu state machine: disconnected ↔ connected
     - _Requirements: 11.1, 11.2, 11.4, 11.5, 11.6, 11.7_
 
-  - [ ] 12.2 Create src/main/chatgpt-client.js — WebSocket client module
+  - [x] 12.2 Create src/main/chatgpt-client.js — WebSocket client module
     - Connect after OAuth authentication using socket.io-client
     - Push full state on connect and reconnect
     - Push incremental updates on circuit/simulation changes (within 2 seconds)
@@ -272,7 +272,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - On unexpected disconnect: trigger toast notification, revert menu to disconnected state
     - _Requirements: 3.1, 3.2, 3.3, 3.6, 3.7, 11.10, 11.11_
 
-  - [ ] 12.3 Implement OAuth connect flow in Electron app
+  - [x] 12.3 Implement OAuth connect flow in Electron app
     - Open OAuth authorization URL in default browser via `shell.openExternal`
     - Listen for authorization code callback (local redirect URI)
     - Exchange authorization code for access token
@@ -280,11 +280,11 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - On failure: display toast error notification with failure reason
     - _Requirements: 11.3, 11.12_
 
-  - [ ] 12.4 Implement "Open Conversation..." handler
+  - [x] 12.4 Implement "Open Conversation..." handler
     - Use `shell.openExternal` to open `chatgptConversationUrl` from config.js in default browser
     - _Requirements: 11.5, 11.8, 11.9_
 
-  - [ ] 12.5 Implement edit request handling in Electron app
+  - [x] 12.5 Implement edit request handling in Electron app
     - Handle `request:optimize` — push undo, apply parameters, re-simulate, revert on failure
     - Handle `request:setCircuitLayout` — push undo, replace layout, re-render, re-simulate
     - Handle `request:addComponent`, `request:removeComponent`, `request:addWire`, `request:removeWire`, `request:moveComponent`
@@ -293,7 +293,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Implement 60-second edit group timeout auto-close
     - _Requirements: 8.4, 8.9, 8.10, 13.3, 13.4, 13.7, 14.8, 14.10, 15.3, 15.4, 15.5, 15.6, 15.7_
 
-  - [ ] 12.6 Implement toast error notifications via IPC
+  - [x] 12.6 Implement toast error notifications via IPC
     - Main process sends IPC message to renderer on connection drop, auth failure, sync validation failure
     - Renderer calls `toast.error(message)` via vue-toastification
     - _Requirements: 11.11, 11.12, 3.8_
@@ -313,7 +313,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - Edits between begin/end_edit_group produce exactly one undo entry, not individual entries
     - **Validates: Requirements 15.5**
 
-- [ ] 13. Final checkpoint
+- [x] 13. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

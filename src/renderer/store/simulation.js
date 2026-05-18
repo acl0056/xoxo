@@ -2,7 +2,7 @@ import CircuitSolver from '@/simulation/CircuitSolver';
 import FrequencyAnalyzer from '@/simulation/FrequencyAnalyzer';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
+import simulationResultsSchema from '@schemas/simulation-results.schema.json';
 
 const ajv = new Ajv();
 addFormats(ajv);

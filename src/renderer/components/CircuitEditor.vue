@@ -179,10 +179,10 @@ export default {
 		...mapActions('ui', ['zoomIn', 'zoomOut']),
 
 		resizeCanvas() {
-			const container = this.$el;
-			if (container) {
-				this.canvasWidth = container.clientWidth;
-				this.canvasHeight = container.clientHeight - 40; // Account for toolbar
+			const { canvas } = this.$refs;
+			if (canvas) {
+				this.canvasWidth = canvas.clientWidth;
+				this.canvasHeight = canvas.clientHeight;
 				this.$nextTick(() => {
 					this.renderCircuit();
 				});
@@ -1404,24 +1404,22 @@ export default {
 				}
 
 				if (minLeft !== Infinity) {
-					const padding = this.gridSize * 0.5;
 					this.context.strokeRect(
-						minLeft - padding,
-						minTop - padding,
-						(maxRight - minLeft) + 2 * padding,
-						(maxBottom - minTop) + 2 * padding,
+						minLeft - 1,
+						minTop - 1,
+						(maxRight - minLeft) + 2,
+						(maxBottom - minTop) + 2,
 					);
 				}
 			} else {
 				// Single component highlight
 				const bounds = this.getComponentBounds(selectedComponent);
-				const padding = this.gridSize * 0.5;
 
 				this.context.strokeRect(
-					bounds.left - padding,
-					bounds.top - padding,
-					(bounds.right - bounds.left) + 2 * padding,
-					(bounds.bottom - bounds.top) + 2 * padding,
+					bounds.left - 1,
+					bounds.top - 1,
+					(bounds.right - bounds.left) + 2,
+					(bounds.bottom - bounds.top) + 2,
 				);
 			}
 
@@ -2844,6 +2842,16 @@ export default {
 				}
 			}
 
+			// Second pass: check if clicking near a terminal of any component
+			// whose bounds don't include terminal positions
+			for (let i = circuit.components.length - 1; i >= 0; i--) {
+				const component = circuit.components[i];
+				const terminal = this.getTerminalAtPosition(component, worldX, worldY);
+				if (terminal !== null) {
+					return component;
+				}
+			}
+
 			return null;
 		},
 
@@ -2890,32 +2898,22 @@ export default {
 			const rotatedWidth = width * cos + height * sin;
 			const rotatedHeight = width * sin + height * cos;
 
+			// Rotate the offset vector with the component
+			const offsetCos = Math.cos(radians);
+			const offsetSin = Math.sin(radians);
+			const rotatedOffsetX = offsetX * offsetCos - offsetY * offsetSin;
+			const rotatedOffsetY = offsetX * offsetSin + offsetY * offsetCos;
+
 			const bounds = {
-				left: centerX + offsetX - rotatedWidth / 2,
-				right: centerX + offsetX + rotatedWidth / 2,
-				top: centerY + offsetY - rotatedHeight / 2,
-				bottom: centerY + offsetY + rotatedHeight / 2,
+				left: centerX + rotatedOffsetX - rotatedWidth / 2,
+				right: centerX + rotatedOffsetX + rotatedWidth / 2,
+				top: centerY + rotatedOffsetY - rotatedHeight / 2,
+				bottom: centerY + rotatedOffsetY + rotatedHeight / 2,
 			};
 
-			// Expand bounds to include terminal positions so they are always clickable
-			if (component.terminals && component.terminals.length > 0) {
-				const terminalHitRadius = gridSize * 1.0;
-				const terminalRadians = (component.rotation * Math.PI) / 180;
-				const terminalCos = Math.cos(terminalRadians);
-				const terminalSin = Math.sin(terminalRadians);
-
-				component.terminals.forEach((terminal) => {
-					const rotatedX = terminal.x * terminalCos - terminal.y * terminalSin;
-					const rotatedY = terminal.x * terminalSin + terminal.y * terminalCos;
-					const tx = (component.x + rotatedX) * gridSize;
-					const ty = (component.y + rotatedY) * gridSize;
-
-					bounds.left = Math.min(bounds.left, tx - terminalHitRadius);
-					bounds.right = Math.max(bounds.right, tx + terminalHitRadius);
-					bounds.top = Math.min(bounds.top, ty - terminalHitRadius);
-					bounds.bottom = Math.max(bounds.bottom, ty + terminalHitRadius);
-				});
-			}
+			// Terminal expansion is no longer needed — the base bounds cover the
+			// component body, and terminals outside the body are found via the
+			// second-pass check in getComponentAtPosition.
 
 			return bounds;
 		},

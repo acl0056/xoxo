@@ -28,6 +28,7 @@
 						class="value-input"
 						@input="handleValueInput"
 						@blur="parseValueInput"
+						@keydown.enter="commitValueInput"
 					>
 					<div class="increment-buttons">
 						<button
@@ -896,6 +897,10 @@ export default {
 				// Revert to previous value if parsing fails
 				this.valueInput = formatEngineering(this.localParameters[this.valueParameterName]);
 			}
+		},
+		commitValueInput() {
+			this.parseValueInput();
+			this.emitUpdate();
 		},
 		startIncrement(direction) {
 			if (!this.isPassiveComponent || !this.valueParameterName) return;

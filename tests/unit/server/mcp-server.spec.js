@@ -36,6 +36,8 @@ jest.mock('../../../server/mcp/tools/removeWire', () => jest.fn());
 jest.mock('../../../server/mcp/tools/moveComponent', () => jest.fn());
 jest.mock('../../../server/mcp/tools/selectGraphAngle', () => jest.fn());
 jest.mock('../../../server/mcp/tools/undo', () => jest.fn());
+jest.mock('../../../server/mcp/tools/initializeXoxoSession', () => jest.fn());
+jest.mock('../../../server/mcp/tools/getSpeakerSummary', () => jest.fn());
 jest.mock('../../../server/mcp/tools/getUserLoadedFrds', () => jest.fn());
 jest.mock('../../../server/mcp/tools/beginEditGroup', () => jest.fn());
 jest.mock('../../../server/mcp/tools/endEditGroup', () => jest.fn());
@@ -101,11 +103,13 @@ describe('server/mcp/server', () => {
 			expect(server).toBeDefined();
 		});
 
-		it('should register all 15 tools', () => {
+		it('should register all 17 tools', () => {
 			createMcpServer();
 			const toolNames = Object.keys(mockRegisteredTools);
-			expect(toolNames).toHaveLength(15);
+			expect(toolNames).toHaveLength(17);
+			expect(toolNames).toContain('initialize_xoxo_session');
 			expect(toolNames).toContain('get_circuit_layout');
+			expect(toolNames).toContain('get_speaker_summary');
 			expect(toolNames).toContain('get_frequency_response');
 			expect(toolNames).toContain('get_impedance_response');
 			expect(toolNames).toContain('optimize_component');

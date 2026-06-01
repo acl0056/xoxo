@@ -186,7 +186,6 @@ function updateApplicationMenu() {
 		},
 		getRecentFilesMenu,
 		chatgptConnect: () => {
-			console.log('[Menu] chatgptConnect clicked, integration exists:', !!chatgptIntegration);
 			if (chatgptIntegration) chatgptIntegration.chatgptConnect();
 		},
 		chatgptDisconnect: () => chatgptIntegration && chatgptIntegration.chatgptDisconnect(),
@@ -344,7 +343,6 @@ ipcMain.on('simulation-results', (event, results) => {
 		impedanceWindow.webContents.send('simulation-results', results);
 	}
 	if (chatgptIntegration && chatgptIntegration.isConnected()) {
-		console.log('[Main] Forwarding simulation-results to ChatGPT client, angle:', results.currentAngle);
 		// Strip fields not in the simulation-results schema (additionalProperties: false)
 		const {
 			frequencyResponse, impedanceResponse, timestamp, currentAngle,
@@ -352,8 +350,6 @@ ipcMain.on('simulation-results', (event, results) => {
 		chatgptIntegration.pushSimulationResults({
 			frequencyResponse, impedanceResponse, timestamp, angle: currentAngle || 0,
 		});
-	} else {
-		console.log('[Main] simulation-results received but ChatGPT not connected:', !!chatgptIntegration, chatgptIntegration && chatgptIntegration.isConnected());
 	}
 });
 

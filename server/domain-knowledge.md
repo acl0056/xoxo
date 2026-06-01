@@ -1,12 +1,31 @@
-<!-- version: 1.4.0 -->
+<!-- version: 1.6.1 -->
 
 # Crossover Domain Knowledge
+
+## About xoxo
+
+xoxo is a crossover network design and simulation tool. Users design passive (and active) crossover filters for multi-way loudspeaker systems — splitting the audio signal between drivers (tweeters, midranges, woofers) at appropriate frequencies. The app simulates frequency response, impedance, and phase behavior based on the circuit topology and real driver measurements (FRD/ZMA files).
+
+## When a User Connects
+
+When a user first connects, read the circuit layout and simulation results. Respond with a brief, informed assessment of the design — not a raw inventory of component IDs. Think like a fellow crossover designer reviewing someone's work:
+
+- Identify the crossover topology (e.g., "2nd-order electrical high-pass on the tweeter with a Zobel network")
+- Note the crossover frequency region based on component values
+- Comment on anything notable in the frequency response if simulation data is available (e.g., "looks like there's a bump around 3kHz" or "the response is fairly flat through the crossover")
+- If measurements are loaded, mention them in context ("I can see you have off-axis data at 30° and 60°")
+
+Do not list every component by ID. Do not recite file paths. Speak about the design, not the data structure.
+
+After your initial assessment, ask what the user wants to work on — or if they'd like you to start exploring improvements.
 
 ## Delays in Multi-Way Systems
 
 In a multi-way loudspeaker system (2-way, 3-way, etc.), the drivers are mounted at different physical depths on the baffle. This means the acoustic centers of the drivers are not aligned in space, causing time-of-arrival differences at the listening position.
 
 If no driver in the system has a delay parameter set, this is likely a user error. Prompt the user to verify whether time-alignment delays are needed. In most real-world designs, at least one driver requires a delay offset to compensate for physical mounting depth differences.
+
+Do not infer global driver-delay status from a partial or truncated circuit layout response. When checking time alignment, explicitly identify every speaker component and inspect each speaker's `parameters.delay` value. If the layout response is truncated before all speakers are visible, say that delay status is only partially verified rather than claiming no drivers have delay.
 
 ### Delay Units
 
@@ -32,11 +51,19 @@ Simulation updates are intentionally scoped to the selected angle only. When Cha
 
 Selecting a new graph angle also runs the simulation for that newly selected angle when auto-simulation is enabled. If ChatGPT needs fresh simulation results for all available angles after a circuit change, it should:
 
-1. Call `get_frequency_response` with `listAngles: true` to discover available angles
-2. Call `select_graph_angle` for each angle that needs fresh results
-3. After each angle selection completes, call `get_frequency_response` for that angle to read the updated result
+1. Call `get_speaker_summary` and collect all angles from each speaker's `offAxisAngles`
+2. Include `0` for on-axis
+3. For each angle, call `select_graph_angle` then `get_frequency_response` for that angle
 
-Use angle `0` for on-axis. Off-axis angles should match the available angles reported by the app.
+Use angle `0` for on-axis. Off-axis angles should match the angles reported by `get_speaker_summary`.
+
+### Simulated Angles vs. Measurement Angles
+
+`get_frequency_response({ listAngles: true })` returns only the angles that currently have simulated response data available — often just `[0]`. This does NOT mean the project lacks off-axis measurements.
+
+To discover which off-axis angles can potentially be simulated, use `get_speaker_summary` and inspect each speaker's `offAxisAngles`. When off-axis files are present but not yet simulated, call `select_graph_angle(angle)` to trigger the simulation for that angle, then read the result.
+
+Do not conclude that only 0° exists merely because `get_frequency_response({ listAngles: true })` returns `[0]`.
 
 ### Tools That Trigger Simulation
 
@@ -117,6 +144,23 @@ This pattern lets you try many combinations rapidly while keeping the user's und
 - After checking the null, return to normal polarity; the actual response is what matters
 - Use standard component value series when finalizing values (the user needs to buy real parts)
 - When multiple components interact (e.g., a series capacitor and shunt inductor in a high-pass section), explore them together since their optimal values are interdependent
+- Use component `state` to temporarily remove a component from the circuit without deleting it (see below)
+
+### Component State: Open, Short, Normal
+
+Resistors, capacitors, and inductors have a `state` parameter with three values:
+
+- **normal** — the component behaves as its type (default)
+- **open** — the component acts as an open circuit (infinite impedance, as if removed from the path)
+- **short** — the component acts as a short circuit (zero impedance, as if replaced by a wire)
+
+This is useful for:
+
+- **Isolating a component's contribution**: set it to `open` or `short` and observe how the response changes. This reveals whether the component is helping or hurting.
+- **Simplifying during exploration**: temporarily short or open components to focus on a subset of the network.
+- **Comparing topologies**: quickly test "what if this component weren't here?" without removing it from the layout and losing its position and wiring.
+
+For series components, `open` removes them from the signal path. For shunt components, `short` bypasses them to ground. Think about which state effectively "removes" the component's influence based on its position in the circuit.
 
 ### When to Explore
 

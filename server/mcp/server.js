@@ -7,6 +7,7 @@ const { z } = require('zod');
 const sessionStore = require('../session/store');
 
 const handleGetCircuitLayout = require('./tools/getCircuitLayout');
+const handleGetSpeakerSummary = require('./tools/getSpeakerSummary');
 const handleGetFrequencyResponse = require('./tools/getFrequencyResponse');
 const handleGetImpedanceResponse = require('./tools/getImpedanceResponse');
 const handleOptimizeComponent = require('./tools/optimizeComponent');
@@ -18,6 +19,7 @@ const handleRemoveWire = require('./tools/removeWire');
 const handleMoveComponent = require('./tools/moveComponent');
 const handleSelectGraphAngle = require('./tools/selectGraphAngle');
 const handleUndo = require('./tools/undo');
+const handleInitializeXoxoSession = require('./tools/initializeXoxoSession');
 const handleGetUserLoadedFrds = require('./tools/getUserLoadedFrds');
 const handleBeginEditGroup = require('./tools/beginEditGroup');
 const handleEndEditGroup = require('./tools/endEditGroup');
@@ -54,7 +56,11 @@ function wrapToolHandler(handler, getUserId) {
  */
 function createMcpServer(getUserId) {
 	const mcpServer = new McpServer(
-		{ name: 'xoxo-mcp-server', version: '1.0.0' },
+		{
+			name: 'xoxo-mcp-server',
+			version: '1.0.0',
+			instructions: 'xoxo is a loudspeaker crossover network design and simulation tool. Before answering any user request involving xoxo, first load and follow the xoxo domain knowledge resource (resource://crossover-domain-knowledge). Use it to understand crossover workflow, response style, delay units, edit grouping, optimization strategy, and layout conventions. Do not make xoxo circuit edits until the user asks for or approves edits. Do not list raw component IDs or file paths — speak about the design like a fellow crossover engineer.',
+		},
 		{
 			capabilities: {
 				tools: { listChanged: true },
@@ -65,9 +71,17 @@ function createMcpServer(getUserId) {
 
 	// Register tools
 
+	mcpServer.registerTool('initialize_xoxo_session', {
+		description: 'Load xoxo domain knowledge, design rules, and interaction guidelines. Call this before responding to the user for the first time in a session.',
+	}, wrapToolHandler(handleInitializeXoxoSession, getUserId));
+
 	mcpServer.registerTool('get_circuit_layout', {
 		description: 'Returns the current circuit layout for the session',
 	}, wrapToolHandler(handleGetCircuitLayout, getUserId));
+
+	mcpServer.registerTool('get_speaker_summary', {
+		description: 'Returns a lightweight summary of all speaker/driver components: name, delay, polarity, mute status, and loaded measurement files. Use this instead of parsing the full circuit layout when you need driver configuration.',
+	}, wrapToolHandler(handleGetSpeakerSummary, getUserId));
 
 	mcpServer.registerTool('get_frequency_response', {
 		description: 'Returns frequency response data. Optionally specify an off-axis angle or list available angles.',

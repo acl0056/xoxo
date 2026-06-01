@@ -72,7 +72,7 @@ export function parseEngineering(notation) {
  * @param {number} precision - Number of significant digits (default: 3)
  * @returns {string} Engineering notation string
  */
-export function formatEngineering(value, precision = 3) {
+export function formatEngineering(value, precision = 4) {
 	if (typeof value !== 'number' || Number.isNaN(value)) {
 		throw new Error('Value must be a valid number');
 	}

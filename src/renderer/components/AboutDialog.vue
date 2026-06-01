@@ -37,10 +37,13 @@
 						Bill Waslo — for XSim, the free-form loudspeaker crossover and circuit simulator
 						that inspired this project
 					</p>
-					<p class="acknowledgement-primary">
-						Javad Shadzi — who taught me how to use Xsim
-					</p>
-					<h4>XSim Acknowledgements</h4>
+						<p class="acknowledgement-primary">
+							Javad Shadzi — who taught me how to use Xsim
+						</p>
+						<p class="acknowledgement-primary">
+							The DIY loudspeaker community — for sharing knowledge and making DIY accessible
+						</p>
+						<h4>XSim Acknowledgements</h4>
 					<ul>
 						<li>Jeff Bagby — for his PCD Xcel-based simulator and inspiration</li>
 						<li>Stewart Hyde — for RFSim99 (basic schematic entry concept)</li>
@@ -209,10 +212,10 @@ export default {
 				}
 
 				float glyphXOXO(vec2 p) {
-					vec2 cell = floor(p);
-					vec2 f = fract(p) - 0.5;
-					float selector = mod(cell.x + cell.y, 4.0);
-					float lineW = 0.055;
+						vec2 cell = floor(p);
+						vec2 f = fract(p) - 0.5;
+						float selector = mod(cell.x + cell.y, 2.0);
+						float lineW = 0.055;
 
 					float x1 = smoothstep(lineW, 0.0, abs(f.x - f.y));
 					float x2 = smoothstep(lineW, 0.0, abs(f.x + f.y));
@@ -221,8 +224,8 @@ export default {
 					float r = length(f);
 					float oGlyph = smoothstep(0.055, 0.0, abs(r - 0.31));
 
-					return selector < 2.0 ? xGlyph : oGlyph;
-				}
+						return selector < 1.0 ? xGlyph : oGlyph;
+					}
 
 				void main() {
 					vec2 p = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.x, uResolution.y);

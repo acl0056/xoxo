@@ -167,10 +167,10 @@ body {
     }
 
     float glyphXOXO(vec2 p) {
-      vec2 cell = floor(p);
-      vec2 f = fract(p) - 0.5;
-      float selector = mod(cell.x + cell.y, 4.0);
-      float lineW = 0.055;
+	      vec2 cell = floor(p);
+	      vec2 f = fract(p) - 0.5;
+	      float selector = mod(cell.x + cell.y, 2.0);
+	      float lineW = 0.055;
       float g;
 
       // X glyph: two diagonals
@@ -182,9 +182,9 @@ body {
       float r = length(f);
       float oGlyph = smoothstep(0.055, 0.0, abs(r - 0.31));
 
-      g = selector < 2.0 ? xGlyph : oGlyph;
-      return g;
-    }
+	      g = selector < 1.0 ? xGlyph : oGlyph;
+	      return g;
+	    }
 
     void main() {
       vec2 uv = gl_FragCoord.xy / uResolution.xy;

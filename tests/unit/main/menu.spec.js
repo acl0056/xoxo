@@ -31,10 +31,11 @@ describe('createApplicationMenu', () => {
 			showAbout: jest.fn(),
 			openDocumentation: jest.fn(),
 			getRecentFilesMenu: jest.fn(() => []),
-			chatgptConnect: jest.fn(),
-			chatgptDisconnect: jest.fn(),
-			chatgptOpenConversation: jest.fn(),
-		};
+				chatgptConnect: jest.fn(),
+				chatgptDisconnect: jest.fn(),
+				chatgptOpenConversation: jest.fn(),
+				chatgptOpenSetupGuide: jest.fn(),
+			};
 
 		jest.clearAllMocks();
 	});
@@ -359,7 +360,7 @@ describe('createApplicationMenu', () => {
 			expect(mockHandlers.chatgptDisconnect).toHaveBeenCalled();
 		});
 
-		it('should call chatgptOpenConversation handler when "Open Conversation..." is clicked', () => {
+			it('should call chatgptOpenConversation handler when "Open Conversation..." is clicked', () => {
 			Menu.buildFromTemplate.mockReturnValue({});
 
 			createApplicationMenu(mockWindow, mockHandlers, { chatgptConnected: true });
@@ -370,10 +371,37 @@ describe('createApplicationMenu', () => {
 
 			openConversationItem.click();
 
-			expect(mockHandlers.chatgptOpenConversation).toHaveBeenCalled();
-		});
+				expect(mockHandlers.chatgptOpenConversation).toHaveBeenCalled();
+			});
 
-		it('should default to disconnected state when no options provided', () => {
+			it('should include ChatGPT beta setup guide item', () => {
+				Menu.buildFromTemplate.mockReturnValue({});
+
+				createApplicationMenu(mockWindow, mockHandlers);
+
+				const template = Menu.buildFromTemplate.mock.calls[0][0];
+				const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+				const setupGuideItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-beta-setup-guide');
+
+				expect(setupGuideItem).toBeDefined();
+				expect(setupGuideItem.label).toBe('Beta Setup Guide...');
+			});
+
+			it('should call chatgptOpenSetupGuide handler when "Beta Setup Guide..." is clicked', () => {
+				Menu.buildFromTemplate.mockReturnValue({});
+
+				createApplicationMenu(mockWindow, mockHandlers);
+
+				const template = Menu.buildFromTemplate.mock.calls[0][0];
+				const chatgptMenu = template.find((item) => item.label === 'ChatGPT');
+				const setupGuideItem = chatgptMenu.submenu.find((item) => item.id === 'chatgpt-beta-setup-guide');
+
+				setupGuideItem.click();
+
+				expect(mockHandlers.chatgptOpenSetupGuide).toHaveBeenCalled();
+			});
+
+			it('should default to disconnected state when no options provided', () => {
 			Menu.buildFromTemplate.mockReturnValue({});
 
 			createApplicationMenu(mockWindow, mockHandlers);

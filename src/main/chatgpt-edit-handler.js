@@ -7,6 +7,7 @@ const {
 	RESPONSE_REMOVE_WIRE,
 	RESPONSE_MOVE_COMPONENT,
 	RESPONSE_SELECT_GRAPH_ANGLE,
+	RESPONSE_UNDO,
 	RESPONSE_BEGIN_EDIT_GROUP,
 	RESPONSE_END_EDIT_GROUP,
 } = require('../../server/ws/messages');
@@ -352,6 +353,26 @@ function createEditHandler({ store, mainWindow, socket }) {
 	}
 
 	/**
+	 * Handle request:undo — revert the most recent change on the undo stack.
+	 *
+	 * @param {object} payload - (unused)
+	 * @param {string} requestId - Correlation ID
+	 */
+	function handleUndoRequest(payload, requestId) {
+		const undoStackLength = store.state.circuit.undoStack.length;
+
+		if (undoStackLength === 0) {
+			sendResponse(RESPONSE_UNDO, { success: false, error: 'Nothing to undo' }, requestId);
+			return;
+		}
+
+		store.dispatch('circuit/undo');
+		triggerSimulation();
+
+		sendResponse(RESPONSE_UNDO, { success: true }, requestId);
+	}
+
+	/**
 	 * Handle request:beginEditGroup — save undo checkpoint and suppress
 	 * individual undo entries until endEditGroup is received.
 	 *
@@ -449,6 +470,9 @@ function createEditHandler({ store, mainWindow, socket }) {
 				break;
 			case 'request:selectGraphAngle':
 				handleSelectGraphAngle(payload, requestId);
+				break;
+			case 'request:undo':
+				handleUndoRequest(payload, requestId);
 				break;
 			case 'request:beginEditGroup':
 				handleBeginEditGroup(payload, requestId);

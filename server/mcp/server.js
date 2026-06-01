@@ -17,6 +17,7 @@ const handleAddWire = require('./tools/addWire');
 const handleRemoveWire = require('./tools/removeWire');
 const handleMoveComponent = require('./tools/moveComponent');
 const handleSelectGraphAngle = require('./tools/selectGraphAngle');
+const handleUndo = require('./tools/undo');
 const handleGetUserLoadedFrds = require('./tools/getUserLoadedFrds');
 const handleBeginEditGroup = require('./tools/beginEditGroup');
 const handleEndEditGroup = require('./tools/endEditGroup');
@@ -140,6 +141,10 @@ function createMcpServer(getUserId) {
 			angle: z.number().min(0).max(180).describe('Off-axis angle in degrees to view and simulate. Use 0 for on-axis.'),
 		},
 	}, wrapToolHandler(handleSelectGraphAngle, getUserId));
+
+	mcpServer.registerTool('undo', {
+		description: 'Undo the most recent circuit change. Cannot be called while an edit group is active — call end_edit_group first. Use this to revert exploratory changes.',
+	}, wrapToolHandler(handleUndo, getUserId));
 
 	mcpServer.registerTool('get_user_loaded_frds', {
 		description: 'Returns all user-loaded FRD measurement data currently displayed in the graph',

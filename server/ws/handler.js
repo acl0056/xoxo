@@ -215,6 +215,7 @@ function setupWebSocketHandler(socketIoServer) {
 			messages.RESPONSE_REMOVE_WIRE,
 			messages.RESPONSE_MOVE_COMPONENT,
 			messages.RESPONSE_SELECT_GRAPH_ANGLE,
+			messages.RESPONSE_UNDO,
 			messages.RESPONSE_BEGIN_EDIT_GROUP,
 			messages.RESPONSE_END_EDIT_GROUP,
 		];

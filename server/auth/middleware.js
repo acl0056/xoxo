@@ -12,6 +12,7 @@ const WRITE_TOOLS = new Set([
 	'remove_wire',
 	'move_component',
 	'select_graph_angle',
+	'undo',
 	'begin_edit_group',
 	'end_edit_group',
 ]);

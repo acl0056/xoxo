@@ -1,4 +1,4 @@
-<!-- version: 1.2.3 -->
+<!-- version: 1.4.0 -->
 
 # Crossover Domain Knowledge
 
@@ -38,6 +38,24 @@ Selecting a new graph angle also runs the simulation for that newly selected ang
 
 Use angle `0` for on-axis. Off-axis angles should match the available angles reported by the app.
 
+### Tools That Trigger Simulation
+
+The following MCP tools cause the desktop app to re-run the simulation for the currently selected angle:
+
+- `optimize_component` — updates component parameters
+- `add_component` — adds a new component to the circuit
+- `remove_component` — removes a component from the circuit
+- `add_wire` — adds a wire connection
+- `remove_wire` — removes a wire connection
+- `move_component` — changes component position (can affect wiring topology)
+- `set_circuit_layout` — replaces the entire circuit layout
+- `select_graph_angle` — switches the viewed angle and runs the simulation for it
+
+Tools that do NOT trigger simulation:
+
+- `begin_edit_group` / `end_edit_group` — undo bookkeeping only
+- `get_circuit_layout`, `get_frequency_response`, `get_impedance_response`, `get_user_loaded_frds` — read-only
+
 ## Standard Component Value Series
 
 When suggesting component values for resistors, capacitors, and inductors, prefer values from standard component series so the user can purchase real-world components:
@@ -61,12 +79,52 @@ A new empty document contains only a voltage source (power amplifier) component 
 
 Always wrap multi-step edits in `begin_edit_group` / `end_edit_group` so the user can undo the full change atomically with a single undo operation (Cmd+Z / Ctrl+Z). Any time you are making more than one modification to the circuit (adding multiple components, adjusting multiple values, rewiring), group them together.
 
+Do not use `begin_edit_group` / `end_edit_group` for a single edit. Individual tool calls (one `optimize_component`, one `add_component`, etc.) already create their own undo entry automatically. Wrapping a single edit in a group is unnecessary overhead.
+
 Example workflow:
 1. Call `begin_edit_group` with a description of what you are doing
 2. Perform all individual edits (add/remove components, add/remove wires, optimize values, move components)
 3. Call `end_edit_group` to finalize
 
 If you forget to call `end_edit_group`, the system will automatically close the group after 60 seconds to prevent undo stack corruption.
+
+## Exploratory Optimization Workflow
+
+Crossover design is an iterative process of exploring component values and observing their effects on the frequency response and phase. Once the user gives permission to optimize or explore, you should actively try different values rather than only suggesting changes.
+
+### Design Goals (in priority order)
+
+1. **Flat on-axis frequency response** — the primary target
+2. **Smooth off-axis response** — straight roll-off without lumps, especially near crossover frequencies
+3. **Phase behavior** — informative but secondary to frequency response
+
+### Exploration Strategy
+
+Use `begin_edit_group` / `end_edit_group` with `undo` to explore without polluting the user's undo stack:
+
+1. `begin_edit_group` — checkpoint the current state
+2. Try a series of value changes, checking `get_frequency_response` after each to evaluate the effect
+3. `end_edit_group` — close the group
+4. `undo` — revert all exploratory changes back to the checkpoint
+5. Now apply only the best change you found as a clean, single edit
+
+This pattern lets you try many combinations rapidly while keeping the user's undo history clean. The user sees only the final chosen change, not every intermediate experiment.
+
+### Techniques
+
+- Vary one component at a time to isolate its effect
+- Check inverted polarity to examine the reverse null — a deeper null at crossover indicates better driver integration
+- After checking the null, return to normal polarity; the actual response is what matters
+- Use standard component value series when finalizing values (the user needs to buy real parts)
+- When multiple components interact (e.g., a series capacitor and shunt inductor in a high-pass section), explore them together since their optimal values are interdependent
+
+### When to Explore
+
+- When the user explicitly asks you to optimize, tune, or improve the response
+- When the user says to "try things" or "see what works"
+- After the user approves a general direction and wants you to refine values
+
+Do not begin exploratory changes without the user's go-ahead. When first connecting, present observations and suggestions, then ask if the user wants you to start making changes.
 
 ## Measurement-Comparison Workflow
 
@@ -146,3 +204,4 @@ The `getTerminalPosition(index)` method applies rotation to the stored terminal 
 - Standard spacing: 6 grid units between component centers for series components
 - Vertical shunt branches typically drop 4-6 grid units below the main path
 - Ground symbols are placed at the bottom of shunt branches
+- **Do not place components or wire segments that overlap each other's bodies.** The only valid intersection between two items on the grid is at a terminal or wire endpoint. If two component bodies would occupy the same space, move one of them to avoid collision.

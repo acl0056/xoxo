@@ -286,6 +286,13 @@ export default {
 						availableAngles: [...this.$store.state.simulation.availableAngles],
 						excludedSpeakerIds: [...this.$store.state.simulation.excludedSpeakers],
 					};
+				} else if (type === 'request:undo') {
+					if (this.$store.state.circuit.undoStack.length === 0) {
+						result = { success: false, error: 'Nothing to undo' };
+					} else {
+						this.$store.dispatch('circuit/undo');
+						result = { success: true };
+					}
 				} else if (type === 'request:setCircuitLayout') {
 					this.$store.dispatch('circuit/loadFromJSON', payload.layout || payload);
 				} else {

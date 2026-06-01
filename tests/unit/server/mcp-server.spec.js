@@ -35,6 +35,7 @@ jest.mock('../../../server/mcp/tools/addWire', () => jest.fn());
 jest.mock('../../../server/mcp/tools/removeWire', () => jest.fn());
 jest.mock('../../../server/mcp/tools/moveComponent', () => jest.fn());
 jest.mock('../../../server/mcp/tools/selectGraphAngle', () => jest.fn());
+jest.mock('../../../server/mcp/tools/undo', () => jest.fn());
 jest.mock('../../../server/mcp/tools/getUserLoadedFrds', () => jest.fn());
 jest.mock('../../../server/mcp/tools/beginEditGroup', () => jest.fn());
 jest.mock('../../../server/mcp/tools/endEditGroup', () => jest.fn());
@@ -100,10 +101,10 @@ describe('server/mcp/server', () => {
 			expect(server).toBeDefined();
 		});
 
-		it('should register all 14 tools', () => {
+		it('should register all 15 tools', () => {
 			createMcpServer();
 			const toolNames = Object.keys(mockRegisteredTools);
-			expect(toolNames).toHaveLength(14);
+			expect(toolNames).toHaveLength(15);
 			expect(toolNames).toContain('get_circuit_layout');
 			expect(toolNames).toContain('get_frequency_response');
 			expect(toolNames).toContain('get_impedance_response');
@@ -115,6 +116,7 @@ describe('server/mcp/server', () => {
 			expect(toolNames).toContain('remove_wire');
 			expect(toolNames).toContain('move_component');
 			expect(toolNames).toContain('select_graph_angle');
+			expect(toolNames).toContain('undo');
 			expect(toolNames).toContain('get_user_loaded_frds');
 			expect(toolNames).toContain('begin_edit_group');
 			expect(toolNames).toContain('end_edit_group');

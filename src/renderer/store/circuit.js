@@ -22,7 +22,7 @@ function triggerSimulation(store) {
 let tuningUndoTimer = null;
 let tuningUndoSnapshot = null;
 let tuningUndoComponentId = null;
-const TUNING_UNDO_DEBOUNCE_MS = 600;
+const TUNING_UNDO_DEBOUNCE_MS = 1000;
 
 export default {
 	namespaced: true,

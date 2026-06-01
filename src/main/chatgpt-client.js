@@ -163,7 +163,7 @@ class ChatgptClient {
 		const requestTypes = [
 			'request:optimize', 'request:setCircuitLayout', 'request:addComponent',
 			'request:removeComponent', 'request:addWire', 'request:removeWire',
-			'request:moveComponent', 'request:selectGraphAngle',
+			'request:moveComponent', 'request:selectGraphAngle', 'request:undo',
 			'request:beginEditGroup', 'request:endEditGroup',
 		];
 		for (const requestType of requestTypes) {

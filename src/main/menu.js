@@ -181,6 +181,12 @@ function createApplicationMenu(mainWindow, handlers, { chatgptConnected = false 
 					enabled: chatgptConnected,
 					click: () => handlers.chatgptOpenConversation(),
 				},
+				{ type: 'separator' },
+				{
+					id: 'chatgpt-beta-setup-guide',
+					label: 'Beta Setup Guide...',
+					click: () => handlers.chatgptOpenSetupGuide(),
+				},
 			],
 		},
 

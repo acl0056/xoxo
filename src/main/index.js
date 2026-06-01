@@ -184,6 +184,9 @@ function updateApplicationMenu() {
 		openDocumentation: () => {
 			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/README.md');
 		},
+		chatgptOpenSetupGuide: () => {
+			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/CHATGPT_APP_SETUP.md');
+		},
 		getRecentFilesMenu,
 		chatgptConnect: () => {
 			if (chatgptIntegration) chatgptIntegration.chatgptConnect();

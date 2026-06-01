@@ -37,13 +37,13 @@
 						Bill Waslo — for XSim, the free-form loudspeaker crossover and circuit simulator
 						that inspired this project
 					</p>
-						<p class="acknowledgement-primary">
-							Javad Shadzi — who taught me how to use Xsim
-						</p>
-						<p class="acknowledgement-primary">
-							The DIY loudspeaker community — for sharing knowledge and making DIY accessible
-						</p>
-						<h4>XSim Acknowledgements</h4>
+					<p class="acknowledgement-primary">
+						Javad Shadzi — who taught me how to use Xsim
+					</p>
+					<p class="acknowledgement-primary">
+						The DIY loudspeaker community — for sharing knowledge and making DIY accessible
+					</p>
+					<h4>XSim Acknowledgements</h4>
 					<ul>
 						<li>Jeff Bagby — for his PCD Xcel-based simulator and inspiration</li>
 						<li>Stewart Hyde — for RFSim99 (basic schematic entry concept)</li>

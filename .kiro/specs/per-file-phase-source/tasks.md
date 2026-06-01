@@ -9,13 +9,13 @@ The implementation follows a schema-first approach: schema → model → simulat
 ## Tasks
 
 - [x] 1. Update circuit schema for per-file phase source
-  - [x] 1.1 Modify `speakerParameters` in `src/schemas/circuit.schema.json`
+  - [x] 1.1 Modify `speakerParameters` in `server/schemas/circuit.schema.json`
     - Remove `phaseSource` from the `required` array and `properties` object
     - Add `frdPhaseSource` as a required string property with enum `["measured", "derived"]` and description `"Phase data source for the primary FRD file"`
     - Add `zmaPhaseSource` as a required string property with enum `["measured", "derived"]` and description `"Phase data source for the ZMA file"`
     - _Requirements: 2.1, 2.2, 2.4_
 
-  - [x] 1.2 Update `offAxisFile` definition in `src/schemas/circuit.schema.json`
+  - [x] 1.2 Update `offAxisFile` definition in `server/schemas/circuit.schema.json`
     - Add `phaseSource` as a required string property with enum `["measured", "derived"]` and description `"Phase data source for this off-axis FRD file"`
     - Add `phaseSource` to the `required` array of `offAxisFile`
     - _Requirements: 2.3_

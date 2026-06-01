@@ -14,7 +14,7 @@
 - [x] 1.9 Create basic Vue 3 renderer process with App.vue
 
 ### 2. JSON Schema Definitions
-- [x] 2.1 Create src/schemas/ directory structure
+- [x] 2.1 Create server/schemas/ directory structure
 - [x] 2.2 Implement circuit.schema.json with all component type definitions
 - [x] 2.3 Implement frd-data.schema.json for frequency response data
 - [x] 2.4 Implement zma-data.schema.json for impedance data

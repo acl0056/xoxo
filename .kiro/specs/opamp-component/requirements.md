@@ -22,7 +22,7 @@ where A₀ is the DC open-loop gain in linear units and f_c is the corner freque
 - **Unity_Gain_Frequency**: The gain-bandwidth product (GBW) equal to A₀ × f_c, representing the frequency at which open-loop gain magnitude equals 1 (0 dB)
 - **VCVS**: Voltage-Controlled Voltage Source — the MNA modeling approach where output voltage equals a frequency-dependent gain times the input differential voltage
 - **Feedback_Network**: External passive components (resistors, capacitors, inductors) connected between the OpAmp output and input terminals that determine closed-loop behavior
-- **Circuit_Schema**: The JSON Schema at `src/schemas/circuit.schema.json` that defines all valid component types and their parameters
+- **Circuit_Schema**: The JSON Schema at `server/schemas/circuit.schema.json` that defines all valid component types and their parameters
 - **Circuit_Solver**: The MNA-based simulation engine (CircuitSolver.js) that calculates node voltages across the circuit
 - **Tune_Dialog**: The modal UI panel (TuneDialog.vue) used to edit component parameters in real time
 - **Circuit_Editor**: The canvas-based schematic editor (CircuitEditor.vue) that renders and manages component placement

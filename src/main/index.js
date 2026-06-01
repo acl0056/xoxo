@@ -6,6 +6,7 @@ const fs = require('fs');
 const { createApplicationMenu } = require('./menu');
 const FileHandlers = require('./fileHandlers');
 const logger = require('./logger');
+const { setupChatgptIntegration } = require('./chatgpt-integration');
 
 // Set app name for macOS menu bar (overrides "Electron" in dev mode)
 app.name = 'xoxo';
@@ -14,9 +15,13 @@ let mainWindow;
 let frequencyResponseWindow;
 let impedanceWindow;
 let fileHandlers;
+let chatgptIntegration;
 let recentFiles = [];
 let lastOpenedFile = null;
 const MAX_RECENT_FILES = 10;
+let isMainWindowCloseAllowed = false;
+let isClosePromptInProgress = false;
+let isQuitPending = false;
 
 /**
  * Get the path to the recent files storage
@@ -161,7 +166,9 @@ function setupCrashRecovery() {
  * Update the application menu
  */
 function updateApplicationMenu() {
-	const menu = createApplicationMenu(mainWindow, {
+	const chatgptConnected = chatgptIntegration ? chatgptIntegration.isConnected() : false;
+
+	const handlers = {
 		newFile: () => mainWindow.webContents.send('menu-new'),
 		openFile: () => mainWindow.webContents.send('menu-open'),
 		saveFile: () => mainWindow.webContents.send('menu-save'),
@@ -178,7 +185,14 @@ function updateApplicationMenu() {
 			shell.openExternal('https://github.com/acl0056/xoxo/blob/main/README.md');
 		},
 		getRecentFilesMenu,
-	});
+		chatgptConnect: () => {
+			if (chatgptIntegration) chatgptIntegration.chatgptConnect();
+		},
+		chatgptDisconnect: () => chatgptIntegration && chatgptIntegration.chatgptDisconnect(),
+		chatgptOpenConversation: () => chatgptIntegration && chatgptIntegration.chatgptOpenConversation(),
+	};
+
+	const menu = createApplicationMenu(mainWindow, handlers, { chatgptConnected });
 	Menu.setApplicationMenu(menu);
 }
 
@@ -252,6 +266,10 @@ function createImpedanceWindow() {
  * Create the main application window
  */
 function createWindow() {
+	isMainWindowCloseAllowed = false;
+	isClosePromptInProgress = false;
+	isQuitPending = false;
+
 	mainWindow = new BrowserWindow({
 		width: 1400,
 		height: 900,
@@ -263,6 +281,9 @@ function createWindow() {
 
 	// Initialize file handlers
 	fileHandlers = new FileHandlers(mainWindow);
+
+	// Initialize ChatGPT integration
+	chatgptIntegration = setupChatgptIntegration(mainWindow, updateApplicationMenu);
 
 	// Load recent files and last opened file
 	loadRecentFiles();
@@ -280,17 +301,29 @@ function createWindow() {
 		// In production, load from built files
 		mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 	}
-
 	// Handle window close event
 	mainWindow.on('close', (event) => {
+		if (isMainWindowCloseAllowed) {
+			return;
+		}
+
+		if (isClosePromptInProgress) {
+			event.preventDefault();
+			return;
+		}
+
 		// Ask renderer if there are unsaved changes
 		event.preventDefault();
+		isClosePromptInProgress = true;
 		mainWindow.webContents.send('window-closing');
 	});
 
 	mainWindow.on('closed', () => {
 		mainWindow = null;
 		fileHandlers = null;
+		if (isQuitPending) {
+			app.quit();
+		}
 	});
 
 	// Set up crash recovery auto-save
@@ -308,6 +341,24 @@ ipcMain.on('simulation-results', (event, results) => {
 	}
 	if (impedanceWindow && !impedanceWindow.isDestroyed()) {
 		impedanceWindow.webContents.send('simulation-results', results);
+	}
+	if (chatgptIntegration && chatgptIntegration.isConnected()) {
+		// Strip fields not in the simulation-results schema (additionalProperties: false)
+		const {
+			frequencyResponse, impedanceResponse, timestamp, currentAngle,
+		} = results;
+		chatgptIntegration.pushSimulationResults({
+			frequencyResponse, impedanceResponse, timestamp, angle: currentAngle || 0,
+		});
+	}
+});
+
+/**
+ * Forward circuit layout changes to the ChatGPT server
+ */
+ipcMain.on('chatgpt:circuit-layout-changed', (event, layout) => {
+	if (chatgptIntegration && chatgptIntegration.isConnected()) {
+		chatgptIntegration.pushCircuitLayout(layout);
 	}
 });
 
@@ -598,7 +649,29 @@ ipcMain.handle('get-app-version', async () => {
  * Handle window-can-close request from renderer
  */
 ipcMain.on('window-can-close', () => {
-	mainWindow.destroy();
+	isClosePromptInProgress = false;
+	isMainWindowCloseAllowed = true;
+
+	if (isQuitPending) {
+		if (frequencyResponseWindow && !frequencyResponseWindow.isDestroyed()) {
+			frequencyResponseWindow.close();
+		}
+		if (impedanceWindow && !impedanceWindow.isDestroyed()) {
+			impedanceWindow.close();
+		}
+	}
+
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.close();
+	}
+});
+
+/**
+ * Handle renderer cancellation of the close request.
+ */
+ipcMain.on('window-close-cancelled', () => {
+	isClosePromptInProgress = false;
+	isQuitPending = false;
 });
 
 /**
@@ -634,6 +707,14 @@ app.whenReady().then(() => {
 			createWindow();
 		}
 	});
+});
+
+app.on('before-quit', (event) => {
+	if (mainWindow && !mainWindow.isDestroyed() && !isMainWindowCloseAllowed) {
+		event.preventDefault();
+		isQuitPending = true;
+		mainWindow.close();
+	}
 });
 
 app.on('window-all-closed', () => {

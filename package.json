@@ -4,8 +4,8 @@
 	"description": "loudspeaker crossover modeller",
 	"main": "dist/main/index.js",
 	"scripts": {
-		"predev": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','main'),{recursive:true});['menu.js','fileHandlers.js','logger.js'].forEach(f=>fs.copyFileSync(p.join('src','main',f),p.join('dist','main',f)))\"",
-		"prebuild": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','main'),{recursive:true});['menu.js','fileHandlers.js','logger.js'].forEach(f=>fs.copyFileSync(p.join('src','main',f),p.join('dist','main',f)))\"",
+		"predev": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','main'),{recursive:true});fs.readdirSync(p.join('src','main')).filter(f=>f.endsWith('.js')&&f!=='index.js').forEach(f=>fs.copyFileSync(p.join('src','main',f),p.join('dist','main',f)))\"",
+		"prebuild": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','main'),{recursive:true});fs.readdirSync(p.join('src','main')).filter(f=>f.endsWith('.js')&&f!=='index.js').forEach(f=>fs.copyFileSync(p.join('src','main',f),p.join('dist','main',f)))\"",
 		"dev": "cross-env NODE_ENV=development vite",
 		"build": "cross-env NODE_ENV=production vite build",
 		"build:win": "npm run build && electron-builder --win",
@@ -15,7 +15,8 @@
 		"lint": "eslint --ext .js,.vue src",
 		"test": "jest",
 		"test:watch": "jest --watch",
-		"test:coverage": "jest --coverage"
+		"test:coverage": "jest --coverage",
+		"release": "./scripts/release.sh"
 	},
 	"keywords": [],
 	"author": "Adam Lockhart <adamlockhart12@gmail.com>",
@@ -24,6 +25,7 @@
 		"ajv": "^8.17.1",
 		"complex.js": "^2.4.3",
 		"mathjs": "^15.1.1",
+		"socket.io-client": "^4.7.5",
 		"vue": "^3.3.4",
 		"vue-toastification": "^2.0.0-rc.5",
 		"vuex": "^4.1.0"

@@ -11,7 +11,7 @@ This document defines the requirements for adding a Parametric Equalizer (PEQ) c
 - **Filter_Section**: A single biquad filter stage within the PEQ, characterized by filter type, center frequency, Q factor, and bypass state
 - **Transfer_Function**: The complex frequency-domain ratio H(f) = V_out(f) / V_in(f) representing the PEQ's effect on the signal
 - **DSP_Rate**: The sample rate in samples per second (sps) used for biquad coefficient calculation via the bilinear transform
-- **Circuit_Schema**: The JSON Schema at `src/schemas/circuit.schema.json` that defines all valid component types and their parameters
+- **Circuit_Schema**: The JSON Schema at `server/schemas/circuit.schema.json` that defines all valid component types and their parameters
 - **Component_Registry**: The set of recognized component types in the schema enum and Component model class
 - **Tune_Dialog**: The modal UI panel (TuneDialog.vue) used to edit component parameters in real time
 - **Circuit_Solver**: The MNA-based simulation engine (CircuitSolver.js) that calculates node voltages across the circuit

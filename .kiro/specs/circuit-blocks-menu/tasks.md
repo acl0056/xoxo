@@ -7,7 +7,7 @@ This plan implements the parametric circuit block system for xoxo. The approach 
 ## Tasks
 
 - [x] 1. Create JSON schemas for new data structures
-  - [x] 1.1 Create `src/schemas/circuit-block.schema.json`
+  - [x] 1.1 Create `server/schemas/circuit-block.schema.json`
     - Define the CircuitBlock schema with title, identifier, variables (6 slots), components array, grounds array, wires array, and texts array
     - Each variable slot: name (string), description (string), defaultValue (number)
     - Each component: partType (0/1/2), defaultValue, esr, rating, position {x,y}, isHorizontal, stepMode, bypassMode, formula, formulaScale
@@ -16,14 +16,14 @@ This plan implements the parametric circuit block system for xoxo. The approach 
     - Each text: label, position {x,y}, size, color
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [x] 1.2 Create `src/schemas/formula-ast.schema.json`
+  - [x] 1.2 Create `server/schemas/formula-ast.schema.json`
     - Define the FormulaNode schema as a discriminated union (type field)
     - Node types: "number" (value), "identifier" (name), "binary" (operator, left, right), "unary" (operator, operand), "group" (expression)
     - Operators for binary: +, -, *, /, ^
     - Operator for unary: -
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [x] 1.3 Update `src/schemas/circuit.schema.json` with BlockGroup definition
+  - [x] 1.3 Update `server/schemas/circuit.schema.json` with BlockGroup definition
     - Add `blockGroups` array to the top-level circuit schema
     - Define blockGroup object: id, blockIdentifier, blockTitle, variables array, componentIds array, wireSegmentIds array, formulas array, stepModes array (6 integers)
     - _Requirements: 6.5, 8.3, 9.4_

@@ -61,4 +61,4 @@ Tests:       12 passed, 12 total
 ## Files
 
 - Test file: `tests/unit/circuit-schema.property.spec.js`
-- Schema: `src/schemas/circuit.schema.json`
+- Schema: `server/schemas/circuit.schema.json`

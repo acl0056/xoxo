@@ -1,8 +1,8 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import solverResultSchema from '../schemas/solver-result.schema.json';
-import frequencyResponseDataSchema from '../schemas/frequency-response-data.schema.json';
-import impedanceResponseDataSchema from '../schemas/impedance-response-data.schema.json';
+import solverResultSchema from '@schemas/solver-result.schema.json';
+import frequencyResponseDataSchema from '@schemas/frequency-response-data.schema.json';
+import impedanceResponseDataSchema from '@schemas/impedance-response-data.schema.json';
 
 /**
  * SchemaValidator provides validation for simulation module outputs

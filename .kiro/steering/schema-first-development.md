@@ -67,10 +67,10 @@ class CircuitSolver {
 
 ## Schema Location
 
-All JSON Schema files are stored in `src/schemas/`:
+All JSON Schema files are stored in `server/schemas/`:
 
 ```
-src/schemas/
+server/schemas/
 ├── circuit.schema.json              # Main circuit document schema
 ├── frd-data.schema.json             # Frequency response data schema
 ├── zma-data.schema.json             # Impedance data schema
@@ -153,7 +153,7 @@ All data structures should be validated against their schemas at critical points
 
 ```javascript
 import Ajv from 'ajv';
-import circuitSchema from '@/schemas/circuit.schema.json';
+import circuitSchema from '/circuit.schema.json';
 
 const ajv = new Ajv();
 const validateCircuit = ajv.compile(circuitSchema);
@@ -186,7 +186,7 @@ function saveCircuit(circuit, filePath) {
 ### On Data Import
 
 ```javascript
-import frdDataSchema from '@/schemas/frd-data.schema.json';
+import frdDataSchema from '/frd-data.schema.json';
 
 const validateFrdData = ajv.compile(frdDataSchema);
 
@@ -336,7 +336,7 @@ fc.assert(
 When implementing a new feature or fixing a bug:
 
 1. **Identify required data structure changes**
-2. **Update JSON Schema files** in `src/schemas/`
+2. **Update JSON Schema files** in `server/schemas/`
 3. **Run schema validation** to ensure schemas are valid
 4. **Update model classes** to match schema
 5. **Update serialization/deserialization** methods

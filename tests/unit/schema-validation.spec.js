@@ -8,7 +8,7 @@ import { VoltageSource } from '@/models/VoltageSource';
 import { Ground } from '@/models/Ground';
 import { Wire } from '@/models/Wire';
 import { TextAnnotation } from '@/models/TextAnnotation';
-import circuitSchema from '@/schemas/circuit.schema.json';
+import circuitSchema from '@schemas/circuit.schema.json';
 
 describe('Schema Validation for toJSON() output', () => {
 	let ajv;

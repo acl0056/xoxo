@@ -1,0 +1,16 @@
+{
+	"apps": [
+		{
+			"name": "xoxo-mcp",
+			"script": "index.js",
+			"cwd": "/home/ubuntu/xoxo-mcp",
+			"autorestart": true,
+			"watch": true,
+			"max_memory_restart": "512M",
+			"env": {
+				"NODE_ENV": "production",
+				"PORT": 3000
+			}
+		}
+	]
+}

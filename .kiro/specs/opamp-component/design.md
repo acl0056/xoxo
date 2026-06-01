@@ -113,7 +113,7 @@ No separate calculator module is needed — this is 5 lines of arithmetic.
 
 | File | Changes |
 |------|---------|
-| `src/schemas/circuit.schema.json` | Add "opamp" to type enum, add `opampParameters` definition, add conditional validation |
+| `server/schemas/circuit.schema.json` | Add "opamp" to type enum, add `opampParameters` definition, add conditional validation |
 | `src/simulation/CircuitSolver.js` | Include "opamp" type alongside "peq" in VCVS handling paths |
 | `src/renderer/components/CircuitEditor.vue` | Add `renderOpAmp()` method, update label assignment to include "opamp" in shared "A" prefix |
 | `src/renderer/components/TuneDialog.vue` | Add OpAmp parameter editing section with dcGain, cornerFrequency, and computed GBW display |

@@ -1253,7 +1253,7 @@ The JSON Schema definitions should be used throughout the application for valida
 ```javascript
 // Example: Validating a circuit before saving
 import Ajv from 'ajv';
-import circuitSchema from './schemas/circuit.schema.json';
+import circuitSchema from '/circuit.schema.json';
 
 const ajv = new Ajv();
 const validateCircuit = ajv.compile(circuitSchema);
@@ -1270,7 +1270,7 @@ function saveCircuit(circuit, filePath) {
 }
 
 // Example: Validating FRD data after parsing
-import frdDataSchema from './schemas/frd-data.schema.json';
+import frdDataSchema from '/frd-data.schema.json';
 
 const validateFrdData = ajv.compile(frdDataSchema);
 
@@ -1879,10 +1879,10 @@ We have two options for implementing the circuit simulation engine:
 
 ### Schema Files Organization
 
-JSON Schema files should be stored in `src/schemas/`:
+JSON Schema files should be stored in `server/schemas/`:
 
 ```
-src/schemas/
+server/schemas/
 ├── circuit.schema.json          # Main circuit document schema
 ├── frd-data.schema.json         # Frequency response data schema
 ├── zma-data.schema.json         # Impedance data schema

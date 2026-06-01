@@ -12,13 +12,13 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 // Import all schema files
-import circuitSchema from '@/schemas/circuit.schema.json';
-import frdDataSchema from '@/schemas/frd-data.schema.json';
-import zmaDataSchema from '@/schemas/zma-data.schema.json';
-import simulationResultsSchema from '@/schemas/simulation-results.schema.json';
-import solverResultSchema from '@/schemas/solver-result.schema.json';
-import frequencyResponseDataSchema from '@/schemas/frequency-response-data.schema.json';
-import impedanceResponseDataSchema from '@/schemas/impedance-response-data.schema.json';
+import circuitSchema from '@schemas/circuit.schema.json';
+import frdDataSchema from '@schemas/frd-data.schema.json';
+import zmaDataSchema from '@schemas/zma-data.schema.json';
+import simulationResultsSchema from '@schemas/simulation-results.schema.json';
+import solverResultSchema from '@schemas/solver-result.schema.json';
+import frequencyResponseDataSchema from '@schemas/frequency-response-data.schema.json';
+import impedanceResponseDataSchema from '@schemas/impedance-response-data.schema.json';
 
 describe('JSON Schema Validation', () => {
 	let ajv;

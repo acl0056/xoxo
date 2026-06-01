@@ -461,4 +461,37 @@ export class Circuit {
 
 		return circuit;
 	}
+
+	/**
+	 * Deserialize a single component from JSON into the appropriate class instance.
+	 *
+	 * @param {object} componentData - The component JSON data with a `type` field
+	 * @returns {Component} A proper Component class instance
+	 */
+	static deserializeComponent(componentData) {
+		switch (componentData.type) {
+			case 'resistor':
+				return Resistor.fromJSON(componentData);
+			case 'capacitor':
+				return Capacitor.fromJSON(componentData);
+			case 'inductor':
+				return Inductor.fromJSON(componentData);
+			case 'speaker':
+				return Speaker.fromJSON(componentData);
+			case 'source':
+				return VoltageSource.fromJSON(componentData);
+			case 'ground':
+				return Ground.fromJSON(componentData);
+			case 'wire-segment':
+				return WireSegment.fromJSON(componentData);
+			case 'peq':
+				return PEQ.fromJSON(componentData);
+			case 'filter':
+				return Filter.fromJSON(componentData);
+			case 'opamp':
+				return OpAmp.fromJSON(componentData);
+			default:
+				throw new Error(`Unknown component type: ${componentData.type}`);
+		}
+	}
 }

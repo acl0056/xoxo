@@ -111,7 +111,7 @@ graph TD
 
 | File | Changes |
 |------|---------|
-| `src/schemas/circuit.schema.json` | Add "filter" type, `filterParameters` definition, conditional validation |
+| `server/schemas/circuit.schema.json` | Add "filter" type, `filterParameters` definition, conditional validation |
 | `src/simulation/CircuitSolver.js` | Add Filter to VCVS handling (same path as PEQ) |
 | `src/renderer/components/CircuitEditor.vue` | Add `renderFilter()` method, update label assignment to share "A" prefix |
 | `src/renderer/components/TuneDialog.vue` | Add Filter parameter editing section |

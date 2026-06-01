@@ -1,9 +1,5 @@
 import { Circuit } from '@/models/Circuit';
 import { VoltageSource } from '@/models/VoltageSource';
-import { Resistor } from '@/models/Resistor';
-import { Capacitor } from '@/models/Capacitor';
-import { Inductor } from '@/models/Inductor';
-import { WireSegment } from '@/models/WireSegment';
 import { insertBlock as engineInsertBlock, tuneBlock as engineTuneBlock, dissolveBlock as engineDissolveBlock } from '@/blocks/InsertionEngine';
 
 /**
@@ -26,7 +22,7 @@ function triggerSimulation(store) {
 let tuningUndoTimer = null;
 let tuningUndoSnapshot = null;
 let tuningUndoComponentId = null;
-const TUNING_UNDO_DEBOUNCE_MS = 600;
+const TUNING_UNDO_DEBOUNCE_MS = 1000;
 
 export default {
 	namespaced: true,
@@ -690,25 +686,9 @@ export default {
 					const subActions = [...action.payload].reverse();
 					for (const subAction of subActions) {
 						if (subAction.type === 'addComponent') {
-							// Re-add the component using Circuit.fromJSON's deserialization
+							// Re-add the component using Circuit.deserializeComponent
 							const componentData = subAction.payload;
-							let comp;
-							switch (componentData.type) {
-								case 'resistor':
-									comp = Resistor.fromJSON(componentData);
-									break;
-								case 'capacitor':
-									comp = Capacitor.fromJSON(componentData);
-									break;
-								case 'inductor':
-									comp = Inductor.fromJSON(componentData);
-									break;
-								case 'wire-segment':
-									comp = WireSegment.fromJSON(componentData);
-									break;
-								default:
-									break;
-							}
+							const comp = Circuit.deserializeComponent(componentData);
 							if (comp) {
 								state.circuit.components.push(comp);
 								redoSubActions.push({ type: 'removeComponent', payload: comp.id });
@@ -886,23 +866,7 @@ export default {
 							}
 						} else if (subAction.type === 'addComponent') {
 							const componentData = subAction.payload;
-							let comp;
-							switch (componentData.type) {
-								case 'resistor':
-									comp = Resistor.fromJSON(componentData);
-									break;
-								case 'capacitor':
-									comp = Capacitor.fromJSON(componentData);
-									break;
-								case 'inductor':
-									comp = Inductor.fromJSON(componentData);
-									break;
-								case 'wire-segment':
-									comp = WireSegment.fromJSON(componentData);
-									break;
-								default:
-									break;
-							}
+							const comp = Circuit.deserializeComponent(componentData);
 							if (comp) {
 								state.circuit.components.push(comp);
 								undoSubActions.push({ type: 'removeComponent', payload: comp.id });

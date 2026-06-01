@@ -1,0 +1,83 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Speaker Summary",
+	"description": "Lightweight summary of speaker/driver components for quick inspection without parsing the full circuit layout",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"required": [
+			"id",
+			"label",
+			"delay",
+			"inverted",
+			"muted"
+		],
+		"additionalProperties": false,
+		"properties": {
+			"id": {
+				"type": "string",
+				"description": "Unique component identifier"
+			},
+			"label": {
+				"type": "string",
+				"description": "Short display label (e.g., S1, S2)"
+			},
+			"name": {
+				"type": [
+					"string",
+					"null"
+				],
+				"description": "Descriptive name (e.g., Tweeter, Woofer)"
+			},
+			"delay": {
+				"type": "number",
+				"minimum": 0,
+				"description": "Acoustic delay in seconds"
+			},
+			"delayUnit": {
+				"type": [
+					"string",
+					"null"
+				],
+				"enum": [
+					"in",
+					"cm",
+					"ms",
+					null
+				],
+				"description": "UI display preference for delay (does not change the stored unit)"
+			},
+			"inverted": {
+				"type": "boolean",
+				"description": "Whether the driver polarity is inverted"
+			},
+			"muted": {
+				"type": "boolean",
+				"description": "Whether the driver is muted in simulation"
+			},
+			"frdFile": {
+				"type": [
+					"string",
+					"null"
+				],
+				"description": "Path to the loaded frequency response data file"
+			},
+			"zmaFile": {
+				"type": [
+					"string",
+					"null"
+				],
+				"description": "Path to the loaded impedance measurement file"
+			},
+			"offAxisAngles": {
+				"type": "array",
+				"items": {
+					"type": "number",
+					"minimum": 0,
+					"maximum": 180
+				},
+				"description": "Available off-axis measurement angles in degrees"
+			}
+		}
+	}
+}

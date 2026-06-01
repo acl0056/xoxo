@@ -10,7 +10,7 @@
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import circuitSchema from '@/schemas/circuit.schema.json';
+import circuitSchema from '@schemas/circuit.schema.json';
 
 describe('Property-Based Tests: Circuit Schema Validation', () => {
 	let ajv;

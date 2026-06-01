@@ -1,4 +1,4 @@
-<!-- version: 1.2.0 -->
+<!-- version: 1.2.3 -->
 
 # Crossover Domain Knowledge
 
@@ -7,6 +7,36 @@
 In a multi-way loudspeaker system (2-way, 3-way, etc.), the drivers are mounted at different physical depths on the baffle. This means the acoustic centers of the drivers are not aligned in space, causing time-of-arrival differences at the listening position.
 
 If no driver in the system has a delay parameter set, this is likely a user error. Prompt the user to verify whether time-alignment delays are needed. In most real-world designs, at least one driver requires a delay offset to compensate for physical mounting depth differences.
+
+### Delay Units
+
+Speaker and voltage source `parameters.delay` values are stored internally in seconds. Active DSP components such as PEQ and Filter also use seconds for their `delay` parameters.
+
+For speaker components, `parameters.delay` is the authoritative acoustic/DSP delay value and is always seconds. `parameters.delayUnit` is only a UI presentation preference that controls how the desktop app displays and parses the delay field. If `delay` is `0.00008048` and `delayUnit` is `"in"`, this means "store 0.00008048 seconds and display it as inches," not "store 0.00008048 inches."
+
+The desktop UI may display speaker delay as inches (`in`), centimeters (`cm`), or milliseconds (`ms`), but those are display units only. Do not write an inch, centimeter, or millisecond value directly into `parameters.delay`, and do not reinterpret an existing `parameters.delay` value based on `parameters.delayUnit`.
+
+When the user gives a physical offset:
+
+- Inches to seconds: `delay = inches / 13504`
+- Centimeters to seconds: `delay = centimeters / 34300`
+- Milliseconds to seconds: `delay = milliseconds / 1000`
+
+For example, a 1.0868 inch acoustic offset should be written as approximately `0.00008048` seconds, not `1.0868`.
+
+## Selected Graph Angle and Simulation Scope
+
+The desktop app has one selected frequency-response graph angle at a time. The selected angle is the angle used by the simulation whenever the circuit/layout/component values are updated.
+
+Simulation updates are intentionally scoped to the selected angle only. When ChatGPT changes a component, changes the layout, or otherwise causes the circuit to update, the app re-runs the simulation for the currently selected angle. It does not automatically re-run simulations for every available off-axis angle.
+
+Selecting a new graph angle also runs the simulation for that newly selected angle when auto-simulation is enabled. If ChatGPT needs fresh simulation results for all available angles after a circuit change, it should:
+
+1. Call `get_frequency_response` with `listAngles: true` to discover available angles
+2. Call `select_graph_angle` for each angle that needs fresh results
+3. After each angle selection completes, call `get_frequency_response` for that angle to read the updated result
+
+Use angle `0` for on-axis. Off-axis angles should match the available angles reported by the app.
 
 ## Standard Component Value Series
 

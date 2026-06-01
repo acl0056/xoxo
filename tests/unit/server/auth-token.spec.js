@@ -36,13 +36,13 @@ describe('server/auth/token', () => {
 		it('should set iss claim to the correct issuer', () => {
 			const token = signAccessToken('session-123');
 			const decoded = jsonwebtoken.decode(token);
-			expect(decoded.iss).toBe('https://aix.reflect.systems');
+			expect(decoded.iss).toBe('https://xoxo.practicube.com');
 		});
 
 		it('should set aud claim to the correct audience', () => {
 			const token = signAccessToken('session-123');
 			const decoded = jsonwebtoken.decode(token);
-			expect(decoded.aud).toBe('https://aix.reflect.systems/mcp');
+			expect(decoded.aud).toBe('https://xoxo.practicube.com/mcp');
 		});
 
 		it('should set exp - iat to 3600 seconds', () => {
@@ -135,11 +135,11 @@ describe('server/auth/token', () => {
 
 	describe('module constants', () => {
 		it('should export the correct issuer', () => {
-			expect(ISSUER).toBe('https://aix.reflect.systems');
+			expect(ISSUER).toBe('https://xoxo.practicube.com');
 		});
 
 		it('should export the correct audience', () => {
-			expect(AUDIENCE).toBe('https://aix.reflect.systems/mcp');
+			expect(AUDIENCE).toBe('https://xoxo.practicube.com/mcp');
 		});
 
 		it('should export the correct token lifetime', () => {

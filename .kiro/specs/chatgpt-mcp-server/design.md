@@ -20,7 +20,7 @@ The server holds all session state in process memory — no database, no persist
 - **`socket.io`** for WebSocket communication between the Electron app and server (provides automatic reconnection, event-based messaging, and room support)
 - **`ajv`** for JSON Schema validation (already a project dependency)
 - **Auth0** as the OAuth 2.1 provider (supports PKCE, token refresh)
-- **Shared schemas** imported directly from `src/schemas/` — no duplication
+- **Shared schemas** imported directly from `server/schemas/` — no duplication
 - **TLS via nginx reverse proxy** with Let's Encrypt — Node.js listens on HTTP only; nginx terminates TLS and proxies to the local port
 - **Sensitive config via `process.env`** — `config.js` is committed to the public repo but reads secrets from environment variables set on the server
 - **Granular editing tools** alongside full layout replacement — ChatGPT can make targeted edits (add/remove components, add/remove wires, move components) or replace the entire layout
@@ -187,7 +187,7 @@ module.exports = {
 		timeoutMs: 60000,
 	},
 	chatgptConversationUrl: 'https://chatgpt.com',
-	schemasPath: '../src/schemas',
+	schemasPath: './schemas',
 	domainKnowledgePath: './domain-knowledge.md',
 };
 ```
@@ -271,9 +271,9 @@ Wraps AJV to validate data against shared schemas:
 ```javascript
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
-const circuitSchema = require('../../src/schemas/circuit.schema.json');
-const simulationResultsSchema = require('../../src/schemas/simulation-results.schema.json');
-const frdDataSchema = require('../../src/schemas/frd-data.schema.json');
+const circuitSchema = require('../schemas/circuit.schema.json');
+const simulationResultsSchema = require('../schemas/simulation-results.schema.json');
+const frdDataSchema = require('../schemas/frd-data.schema.json');
 
 const ajv = new Ajv({ allErrors: true });
 addFormats(ajv);
@@ -668,7 +668,7 @@ Messages between Electron app and server use a simple envelope:
 
 ### Property 15: Schema Resource Content Fidelity
 
-*For any* schema resource exposed by the MCP server (circuit.schema.json, simulation-results.schema.json, frd-data.schema.json), requesting that resource SHALL return content byte-for-byte identical to the corresponding file in `src/schemas/`, with MIME type application/json.
+*For any* schema resource exposed by the MCP server (circuit.schema.json, simulation-results.schema.json, frd-data.schema.json), requesting that resource SHALL return content byte-for-byte identical to the corresponding file in `server/schemas/`, with MIME type application/json.
 
 **Validates: Requirements 9.4**
 

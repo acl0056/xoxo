@@ -8,8 +8,9 @@ module.exports = {
 			alias: {
 				map: [
 					['@', './src'],
+					['@schemas', './server/schemas'],
 				],
-				extensions: ['.js', '.vue'],
+				extensions: ['.js', '.vue', '.json'],
 			},
 		},
 	},
@@ -43,6 +44,7 @@ module.exports = {
 		'class-methods-use-this': 'off',
 		'global-require': 'off',
 		'vue/html-indent': ['error', 'tab'],
+		'vue/max-attributes-per-line': 'off',
 		'vue/custom-event-name-casing': 'off',
 		'vue/valid-template-root': 'off',
 		'vue/no-unused-components': 2,

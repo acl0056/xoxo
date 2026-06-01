@@ -60,15 +60,15 @@ describe('OAuth metadata endpoints', () => {
 		});
 
 		it('returns correct issuer', () => {
-			expect(response.body.issuer).toBe('https://aix.reflect.systems');
+			expect(response.body.issuer).toBe('https://xoxo.practicube.com');
 		});
 
 		it('returns correct authorization_endpoint', () => {
-			expect(response.body.authorization_endpoint).toBe('https://aix.reflect.systems/oauth/authorize');
+			expect(response.body.authorization_endpoint).toBe('https://xoxo.practicube.com/oauth/authorize');
 		});
 
 		it('returns correct token_endpoint', () => {
-			expect(response.body.token_endpoint).toBe('https://aix.reflect.systems/oauth/token');
+			expect(response.body.token_endpoint).toBe('https://xoxo.practicube.com/oauth/token');
 		});
 
 		it('includes code in response_types_supported', () => {
@@ -108,11 +108,11 @@ describe('OAuth metadata endpoints', () => {
 		});
 
 		it('returns correct resource field', () => {
-			expect(response.body.resource).toBe('https://aix.reflect.systems/mcp');
+			expect(response.body.resource).toBe('https://xoxo.practicube.com/mcp');
 		});
 
 		it('returns correct authorization_servers', () => {
-			expect(response.body.authorization_servers).toEqual(['https://aix.reflect.systems']);
+			expect(response.body.authorization_servers).toEqual(['https://xoxo.practicube.com']);
 		});
 	});
 });

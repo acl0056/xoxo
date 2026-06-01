@@ -152,7 +152,7 @@ This feature adds a remote MCP (Model Context Protocol) server that bridges the 
 3. THE MCP_Server SHALL support at least 100 concurrent authenticated user sessions using in-memory state only
 4. THE MCP_Server SHALL enforce per-session data isolation such that one user's Circuit_Layout, Frequency_Response, Impedance_Response, and FRD_Data are not accessible to another user's session
 5. IF the manifest endpoint encounters an internal error, THEN THE MCP_Server SHALL return an MCP error response indicating the manifest is temporarily unavailable
-6. THE MCP_Server source code SHALL reside in a `server/` directory within the existing xoxo repository, sharing JSON Schema files from `src/schemas/` to avoid duplication
+6. THE MCP_Server source code SHALL reside in a `server/` directory within the existing xoxo repository, sharing JSON Schema files from `server/schemas/` to avoid duplication
 
 ### Requirement 11: ChatGPT Menu and Browser Launch
 

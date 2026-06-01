@@ -294,7 +294,12 @@
 				"delay": {
 					"type": "number",
 					"minimum": 0,
-					"description": "Delay in milliseconds"
+					"description": "Delay in seconds. The desktop UI may display this as inches, centimeters, or milliseconds, but serialized circuit data stores seconds."
+				},
+				"delayUnit": {
+					"type": "string",
+					"enum": ["in", "cm", "ms"],
+					"description": "UI presentation preference for speaker delay display and input parsing only. This does not change the unit of delay; delay is always stored in seconds."
 				},
 				"inverted": {
 					"type": "boolean",
@@ -373,7 +378,7 @@
 				"delay": {
 					"type": "number",
 					"minimum": 0,
-					"description": "Delay in milliseconds"
+					"description": "Delay in seconds"
 				},
 				"inverted": {
 					"type": "boolean",

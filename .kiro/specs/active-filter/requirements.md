@@ -14,7 +14,7 @@ This document defines the requirements for adding an Active Filter component to 
 - **Cascaded_Biquad**: A series of 2nd-order IIR filter sections whose individual transfer functions are multiplied together to form the complete filter response
 - **Biquad_Section**: A single 2nd-order IIR filter defined by five coefficients (b0, b1, b2, a1, a2)
 - **Pole_Placement**: The mathematical determination of filter pole positions on the s-plane based on the chosen filter shape
-- **Circuit_Schema**: The JSON Schema at `src/schemas/circuit.schema.json` that defines all valid component types and their parameters
+- **Circuit_Schema**: The JSON Schema at `server/schemas/circuit.schema.json` that defines all valid component types and their parameters
 - **Circuit_Solver**: The MNA-based simulation engine (CircuitSolver.js) that calculates node voltages across the circuit
 - **Tune_Dialog**: The modal UI panel (TuneDialog.vue) used to edit component parameters in real time
 - **Circuit_Editor**: The canvas-based schematic editor (CircuitEditor.vue) that renders and manages component placement

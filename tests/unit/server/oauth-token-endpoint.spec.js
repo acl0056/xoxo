@@ -5,7 +5,8 @@ process.env.JWT_SECRET = TEST_SECRET;
 
 const { authorizationCodes } = require('../../../server/oauth/authorize');
 const tokenEndpointRouter = require('../../../server/oauth/token-endpoint');
-const { verifyAccessToken } = require('../../../server/auth/token');
+const { verifyAccessToken, TOKEN_LIFETIME_SECONDS } = require('../../../server/auth/token');
+const sessionStore = require('../../../server/session/store');
 
 // Extract the route handler from the router stack
 function getRouteHandler(router, method, path) {
@@ -75,6 +76,7 @@ describe('POST /oauth/token', () => {
 
 	beforeEach(() => {
 		authorizationCodes.clear();
+		sessionStore.getAll().clear();
 	});
 
 	describe('successful token exchange', () => {
@@ -94,7 +96,31 @@ describe('POST /oauth/token', () => {
 			expect(response.statusCode).toBe(200);
 			expect(response.body.access_token).toBeDefined();
 			expect(response.body.token_type).toBe('bearer');
-			expect(response.body.expires_in).toBe(3600);
+			expect(response.body.expires_in).toBe(TOKEN_LIFETIME_SECONDS);
+		});
+
+		it('should notify the desktop app with the remote token lifetime', () => {
+			const wsConnection = { emit: jest.fn() };
+			sessionStore.create('test-session-id', { wsConnection });
+			const { code, codeVerifier } = createAuthCodeEntry();
+			const request = createMockRequest({
+				grant_type: 'authorization_code',
+				code,
+				redirect_uri: 'https://chatgpt.com/callback',
+				client_id: 'test-client',
+				code_verifier: codeVerifier,
+			});
+			const response = createMockResponse();
+
+			handler(request, response);
+
+			expect(wsConnection.emit).toHaveBeenCalledWith('message', {
+				type: 'pairing:success',
+				payload: {
+					sessionId: 'test-session-id',
+					expiresIn: TOKEN_LIFETIME_SECONDS,
+				},
+			});
 		});
 
 		it('should issue a JWT with the correct session ID as sub', () => {
@@ -140,7 +166,7 @@ describe('POST /oauth/token', () => {
 				redirect_uri: 'https://chatgpt.com/callback',
 				client_id: 'test-client',
 				code_verifier: codeVerifier,
-				resource: 'https://aix.reflect.systems/mcp',
+				resource: 'https://xoxo.practicube.com/mcp',
 			});
 			const response = createMockResponse();
 

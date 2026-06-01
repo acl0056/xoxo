@@ -40,6 +40,42 @@ describe('ChatgptEditHandler', () => {
 								},
 							};
 						}
+						if (id === 'speaker-1') {
+							return {
+								id: 'speaker-1',
+								type: 'speaker',
+								label: 'S2',
+								x: 100,
+								y: 200,
+								rotation: 0,
+								parameters: {
+									name: 'Woofer',
+									sensitivity: -1.5,
+									delay: 0.0000804827191049731,
+									delayUnit: 'in',
+									inverted: true,
+									muted: true,
+									frdFile: '/measurements/woofer.frd',
+									zmaFile: '/measurements/woofer.zma',
+									frdPhaseSource: 'measured',
+									zmaPhaseSource: 'derived',
+									offAxisFiles: [
+										{ angle: 30, frdPath: '/measurements/woofer-30.frd', phaseSource: 'measured' },
+									],
+								},
+								toJSON() {
+									return {
+										id: this.id,
+										type: this.type,
+										label: this.label,
+										x: this.x,
+										y: this.y,
+										rotation: this.rotation,
+										parameters: JSON.parse(JSON.stringify(this.parameters)),
+									};
+								},
+							};
+						}
 						return null;
 					}),
 					getWire: jest.fn((id) => {
@@ -148,6 +184,34 @@ describe('ChatgptEditHandler', () => {
 			expect(store.commit).toHaveBeenCalledWith('circuit/UPDATE_COMPONENT', {
 				componentId: 'resistor-1',
 				updates: { parameters: { resistance: 10 } },
+			});
+		});
+
+		it('should merge partial parameter updates without clearing existing speaker fields', () => {
+			handler.handleEditRequest('request:optimize', {
+				componentId: 'speaker-1',
+				parameters: { delay: 0.00008048, delayUnit: 'in' },
+			}, 'req-speaker');
+
+			expect(store.commit).toHaveBeenCalledWith('circuit/UPDATE_COMPONENT', {
+				componentId: 'speaker-1',
+				updates: {
+					parameters: {
+						name: 'Woofer',
+						sensitivity: -1.5,
+						delay: 0.00008048,
+						delayUnit: 'in',
+						inverted: true,
+						muted: true,
+						frdFile: '/measurements/woofer.frd',
+						zmaFile: '/measurements/woofer.zma',
+						frdPhaseSource: 'measured',
+						zmaPhaseSource: 'derived',
+						offAxisFiles: [
+							{ angle: 30, frdPath: '/measurements/woofer-30.frd', phaseSource: 'measured' },
+						],
+					},
+				},
 			});
 		});
 
@@ -298,6 +362,17 @@ describe('ChatgptEditHandler', () => {
 			expect(emittedMessages[0].message.type).toBe('response:moveComponent');
 			expect(emittedMessages[0].message.payload.success).toBe(true);
 			expect(emittedMessages[0].message.payload.component.id).toBe('resistor-1');
+		});
+	});
+
+	describe('request:selectGraphAngle', () => {
+		it('should dispatch angle switching and send a success response', async () => {
+			handler.handleEditRequest('request:selectGraphAngle', { angle: 30 }, 'req-angle');
+			await Promise.resolve();
+
+			expect(store.dispatch).toHaveBeenCalledWith('simulation/switchAngle', 30);
+			expect(emittedMessages[0].message.type).toBe('response:selectGraphAngle');
+			expect(emittedMessages[0].message.payload).toEqual({ success: true, angle: 30 });
 		});
 	});
 

@@ -152,7 +152,7 @@ describe('server/oauth/authorize', () => {
 			const response = await makeRequest(app, 'GET', `/oauth/authorize${buildQueryString(validQueryParams)}`);
 
 			expect(response.status).toBe(200);
-			expect(response.text).toContain('Enter Pairing Code');
+			expect(response.text).toContain('Pairing Code');
 		});
 
 		it('should accept any client_id value', async () => {

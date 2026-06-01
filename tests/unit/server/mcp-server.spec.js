@@ -34,6 +34,7 @@ jest.mock('../../../server/mcp/tools/removeComponent', () => jest.fn());
 jest.mock('../../../server/mcp/tools/addWire', () => jest.fn());
 jest.mock('../../../server/mcp/tools/removeWire', () => jest.fn());
 jest.mock('../../../server/mcp/tools/moveComponent', () => jest.fn());
+jest.mock('../../../server/mcp/tools/selectGraphAngle', () => jest.fn());
 jest.mock('../../../server/mcp/tools/getUserLoadedFrds', () => jest.fn());
 jest.mock('../../../server/mcp/tools/beginEditGroup', () => jest.fn());
 jest.mock('../../../server/mcp/tools/endEditGroup', () => jest.fn());
@@ -71,7 +72,7 @@ jest.mock('../../../server/mcp/resources/domainKnowledge', () => ({
 	getContent: () => '# Domain Knowledge',
 }));
 
-const { createMcpServer, createMcpMiddleware, transports } = require('../../../server/mcp/server');
+const { createMcpServer, createMcpMiddleware, sessions } = require('../../../server/mcp/server');
 
 describe('server/mcp/server', () => {
 	beforeEach(() => {
@@ -88,8 +89,8 @@ describe('server/mcp/server', () => {
 			expect(typeof createMcpMiddleware).toBe('function');
 		});
 
-		it('should export transports as a Map', () => {
-			expect(transports).toBeInstanceOf(Map);
+		it('should export sessions as a Map', () => {
+			expect(sessions).toBeInstanceOf(Map);
 		});
 	});
 
@@ -99,10 +100,10 @@ describe('server/mcp/server', () => {
 			expect(server).toBeDefined();
 		});
 
-		it('should register all 13 tools', () => {
+		it('should register all 14 tools', () => {
 			createMcpServer();
 			const toolNames = Object.keys(mockRegisteredTools);
-			expect(toolNames).toHaveLength(13);
+			expect(toolNames).toHaveLength(14);
 			expect(toolNames).toContain('get_circuit_layout');
 			expect(toolNames).toContain('get_frequency_response');
 			expect(toolNames).toContain('get_impedance_response');
@@ -113,6 +114,7 @@ describe('server/mcp/server', () => {
 			expect(toolNames).toContain('add_wire');
 			expect(toolNames).toContain('remove_wire');
 			expect(toolNames).toContain('move_component');
+			expect(toolNames).toContain('select_graph_angle');
 			expect(toolNames).toContain('get_user_loaded_frds');
 			expect(toolNames).toContain('begin_edit_group');
 			expect(toolNames).toContain('end_edit_group');
@@ -176,6 +178,13 @@ describe('server/mcp/server', () => {
 			expect(tool.config.inputSchema.x).toBeDefined();
 			expect(tool.config.inputSchema.y).toBeDefined();
 		});
+
+		it('should register select_graph_angle with inputSchema', () => {
+			createMcpServer();
+			const tool = mockRegisteredTools.select_graph_angle;
+			expect(tool.config.inputSchema).toBeDefined();
+			expect(tool.config.inputSchema.angle).toBeDefined();
+		});
 	});
 
 	describe('createMcpMiddleware', () => {
@@ -215,7 +224,7 @@ describe('server/mcp/server', () => {
 			await middleware(request, response);
 
 			expect(response.statusCode).toBe(400);
-			expect(response.jsonBody.error.message).toMatch(/Mcp-Session-Id/);
+			expect(response.jsonBody.error.message).toMatch(/Invalid request/);
 		});
 
 		it('should return 400 for non-POST/GET requests without a session ID', async () => {

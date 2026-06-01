@@ -1,9 +1,5 @@
 import { Circuit } from '@/models/Circuit';
 import { VoltageSource } from '@/models/VoltageSource';
-import { Resistor } from '@/models/Resistor';
-import { Capacitor } from '@/models/Capacitor';
-import { Inductor } from '@/models/Inductor';
-import { WireSegment } from '@/models/WireSegment';
 import { insertBlock as engineInsertBlock, tuneBlock as engineTuneBlock, dissolveBlock as engineDissolveBlock } from '@/blocks/InsertionEngine';
 
 /**

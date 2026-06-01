@@ -6,8 +6,8 @@ const TEST_SECRET = 'a-test-secret-that-is-at-least-32-bytes-long';
 jest.mock('../../../server/auth/token', () => {
 	const jwt = require('jsonwebtoken');
 	const secret = 'a-test-secret-that-is-at-least-32-bytes-long';
-	const ISSUER = 'https://aix.reflect.systems';
-	const AUDIENCE = 'https://aix.reflect.systems/mcp';
+	const ISSUER = 'https://xoxo.practicube.com';
+	const AUDIENCE = 'https://xoxo.practicube.com/mcp';
 
 	return {
 		verifyAccessToken(jwtString) {
@@ -71,8 +71,8 @@ function createMockResponse() {
 function signTestToken(payload = {}, options = {}) {
 	const defaultPayload = {
 		sub: 'test-session-id',
-		iss: 'https://aix.reflect.systems',
-		aud: 'https://aix.reflect.systems/mcp',
+		iss: 'https://xoxo.practicube.com',
+		aud: 'https://xoxo.practicube.com/mcp',
 		iat: Math.floor(Date.now() / 1000),
 		exp: Math.floor(Date.now() / 1000) + 3600,
 		...payload,
@@ -143,8 +143,8 @@ describe('server/auth/middleware', () => {
 			expect(next).toHaveBeenCalled();
 			expect(request.user).toBeDefined();
 			expect(request.user.sub).toBe('test-session-id');
-			expect(request.user.iss).toBe('https://aix.reflect.systems');
-			expect(request.user.aud).toBe('https://aix.reflect.systems/mcp');
+			expect(request.user.iss).toBe('https://xoxo.practicube.com');
+			expect(request.user.aud).toBe('https://xoxo.practicube.com/mcp');
 		});
 	});
 
@@ -232,6 +232,26 @@ describe('server/auth/middleware', () => {
 			expect(response.body.error).toBe('desktop_disconnected');
 		});
 
+		it('should treat selecting the graph angle as a write tool because it needs the desktop app', () => {
+			mockSessions.set('disconnected-session', {
+				userId: 'disconnected-session',
+				wsConnection: null,
+				circuitLayout: null,
+			});
+
+			const token = signTestToken({ sub: 'disconnected-session' });
+			const body = { method: 'tools/call', params: { name: 'select_graph_angle' } };
+			const request = createMockRequest(`Bearer ${token}`, body);
+			const response = createMockResponse();
+			const next = jest.fn();
+
+			tokenValidationMiddleware(request, response, next);
+
+			expect(next).not.toHaveBeenCalled();
+			expect(response.statusCode).toBe(502);
+			expect(response.body.error).toBe('desktop_disconnected');
+		});
+
 		it('should allow read tools even when WebSocket is not connected', () => {
 			mockSessions.set('disconnected-session', {
 				userId: 'disconnected-session',
@@ -278,7 +298,7 @@ describe('server/auth/middleware', () => {
 			tokenValidationMiddleware(request, response, next);
 
 			expect(response.headers['WWW-Authenticate']).toBe(
-				'Bearer realm="https://aix.reflect.systems", resource_metadata="https://aix.reflect.systems/.well-known/oauth-protected-resource"',
+				'Bearer realm="https://xoxo.practicube.com", resource_metadata="https://xoxo.practicube.com/.well-known/oauth-protected-resource"',
 			);
 		});
 	});

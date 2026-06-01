@@ -96,12 +96,12 @@ describe('server/session/manager', () => {
 			sessionStore.create('auth0|sim-user');
 		});
 
-		it('should store valid simulation results', () => {
+		it('should store valid simulation results keyed by angle', () => {
 			const result = sessionManager.updateSimulationResults('auth0|sim-user', validResults);
 
 			expect(result.success).toBe(true);
 			const session = sessionStore.get('auth0|sim-user');
-			expect(session.simulationResults).toEqual(validResults);
+			expect(session.simulationResults).toEqual({ 0: validResults });
 		});
 
 		it('should return an error for invalid simulation results', () => {

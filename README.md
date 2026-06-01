@@ -22,8 +22,9 @@ src/
 ├── models/                # Data models
 ├── simulation/            # Simulation engine
 ├── io/                    # File I/O
-├── schemas/               # JSON Schema definitions
 └── lib/                   # Third-party libraries
+server/
+├── schemas/               # JSON Schema definitions shared by app and MCP server
 ```
 
 ## Development

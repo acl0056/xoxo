@@ -10,6 +10,7 @@ module.exports = {
 		'\\.(svg|png|jpg|jpeg|gif)$': '<rootDir>/tests/__mocks__/fileMock.js',
 		'^@schemas/(.*)$': '<rootDir>/server/schemas/$1',
 		'^@/(.*)$': '<rootDir>/src/$1',
+		'^@vue/test-utils$': '<rootDir>/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js',
 	},
 	testMatch: [
 		'**/tests/unit/**/*.spec.js',

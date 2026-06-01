@@ -94,7 +94,7 @@ Where G is the complex transfer function H(f) at the current frequency. The VCVS
 
 | File | Changes |
 |------|---------|
-| `src/schemas/circuit.schema.json` | Add "peq" type, peqParameters, filterSection definitions |
+| `server/schemas/circuit.schema.json` | Add "peq" type, peqParameters, filterSection definitions |
 | `src/simulation/CircuitSolver.js` | Add VCVS stamping for PEQ components |
 | `src/renderer/components/CircuitEditor.vue` | Add renderPEQ method, label prefix "A", component creation |
 | `src/renderer/components/TuneDialog.vue` | Add PEQ parameter editing section with dynamic filter sections |

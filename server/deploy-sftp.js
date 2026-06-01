@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable consistent-return, import/no-dynamic-require, no-await-in-loop */
 
 /**
  * SFTP Deployment Script

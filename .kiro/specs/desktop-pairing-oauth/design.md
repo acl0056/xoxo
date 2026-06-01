@@ -89,9 +89,9 @@ Serves the RFC 8414 metadata document at `/.well-known/oauth-authorization-serve
 // GET /.well-known/oauth-authorization-server
 // Response: 200 application/json
 {
-  issuer: "https://aix.reflect.systems",
-  authorization_endpoint: "https://aix.reflect.systems/oauth/authorize",
-  token_endpoint: "https://aix.reflect.systems/oauth/token",
+  issuer: "https://xoxo.practicube.com",
+  authorization_endpoint: "https://xoxo.practicube.com/oauth/authorize",
+  token_endpoint: "https://xoxo.practicube.com/oauth/token",
   response_types_supported: ["code"],
   grant_types_supported: ["authorization_code"],
   code_challenge_methods_supported: ["S256"]
@@ -104,14 +104,14 @@ Also serves the RFC 9728 Protected Resource Metadata at `/.well-known/oauth-prot
 // GET /.well-known/oauth-protected-resource
 // Response: 200 application/json
 {
-  resource: "https://aix.reflect.systems/mcp",
-  authorization_servers: ["https://aix.reflect.systems"]
+  resource: "https://xoxo.practicube.com/mcp",
+  authorization_servers: ["https://xoxo.practicube.com"]
 }
 ```
 
 The auth middleware returns a `WWW-Authenticate` header on 401 responses:
 ```
-WWW-Authenticate: Bearer realm="https://aix.reflect.systems", resource_metadata="https://aix.reflect.systems/.well-known/oauth-protected-resource"
+WWW-Authenticate: Bearer realm="https://xoxo.practicube.com", resource_metadata="https://xoxo.practicube.com/.well-known/oauth-protected-resource"
 ```
 
 ### 2. Pairing Code Generator (`server/pairing/generator.js`)
@@ -169,8 +169,8 @@ JWT payload:
 ```json
 {
   "sub": "desktop-session-id",
-  "iss": "https://aix.reflect.systems",
-  "aud": "https://aix.reflect.systems/mcp",
+  "iss": "https://xoxo.practicube.com",
+  "aud": "https://xoxo.practicube.com/mcp",
   "iat": 1700000000,
   "exp": 1700003600
 }
@@ -192,7 +192,7 @@ Replaces RS256/JWKS validation with HS256 self-issued validation. Removes `AUTH_
 - Algorithm is HS256 (reject others)
 - Signature matches server secret
 - Token not expired
-- Issuer matches `https://aix.reflect.systems`
+- Issuer matches `https://xoxo.practicube.com`
 
 ### 9. Pairing Routes (`server/pairing/routes.js`)
 
@@ -200,7 +200,7 @@ Replaces RS256/JWKS validation with HS256 self-issued validation. Removes `AUTH_
 
 ### 10. Desktop App Changes (`src/main/chatgpt-config.js`, `src/main/chatgpt-oauth.js`)
 
-- Update `chatgpt-config.js` to point OAuth endpoints at `https://aix.reflect.systems`
+- Update `chatgpt-config.js` to point OAuth endpoints at `https://xoxo.practicube.com`
 - Update `chatgpt-oauth.js` to use the server's own token endpoint URL
 - Add pairing code request/display logic to the integration module
 - Add WebSocket listener for `pairing:success` notification
@@ -248,8 +248,8 @@ Constraints:
 ```json
 {
   "sub": "uuid-of-desktop-session",
-  "iss": "https://aix.reflect.systems",
-  "aud": "https://aix.reflect.systems/mcp",
+  "iss": "https://xoxo.practicube.com",
+  "aud": "https://xoxo.practicube.com/mcp",
   "iat": 1700000000,
   "exp": 1700003600
 }
@@ -265,9 +265,9 @@ Constraints:
 
 ```json
 {
-  "issuer": "https://aix.reflect.systems",
-  "authorization_endpoint": "https://aix.reflect.systems/oauth/authorize",
-  "token_endpoint": "https://aix.reflect.systems/oauth/token",
+  "issuer": "https://xoxo.practicube.com",
+  "authorization_endpoint": "https://xoxo.practicube.com/oauth/authorize",
+  "token_endpoint": "https://xoxo.practicube.com/oauth/token",
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code"],
   "code_challenge_methods_supported": ["S256"]
@@ -279,8 +279,8 @@ Constraints:
 | Variable | Purpose | Constraints |
 |----------|---------|-------------|
 | `JWT_SECRET` | HS256 signing secret | ≥32 bytes, not committed to repo |
-| `OAUTH_ISSUER` | Self-issued issuer URL | `https://aix.reflect.systems` |
-| `OAUTH_AUDIENCE` | Resource URI for token audience binding | `https://aix.reflect.systems/mcp` |
+| `OAUTH_ISSUER` | Self-issued issuer URL | `https://xoxo.practicube.com` |
+| `OAUTH_AUDIENCE` | Resource URI for token audience binding | `https://xoxo.practicube.com/mcp` |
 
 ### Environment Variables (removals)
 
@@ -352,13 +352,13 @@ Constraints:
 
 ### Property 10: Issued JWT correctness
 
-*For any* access token issued by the token endpoint, decoding the JWT SHALL reveal: `alg` header equal to `HS256`, `sub` claim equal to the paired desktop session ID, `iss` claim equal to `https://aix.reflect.systems`, and `exp - iat` equal to 3600 seconds. The token SHALL be verifiable using the server's signing secret.
+*For any* access token issued by the token endpoint, decoding the JWT SHALL reveal: `alg` header equal to `HS256`, `sub` claim equal to the paired desktop session ID, `iss` claim equal to `https://xoxo.practicube.com`, and `exp - iat` equal to 3600 seconds. The token SHALL be verifiable using the server's signing secret.
 
 **Validates: Requirements 4.4, 4.5, 4.6, 4.7, 9.1**
 
 ### Property 11: Token validation rejects invalid tokens
 
-*For any* string presented as a Bearer token that is either (a) not a valid 3-part JWT structure, (b) signed with a different secret, (c) uses an algorithm other than HS256, (d) has an expired `exp` claim, or (e) has an `iss` claim not matching `https://aix.reflect.systems`, the auth middleware SHALL return a 401 response.
+*For any* string presented as a Bearer token that is either (a) not a valid 3-part JWT structure, (b) signed with a different secret, (c) uses an algorithm other than HS256, (d) has an expired `exp` claim, or (e) has an `iss` claim not matching `https://xoxo.practicube.com`, the auth middleware SHALL return a 401 response.
 
 **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 9.4, 9.5**
 

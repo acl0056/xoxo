@@ -5,7 +5,7 @@ global.fetch = jest.fn();
 
 // Mock chatgpt-config
 jest.mock('../../../src/main/chatgpt-config', () => ({
-	serverUrl: 'https://aix.reflect.systems',
+	serverUrl: 'https://xoxo.practicube.com',
 }));
 
 describe('ChatgptPairing', () => {
@@ -31,7 +31,7 @@ describe('ChatgptPairing', () => {
 
 			const result = await pairing.requestPairingCode();
 
-			expect(fetch).toHaveBeenCalledWith('https://aix.reflect.systems/pairing/start', {
+			expect(fetch).toHaveBeenCalledWith('https://xoxo.practicube.com/pairing/start', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 			});

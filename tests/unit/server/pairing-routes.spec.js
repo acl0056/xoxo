@@ -1,3 +1,5 @@
+process.env.JWT_SECRET = 'a-test-secret-that-is-at-least-32-bytes-long';
+
 const pairingStore = require('../../../server/pairing/store');
 const sessionStore = require('../../../server/session/store');
 

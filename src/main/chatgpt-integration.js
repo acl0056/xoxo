@@ -20,6 +20,40 @@ const chatgptConfig = require('./chatgpt-config');
 function setupChatgptIntegration(mainWindow, rebuildMenu) {
 	const client = new ChatgptClient();
 	const pairing = new ChatgptPairing();
+	let remoteSessionExpiryTimer = null;
+
+	function clearRemoteSessionExpiryTimer() {
+		if (remoteSessionExpiryTimer) {
+			clearTimeout(remoteSessionExpiryTimer);
+			remoteSessionExpiryTimer = null;
+		}
+	}
+
+	function markChatgptDisconnected({ notify = false } = {}) {
+		clearRemoteSessionExpiryTimer();
+		client.disconnect();
+		pairing.reset();
+		if (mainWindow && !mainWindow.isDestroyed()) {
+			mainWindow.webContents.send('chatgpt:disconnected');
+		}
+		if (notify) {
+			notifyConnectionLost(mainWindow);
+		}
+		rebuildMenu();
+	}
+
+	function scheduleRemoteSessionExpiry(expiresIn) {
+		clearRemoteSessionExpiryTimer();
+
+		if (!Number.isFinite(expiresIn) || expiresIn <= 0) {
+			return;
+		}
+
+		remoteSessionExpiryTimer = setTimeout(() => {
+			console.log('[ChatGPT] Remote ChatGPT session expired');
+			markChatgptDisconnected({ notify: true });
+		}, expiresIn * 1000);
+	}
 
 	/**
 	 * Request data from the renderer process via IPC.
@@ -94,8 +128,9 @@ function setupChatgptIntegration(mainWindow, rebuildMenu) {
 	 * Handle the pairing:success message from the server.
 	 * Updates pairing state and UI.
 	 */
-	function handlePairingSuccess() {
+	function handlePairingSuccess(payload = {}) {
 		pairing.markPaired();
+		scheduleRemoteSessionExpiry(payload.expiresIn);
 		if (mainWindow && !mainWindow.isDestroyed()) {
 			mainWindow.webContents.send('chatgpt:pairing-success');
 		}
@@ -200,6 +235,11 @@ function setupChatgptIntegration(mainWindow, rebuildMenu) {
 					notifyValidationFailure(mainWindow, reason);
 				},
 				onPairingSuccess: handlePairingSuccess,
+				onRemoteDisconnect: () => {
+					// MCP HTTP sessions can close between tool calls while the desktop
+					// WebSocket remains valid. Keep the desktop socket connected so
+					// future ChatGPT writes can still reach the app.
+				},
 			});
 
 			rebuildMenu();
@@ -214,12 +254,7 @@ function setupChatgptIntegration(mainWindow, rebuildMenu) {
 	 * and rebuild the menu.
 	 */
 	function chatgptDisconnect() {
-		client.disconnect();
-		pairing.reset();
-		if (mainWindow && !mainWindow.isDestroyed()) {
-			mainWindow.webContents.send('chatgpt:disconnected');
-		}
-		rebuildMenu();
+		markChatgptDisconnected();
 	}
 
 	/**

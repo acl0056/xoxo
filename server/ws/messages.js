@@ -18,6 +18,7 @@ const RESPONSE_REMOVE_COMPONENT = 'response:removeComponent';
 const RESPONSE_ADD_WIRE = 'response:addWire';
 const RESPONSE_REMOVE_WIRE = 'response:removeWire';
 const RESPONSE_MOVE_COMPONENT = 'response:moveComponent';
+const RESPONSE_SELECT_GRAPH_ANGLE = 'response:selectGraphAngle';
 const RESPONSE_BEGIN_EDIT_GROUP = 'response:beginEditGroup';
 const RESPONSE_END_EDIT_GROUP = 'response:endEditGroup';
 
@@ -29,6 +30,7 @@ const REQUEST_REMOVE_COMPONENT = 'request:removeComponent';
 const REQUEST_ADD_WIRE = 'request:addWire';
 const REQUEST_REMOVE_WIRE = 'request:removeWire';
 const REQUEST_MOVE_COMPONENT = 'request:moveComponent';
+const REQUEST_SELECT_GRAPH_ANGLE = 'request:selectGraphAngle';
 const REQUEST_BEGIN_EDIT_GROUP = 'request:beginEditGroup';
 const REQUEST_END_EDIT_GROUP = 'request:endEditGroup';
 
@@ -70,6 +72,7 @@ module.exports = {
 	RESPONSE_ADD_WIRE,
 	RESPONSE_REMOVE_WIRE,
 	RESPONSE_MOVE_COMPONENT,
+	RESPONSE_SELECT_GRAPH_ANGLE,
 	RESPONSE_BEGIN_EDIT_GROUP,
 	RESPONSE_END_EDIT_GROUP,
 
@@ -81,6 +84,7 @@ module.exports = {
 	REQUEST_ADD_WIRE,
 	REQUEST_REMOVE_WIRE,
 	REQUEST_MOVE_COMPONENT,
+	REQUEST_SELECT_GRAPH_ANGLE,
 	REQUEST_BEGIN_EDIT_GROUP,
 	REQUEST_END_EDIT_GROUP,
 

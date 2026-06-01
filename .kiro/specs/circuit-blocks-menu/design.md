@@ -220,7 +220,7 @@ export function insertBlock(circuit, block, variables, insertionPoint) { ... }
 
 ### CircuitBlock (parsed .xsc structure)
 
-**Schema:** `src/schemas/circuit-block.schema.json`
+**Schema:** `server/schemas/circuit-block.schema.json`
 
 ```javascript
 {
@@ -262,7 +262,7 @@ export function insertBlock(circuit, block, variables, insertionPoint) { ... }
 
 ### FormulaNode (AST)
 
-**Schema:** `src/schemas/formula-ast.schema.json`
+**Schema:** `server/schemas/formula-ast.schema.json`
 
 ```javascript
 // Number literal

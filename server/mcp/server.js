@@ -4,6 +4,7 @@ const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 /* eslint-enable import/extensions */
 const { z } = require('zod');
+const sessionStore = require('../session/store');
 
 const handleGetCircuitLayout = require('./tools/getCircuitLayout');
 const handleGetFrequencyResponse = require('./tools/getFrequencyResponse');
@@ -15,6 +16,7 @@ const handleRemoveComponent = require('./tools/removeComponent');
 const handleAddWire = require('./tools/addWire');
 const handleRemoveWire = require('./tools/removeWire');
 const handleMoveComponent = require('./tools/moveComponent');
+const handleSelectGraphAngle = require('./tools/selectGraphAngle');
 const handleGetUserLoadedFrds = require('./tools/getUserLoadedFrds');
 const handleBeginEditGroup = require('./tools/beginEditGroup');
 const handleEndEditGroup = require('./tools/endEditGroup');
@@ -132,6 +134,13 @@ function createMcpServer(getUserId) {
 		},
 	}, wrapToolHandler(handleMoveComponent, getUserId));
 
+	mcpServer.registerTool('select_graph_angle', {
+		description: 'Select the frequency-response graph angle being viewed. Selecting an angle runs the simulation for that selected angle in the Electron app.',
+		inputSchema: {
+			angle: z.number().min(0).max(180).describe('Off-axis angle in degrees to view and simulate. Use 0 for on-axis.'),
+		},
+	}, wrapToolHandler(handleSelectGraphAngle, getUserId));
+
 	mcpServer.registerTool('get_user_loaded_frds', {
 		description: 'Returns all user-loaded FRD measurement data currently displayed in the graph',
 	}, wrapToolHandler(handleGetUserLoadedFrds, getUserId));
@@ -205,6 +214,10 @@ function createMcpMiddleware() {
 					return;
 				}
 
+				if (session.userId) {
+					sessionStore.update(session.userId, { lastMcpActivityAt: new Date().toISOString() });
+				}
+
 				await session.transport.handleRequest(request, response, request.body);
 				return;
 			}
@@ -216,13 +229,33 @@ function createMcpMiddleware() {
 				const transport = new StreamableHTTPServerTransport({
 					sessionIdGenerator: () => crypto.randomUUID(),
 					onsessioninitialized: (newSessionId) => {
-						sessions.set(newSessionId, { transport, mcpServer });
+						sessions.set(newSessionId, { transport, mcpServer, userId });
+						const session = sessionStore.update(userId, {
+							mcpSessionId: newSessionId,
+							lastMcpActivityAt: new Date().toISOString(),
+						});
+						if (session && session.wsConnection) {
+							session.wsConnection.emit('message', {
+								type: 'chatgpt:session-active',
+								payload: { sessionId: newSessionId },
+							});
+						}
 					},
 				});
 
 				transport.onclose = () => {
 					if (transport.sessionId) {
 						sessions.delete(transport.sessionId);
+						const session = sessionStore.get(userId);
+						if (session && session.mcpSessionId === transport.sessionId) {
+							sessionStore.update(userId, { mcpSessionId: null });
+							if (session.wsConnection) {
+								session.wsConnection.emit('message', {
+									type: 'chatgpt:session-closed',
+									payload: { sessionId: transport.sessionId },
+								});
+							}
+						}
 					}
 				};
 

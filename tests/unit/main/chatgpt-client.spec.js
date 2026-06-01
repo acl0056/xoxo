@@ -51,6 +51,7 @@ describe('ChatgptClient', () => {
 			onEditRequest: jest.fn(),
 			onDisconnect: jest.fn(),
 			onValidationError: jest.fn(),
+			onRemoteDisconnect: jest.fn(),
 		};
 	});
 
@@ -70,19 +71,19 @@ describe('ChatgptClient', () => {
 			});
 		});
 
-		it('should push full state on connect', () => {
+		it('should push full state on connect', async () => {
 			client.connect('https://example.com', 'test-token', callbacks);
 			mockSocket._trigger('connect');
+			await Promise.resolve();
+			await Promise.resolve();
 
 			expect(callbacks.getCircuitLayout).toHaveBeenCalled();
 			expect(callbacks.getSimulationResults).toHaveBeenCalled();
 			expect(callbacks.getUserLoadedFrds).toHaveBeenCalled();
-			expect(mockSocket.emit).toHaveBeenCalledWith('message', {
-				type: 'state:circuit',
+			expect(mockSocket.emit).toHaveBeenCalledWith('state:circuit', {
 				payload: { version: '1.0', components: [] },
 			});
-			expect(mockSocket.emit).toHaveBeenCalledWith('message', {
-				type: 'state:simulation',
+			expect(mockSocket.emit).toHaveBeenCalledWith('state:simulation', {
 				payload: { frequencyResponse: {} },
 			});
 		});
@@ -101,7 +102,7 @@ describe('ChatgptClient', () => {
 			mockSocket._trigger('connect');
 
 			const circuitEmits = mockSocket.emit.mock.calls.filter(
-				(call) => call[1] && call[1].type === 'state:circuit',
+				(call) => call[0] === 'state:circuit',
 			);
 			expect(circuitEmits).toHaveLength(0);
 		});
@@ -138,8 +139,7 @@ describe('ChatgptClient', () => {
 			const layout = { version: '1.0', components: [{ id: 'r1' }] };
 			client.pushCircuitLayout(layout);
 
-			expect(mockSocket.emit).toHaveBeenCalledWith('message', {
-				type: 'state:circuit',
+			expect(mockSocket.emit).toHaveBeenCalledWith('state:circuit', {
 				payload: layout,
 			});
 		});
@@ -163,8 +163,7 @@ describe('ChatgptClient', () => {
 			const results = { frequencyResponse: { frequencies: [100, 200] } };
 			client.pushSimulationResults(results);
 
-			expect(mockSocket.emit).toHaveBeenCalledWith('message', {
-				type: 'state:simulation',
+			expect(mockSocket.emit).toHaveBeenCalledWith('state:simulation', {
 				payload: results,
 			});
 		});
@@ -179,8 +178,7 @@ describe('ChatgptClient', () => {
 			const frds = [{ label: 'test.frd', frequencies: [100] }];
 			client.pushUserLoadedFrds(frds);
 
-			expect(mockSocket.emit).toHaveBeenCalledWith('message', {
-				type: 'state:userFrds',
+			expect(mockSocket.emit).toHaveBeenCalledWith('state:userFrds', {
 				payload: frds,
 			});
 		});
@@ -204,6 +202,22 @@ describe('ChatgptClient', () => {
 			);
 		});
 
+		it('should call onEditRequest when selectGraphAngle is received as a socket event', () => {
+			client.connect('https://example.com', 'test-token', callbacks);
+			mockSocket._trigger('connect');
+
+			mockSocket._trigger('request:selectGraphAngle', {
+				payload: { angle: 30 },
+				requestId: 'req-angle',
+			});
+
+			expect(callbacks.onEditRequest).toHaveBeenCalledWith(
+				'request:selectGraphAngle',
+				{ angle: 30 },
+				'req-angle',
+			);
+		});
+
 		it('should call onValidationError for error:validation messages', () => {
 			client.connect('https://example.com', 'test-token', callbacks);
 			mockSocket._trigger('connect');
@@ -215,6 +229,19 @@ describe('ChatgptClient', () => {
 			});
 
 			expect(callbacks.onValidationError).toHaveBeenCalledWith(errors);
+		});
+
+		it('should call onRemoteDisconnect for chatgpt:session-closed messages', () => {
+			client.connect('https://example.com', 'test-token', callbacks);
+			mockSocket._trigger('connect');
+
+			const payload = { sessionId: 'mcp-session-1' };
+			mockSocket._trigger('message', {
+				type: 'chatgpt:session-closed',
+				payload,
+			});
+
+			expect(callbacks.onRemoteDisconnect).toHaveBeenCalledWith(payload);
 		});
 
 		it('should ignore messages with no type', () => {
@@ -281,9 +308,11 @@ describe('ChatgptClient', () => {
 			expect(client.reconnectAttempt).toBe(0);
 		});
 
-		it('should push full state on reconnect', () => {
+		it('should push full state on reconnect', async () => {
 			client.connect('https://example.com', 'test-token', callbacks);
 			mockSocket._trigger('connect');
+			await Promise.resolve();
+			await Promise.resolve();
 			callbacks.getCircuitLayout.mockClear();
 			callbacks.getSimulationResults.mockClear();
 			callbacks.getUserLoadedFrds.mockClear();
@@ -292,6 +321,8 @@ describe('ChatgptClient', () => {
 			mockSocket._trigger('disconnect');
 			jest.advanceTimersByTime(1000);
 			mockSocket._trigger('connect');
+			await Promise.resolve();
+			await Promise.resolve();
 
 			expect(callbacks.getCircuitLayout).toHaveBeenCalled();
 			expect(callbacks.getSimulationResults).toHaveBeenCalled();

@@ -50,6 +50,7 @@ class ChatgptClient {
 	 * @param {function} callbacks.onDisconnect - Called on unexpected disconnect
 	 * @param {function} callbacks.onValidationError - Called with (errors) when server rejects a state push
 	 * @param {function} [callbacks.onPairingSuccess] - Called when pairing:success event is received
+	 * @param {function} [callbacks.onRemoteDisconnect] - Called when the remote ChatGPT MCP session closes
 	 */
 	connect(serverUrl, accessToken, callbacks) {
 		this.serverUrl = serverUrl;
@@ -162,7 +163,8 @@ class ChatgptClient {
 		const requestTypes = [
 			'request:optimize', 'request:setCircuitLayout', 'request:addComponent',
 			'request:removeComponent', 'request:addWire', 'request:removeWire',
-			'request:moveComponent', 'request:beginEditGroup', 'request:endEditGroup',
+			'request:moveComponent', 'request:selectGraphAngle',
+			'request:beginEditGroup', 'request:endEditGroup',
 		];
 		for (const requestType of requestTypes) {
 			this.socket.on(requestType, (message) => {
@@ -246,6 +248,13 @@ class ChatgptClient {
 		if (type === 'error:validation') {
 			if (this.callbacks && this.callbacks.onValidationError) {
 				this.callbacks.onValidationError(payload);
+			}
+			return;
+		}
+
+		if (type === 'chatgpt:session-closed') {
+			if (this.callbacks && this.callbacks.onRemoteDisconnect) {
+				this.callbacks.onRemoteDisconnect(payload);
 			}
 			return;
 		}

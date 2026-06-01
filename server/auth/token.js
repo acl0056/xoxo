@@ -1,7 +1,7 @@
 const jsonwebtoken = require('jsonwebtoken');
 
-const ISSUER = 'https://aix.reflect.systems';
-const AUDIENCE = 'https://aix.reflect.systems/mcp';
+const ISSUER = 'https://xoxo.practicube.com';
+const AUDIENCE = 'https://xoxo.practicube.com/mcp';
 const TOKEN_LIFETIME_SECONDS = 3600;
 const MINIMUM_SECRET_LENGTH = 32;
 

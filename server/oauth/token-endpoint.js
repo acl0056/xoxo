@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { Router } = require('express');
-const { signAccessToken } = require('../auth/token');
+const { signAccessToken, TOKEN_LIFETIME_SECONDS } = require('../auth/token');
 const { authorizationCodes } = require('./authorize');
 const sessionStore = require('../session/store');
 
@@ -84,14 +84,17 @@ router.post('/oauth/token', (req, res) => {
 	if (session && session.wsConnection) {
 		session.wsConnection.emit('message', {
 			type: 'pairing:success',
-			payload: { sessionId: authCodeEntry.sessionId },
+			payload: {
+				sessionId: authCodeEntry.sessionId,
+				expiresIn: TOKEN_LIFETIME_SECONDS,
+			},
 		});
 	}
 
 	return res.status(200).json({
 		access_token: accessToken,
 		token_type: 'bearer',
-		expires_in: 3600,
+		expires_in: TOKEN_LIFETIME_SECONDS,
 	});
 });
 

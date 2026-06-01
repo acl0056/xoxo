@@ -1,7 +1,7 @@
 const { verifyAccessToken } = require('./token');
 const sessionStore = require('../session/store');
 
-const WWW_AUTHENTICATE_HEADER = 'Bearer realm="https://aix.reflect.systems", resource_metadata="https://aix.reflect.systems/.well-known/oauth-protected-resource"';
+const WWW_AUTHENTICATE_HEADER = 'Bearer realm="https://xoxo.practicube.com", resource_metadata="https://xoxo.practicube.com/.well-known/oauth-protected-resource"';
 
 const WRITE_TOOLS = new Set([
 	'optimize_component',
@@ -11,6 +11,7 @@ const WRITE_TOOLS = new Set([
 	'add_wire',
 	'remove_wire',
 	'move_component',
+	'select_graph_angle',
 	'begin_edit_group',
 	'end_edit_group',
 ]);

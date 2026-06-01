@@ -5,11 +5,11 @@
  */
 
 const chatgptConfig = {
-	serverUrl: 'https://aix.reflect.systems',
+	serverUrl: 'https://xoxo.practicube.com',
 
 	oauth: {
-		issuer: 'https://aix.reflect.systems',
-		audience: 'https://aix.reflect.systems/mcp',
+		issuer: 'https://xoxo.practicube.com',
+		audience: 'https://xoxo.practicube.com/mcp',
 	},
 
 	conversationUrl: 'https://chatgpt.com',

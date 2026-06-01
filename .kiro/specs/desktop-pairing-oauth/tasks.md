@@ -12,12 +12,12 @@ Replace the external Auth0/JWKS-based OAuth flow with a self-contained OAuth 2.1
     - Implement `verifyAccessToken(jwtString)` that validates signature, algorithm, expiration, and issuer
     - Read `JWT_SECRET` from environment, validate it is at least 32 bytes on startup
     - Use `jsonwebtoken` package (already a dependency)
-    - Issuer: `https://aix.reflect.systems`, audience: `https://aix.reflect.systems/mcp`, lifetime: 3600s
+    - Issuer: `https://xoxo.practicube.com`, audience: `https://xoxo.practicube.com/mcp`, lifetime: 3600s
     - _Requirements: 4.4, 4.5, 4.6, 4.7, 4.11, 9.1, 9.2, 9.3, 9.5_
 
   - [ ]* 1.2 Write property test for issued JWT correctness (Property 10)
     - **Property 10: Issued JWT correctness**
-    - For any session ID, `signAccessToken` produces a JWT where: `alg` header is `HS256`, `sub` equals the session ID, `iss` equals `https://aix.reflect.systems`, `aud` equals `https://aix.reflect.systems/mcp`, and `exp - iat` equals 3600
+    - For any session ID, `signAccessToken` produces a JWT where: `alg` header is `HS256`, `sub` equals the session ID, `iss` equals `https://xoxo.practicube.com`, `aud` equals `https://xoxo.practicube.com/mcp`, and `exp - iat` equals 3600
     - **Validates: Requirements 4.4, 4.5, 4.6, 4.7, 9.1**
 
   - [ ]* 1.3 Write property test for token validation rejects invalid tokens (Property 11)
@@ -170,15 +170,15 @@ Replace the external Auth0/JWKS-based OAuth flow with a self-contained OAuth 2.1
   - [x] 10.2 Update `server/config.js` to remove external OAuth settings
     - Remove `jwksUri`, `clientId`, `clientSecret` from oauth config
     - Add `jwtSecret` reading from `JWT_SECRET` env var
-    - Keep `issuer` set to `https://aix.reflect.systems`
-    - Keep `audience` set to `https://aix.reflect.systems/mcp`
+    - Keep `issuer` set to `https://xoxo.practicube.com`
+    - Keep `audience` set to `https://xoxo.practicube.com/mcp`
     - Keep `tokenLifetimeSeconds: 3600`
     - _Requirements: 10.3_
 
 - [x] 11. Implement desktop app pairing integration
   - [x] 11.1 Update `src/main/chatgpt-config.js` to reference self-issued OAuth endpoints
-    - Set `oauth.issuer` to `https://aix.reflect.systems`
-    - Set `oauth.audience` to `https://aix.reflect.systems/mcp`
+    - Set `oauth.issuer` to `https://xoxo.practicube.com`
+    - Set `oauth.audience` to `https://xoxo.practicube.com/mcp`
     - Remove `clientId` (server accepts any client_id)
     - _Requirements: 10.4_
 

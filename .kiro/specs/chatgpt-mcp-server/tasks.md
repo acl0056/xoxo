@@ -22,7 +22,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
     - _Requirements: 1.6, 11.8_
 
   - [x] 1.3 Create server/validation/validator.js — AJV schema validation wrapper
-    - Import and compile circuit.schema.json, simulation-results.schema.json, frd-data.schema.json from `../../src/schemas/`
+    - Import and compile circuit.schema.json, simulation-results.schema.json, frd-data.schema.json from `server/schemas/`
     - Export validation functions: `validateCircuitLayout`, `validateSimulationResults`, `validateFrdData`, `validateComponent`, `validateWire`
     - Use `allErrors: true` for descriptive error messages
     - _Requirements: 1.3, 4.2, 13.1, 14.6_
@@ -214,7 +214,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
 
   - [ ]* 8.5 Write property test for schema resource content fidelity (Property 15)
     - **Property 15: Schema Resource Content Fidelity**
-    - Each schema resource returns content identical to the corresponding file in `src/schemas/`, with MIME type application/json
+    - Each schema resource returns content identical to the corresponding file in `server/schemas/`, with MIME type application/json
     - **Validates: Requirements 9.4**
 
   - [ ]* 8.6 Write property test for MCP request validation (Property 1)
@@ -324,7 +324,7 @@ Implementation proceeds bottom-up: shared infrastructure first (config, validati
 - Property tests validate universal correctness properties from the design document
 - Unit tests validate specific examples and edge cases
 - The server uses plain JavaScript (no TypeScript), tabs for indentation, Airbnb-base ESLint
-- Shared schemas are imported from `src/schemas/` — no duplication
+- Shared schemas are imported from `server/schemas/` — no duplication
 - socket.io is used for WebSocket communication (not raw `ws`)
 - nginx handles TLS — Node.js listens HTTP only
 - Sensitive config values come from `process.env`, non-sensitive are hardcoded in config.js

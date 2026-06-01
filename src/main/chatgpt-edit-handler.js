@@ -6,6 +6,7 @@ const {
 	RESPONSE_ADD_WIRE,
 	RESPONSE_REMOVE_WIRE,
 	RESPONSE_MOVE_COMPONENT,
+	RESPONSE_SELECT_GRAPH_ANGLE,
 	RESPONSE_BEGIN_EDIT_GROUP,
 	RESPONSE_END_EDIT_GROUP,
 } = require('../../server/ws/messages');
@@ -100,8 +101,12 @@ function createEditHandler({ store, mainWindow, socket }) {
 			payload: { componentId, updates: { parameters: previousParameters } },
 		});
 
-		// Apply new parameters
-		store.commit('circuit/UPDATE_COMPONENT', { componentId, updates: { parameters } });
+		// ChatGPT sends partial parameter patches; keep the rest of the component tuning intact.
+		const mergedParameters = {
+			...previousParameters,
+			...parameters,
+		};
+		store.commit('circuit/UPDATE_COMPONENT', { componentId, updates: { parameters: mergedParameters } });
 
 		// Trigger simulation
 		triggerSimulation();
@@ -322,6 +327,31 @@ function createEditHandler({ store, mainWindow, socket }) {
 	}
 
 	/**
+	 * Handle request:selectGraphAngle — change the viewed graph angle.
+	 * The renderer simulation store runs the selected-angle simulation.
+	 *
+	 * @param {object} payload - { angle }
+	 * @param {string} requestId - Correlation ID
+	 */
+	function handleSelectGraphAngle(payload, requestId) {
+		const { angle } = payload;
+
+		Promise.resolve(store.dispatch('simulation/switchAngle', angle))
+			.then(() => {
+				sendResponse(RESPONSE_SELECT_GRAPH_ANGLE, {
+					success: true,
+					angle,
+				}, requestId);
+			})
+			.catch((error) => {
+				sendResponse(RESPONSE_SELECT_GRAPH_ANGLE, {
+					success: false,
+					error: error.message || 'Failed to select graph angle',
+				}, requestId);
+			});
+	}
+
+	/**
 	 * Handle request:beginEditGroup — save undo checkpoint and suppress
 	 * individual undo entries until endEditGroup is received.
 	 *
@@ -416,6 +446,9 @@ function createEditHandler({ store, mainWindow, socket }) {
 				break;
 			case 'request:moveComponent':
 				handleMoveComponent(payload, requestId);
+				break;
+			case 'request:selectGraphAngle':
+				handleSelectGraphAngle(payload, requestId);
 				break;
 			case 'request:beginEditGroup':
 				handleBeginEditGroup(payload, requestId);

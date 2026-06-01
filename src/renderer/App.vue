@@ -6,26 +6,54 @@
 			:visible="showAboutDialog"
 			@close="showAboutDialog = false"
 		/>
-		<div v-if="showPairingDialog" class="pairing-overlay">
+		<div
+			v-if="showPairingDialog"
+			class="pairing-overlay"
+		>
 			<div class="pairing-dialog">
 				<h2>Connect to ChatGPT</h2>
-				<p v-if="!pairingExpired">Enter this code in the ChatGPT authorization page:</p>
-				<p v-else class="pairing-expired-message">Code expired.</p>
+				<p
+					class="pairing-instruction"
+					:class="{ 'pairing-expired-message': pairingExpired }"
+				>
+					{{ pairingExpired ? 'Code expired.' : 'Enter this code in the ChatGPT authorization page:' }}
+				</p>
 				<div
-					v-if="!pairingExpired"
 					class="pairing-code"
+					:class="{ 'pairing-code-expired': pairingExpired }"
 					@click="copyPairingCode"
 				>
-					{{ pairingCode }}
-					<span v-if="pairingCopied" class="pairing-copied">Copied to clipboard</span>
+					<span
+						ref="pairingCodeText"
+						class="pairing-code-text"
+					>{{ pairingExpired ? 'XOXO-XXXX' : pairingCode }}</span>
+					<span
+						class="pairing-copied"
+						:class="{ 'pairing-copied-visible': pairingCopied && !pairingExpired }"
+					>
+						Copied to clipboard
+					</span>
 				</div>
-				<p v-if="pairingCountdown && !pairingExpired" class="pairing-countdown">
-					Expires in {{ Math.floor(pairingCountdown / 60) }}:{{ String(pairingCountdown % 60).padStart(2, '0') }}
+				<p class="pairing-countdown">
+					<span
+						:class="{ 'pairing-countdown-hidden': !pairingCountdown || pairingExpired }"
+					>
+						Expires in {{ Math.floor((pairingCountdown || 0) / 60) }}:{{ String((pairingCountdown || 0) % 60).padStart(2, '0') }}
+					</span>
 				</p>
-				<button v-if="pairingExpired" class="pairing-button" @click="requestNewCode">
-					Generate New Code
-				</button>
-				<button class="pairing-button pairing-cancel" @click="cancelPairing">
+				<div class="pairing-action-slot">
+					<button
+						v-if="pairingExpired"
+						class="pairing-button"
+						@click="requestNewCode"
+					>
+						Generate New Code
+					</button>
+				</div>
+				<button
+					class="pairing-button pairing-cancel"
+					@click="cancelPairing"
+				>
 					Cancel
 				</button>
 			</div>
@@ -34,12 +62,16 @@
 </template>
 
 <script>
-import ComponentPalette from './components/ComponentPalette.vue';
-import CircuitEditor from './components/CircuitEditor.vue';
-import AboutDialog from './components/AboutDialog.vue';
 import { useToast } from 'vue-toastification';
 import { Circuit } from '@/models/Circuit';
 import { Wire } from '@/models/Wire';
+import AboutDialog from './components/AboutDialog.vue';
+import CircuitEditor from './components/CircuitEditor.vue';
+import ComponentPalette from './components/ComponentPalette.vue';
+
+function toIpcPayload(value) {
+	return JSON.parse(JSON.stringify(value));
+}
 
 export default {
 	name: 'App',
@@ -153,7 +185,7 @@ export default {
 		// Auto-accept edit requests from ChatGPT (no confirmation dialog)
 		let editGroupActions = null; // Collects actions during an edit group
 
-		ipcRenderer.on('chatgpt:edit-request', (event, { type, payload, requestId }) => {
+		ipcRenderer.on('chatgpt:edit-request', async (event, { type, payload, requestId }) => {
 			console.log('[ChatGPT IPC] edit-request:', type, requestId);
 			try {
 				const responseType = type.replace('request:', 'response:');
@@ -177,24 +209,25 @@ export default {
 					editGroupActions = null;
 				} else if (type === 'request:optimize') {
 					const { componentId, parameters } = payload;
+					const circuit = this.$store.getters['circuit/getCircuit'];
+					const component = circuit ? circuit.getComponent(componentId) : null;
+					const previousParameters = component
+						? JSON.parse(JSON.stringify(component.parameters))
+						: null;
+					const mergedParameters = previousParameters
+						? { ...previousParameters, ...parameters }
+						: parameters;
+
 					// Capture previous values for the batch undo
-					if (editGroupActions !== null) {
-						const circuit = this.$store.getters['circuit/getCircuit'];
-						const component = circuit ? circuit.getComponent(componentId) : null;
-						if (component) {
-							const previousValues = {};
-							Object.keys(parameters).forEach((key) => {
-								previousValues[key] = component.parameters[key];
-							});
-							editGroupActions.push({
-								type: 'updateComponent',
-								payload: { componentId, updates: { parameters: previousValues } },
-							});
-						}
+					if (editGroupActions !== null && previousParameters) {
+						editGroupActions.push({
+							type: 'updateComponent',
+							payload: { componentId, updates: { parameters: previousParameters } },
+						});
 					}
 					this.$store.dispatch('circuit/updateComponent', {
 						componentId,
-						updates: { parameters },
+						updates: { parameters: mergedParameters },
 					});
 				} else if (type === 'request:addComponent') {
 					const componentData = payload.component || payload;
@@ -244,6 +277,15 @@ export default {
 						componentId,
 						updates: { x, y },
 					});
+				} else if (type === 'request:selectGraphAngle') {
+					const { angle } = payload;
+					await this.$store.dispatch('simulation/switchAngle', angle);
+					result = {
+						success: true,
+						angle: this.$store.state.simulation.currentAngle,
+						availableAngles: [...this.$store.state.simulation.availableAngles],
+						excludedSpeakerIds: [...this.$store.state.simulation.excludedSpeakers],
+					};
 				} else if (type === 'request:setCircuitLayout') {
 					this.$store.dispatch('circuit/loadFromJSON', payload.layout || payload);
 				} else {
@@ -251,7 +293,7 @@ export default {
 					result = { success: false, error: `Unhandled request type: ${type}` };
 				}
 
-				ipcRenderer.send('chatgpt:edit-response', { responseType, payload: result, requestId });
+				ipcRenderer.send('chatgpt:edit-response', toIpcPayload({ responseType, payload: result, requestId }));
 			} catch (error) {
 				console.error('[ChatGPT IPC] edit-request error:', error);
 				const responseType = type.replace('request:', 'response:');
@@ -345,7 +387,9 @@ export default {
 		// ChatGPT pairing flow
 		ipcRenderer.on('chatgpt:pairing-code', (event, { code }) => {
 			this.pairingCode = code;
+			this.pairingCountdown = null;
 			this.pairingExpired = false;
+			this.pairingCopied = false;
 			this.showPairingDialog = true;
 		});
 
@@ -439,7 +483,7 @@ export default {
 			navigator.clipboard.writeText(this.pairingCode);
 			const selection = window.getSelection();
 			const range = document.createRange();
-			range.selectNodeContents(event.currentTarget);
+			range.selectNodeContents(this.$refs.pairingCodeText);
 			selection.removeAllRanges();
 			selection.addRange(range);
 			this.pairingCopied = true;
@@ -864,12 +908,18 @@ export default {
 	border-radius: 8px;
 	padding: 32px;
 	text-align: center;
-	min-width: 320px;
+	width: 460px;
+	min-height: 330px;
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .pairing-dialog h2 {
 	margin: 0 0 12px;
+}
+
+.pairing-instruction {
+	min-height: 20px;
+	margin: 0;
 }
 
 .pairing-code {
@@ -883,15 +933,28 @@ export default {
 	border-radius: 6px;
 	cursor: pointer;
 	position: relative;
-	user-select: all;
+	user-select: text;
 }
 
-.pairing-code:hover {
+.pairing-code-text {
+	display: block;
+	min-height: 43px;
+	white-space: nowrap;
+}
+
+.pairing-code-expired {
+	cursor: default;
+	color: transparent;
+	user-select: none;
+}
+
+.pairing-code:not(.pairing-code-expired):hover {
 	background: #e4e4e4;
 }
 
 .pairing-copied {
 	display: block;
+	visibility: hidden;
 	font-size: 12px;
 	font-weight: normal;
 	letter-spacing: normal;
@@ -899,14 +962,27 @@ export default {
 	margin-top: 8px;
 }
 
+.pairing-copied-visible {
+	visibility: visible;
+}
+
 .pairing-countdown {
 	color: #666;
+	min-height: 17px;
 	margin: 8px 0 16px;
+}
+
+.pairing-countdown-hidden {
+	visibility: hidden;
 }
 
 .pairing-expired-message {
 	color: #c00;
 	font-weight: bold;
+}
+
+.pairing-action-slot {
+	min-height: 46px;
 }
 
 .pairing-button {

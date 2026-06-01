@@ -31,6 +31,7 @@ application.use(tokenEndpointRouter);
 
 // Debug endpoint to inspect session data
 const sessionStore = require('./session/store');
+
 application.get('/debug/session/:userId', (req, res) => {
 	const session = sessionStore.get(req.params.userId);
 	if (!session) {
@@ -43,27 +44,6 @@ application.get('/debug/session/:userId', (req, res) => {
 		simulationResultsKeys: data.simulationResults ? Object.keys(data.simulationResults) : null,
 		circuitLayoutPresent: !!data.circuitLayout,
 	});
-});
-
-// Request logging for debugging
-application.use('/mcp', (req, res, next) => {
-	const start = Date.now();
-
-	res.on('finish', () => {
-		// console.log('[MCP]', {
-		// 	method: req.method,
-		// 	path: req.path,
-		// 	status: res.statusCode,
-		// 	session: req.headers['mcp-session-id'] || 'none',
-		// 	accept: req.headers.accept,
-		// 	contentType: req.headers['content-type'],
-		// 	rpcMethod: req.body?.method,
-		// 	rpcId: req.body?.id,
-		// 	ms: Date.now() - start,
-		// });
-	});
-
-	next();
 });
 
 application.use('/mcp', tokenValidationMiddleware, mcpMiddleware);

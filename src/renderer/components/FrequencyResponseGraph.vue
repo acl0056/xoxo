@@ -414,8 +414,8 @@ export default {
 	},
 	methods: {
 		resizeCanvas() {
-			const container = this.canvas.parentElement;
 			const menuHeight = this.$refs.graphMenu ? this.$refs.graphMenu.offsetHeight : 0;
+			const container = this.canvas.parentElement;
 			this.canvas.width = container.clientWidth;
 			this.canvas.height = container.clientHeight - menuHeight;
 			this.renderGraph();
@@ -551,17 +551,20 @@ export default {
 			this.context.strokeStyle = '#e0e0e0';
 			this.context.lineWidth = 1;
 
-			// Vertical grid lines (frequency)
-			const freqDecades = Math.log10(this.scaleSettings.maxFreq / this.scaleSettings.minFreq);
-			const numVerticalLines = Math.ceil(freqDecades) * 10;
+			// Vertical grid lines (frequency) — draw at each sub-decade (1, 2, 3, ..., 9 of each decade)
+			const minDecade = Math.floor(Math.log10(this.scaleSettings.minFreq));
+			const maxDecade = Math.ceil(Math.log10(this.scaleSettings.maxFreq));
 
-			for (let i = 0; i <= numVerticalLines; i++) {
-				const logPos = i / numVerticalLines;
-				const x = margin.left + logPos * graphWidth;
-				this.context.beginPath();
-				this.context.moveTo(x, margin.top);
-				this.context.lineTo(x, margin.top + graphHeight);
-				this.context.stroke();
+			for (let decade = minDecade; decade <= maxDecade; decade++) {
+				for (let sub = 1; sub <= 9; sub++) {
+					const freq = sub * (10 ** decade);
+					if (freq < this.scaleSettings.minFreq || freq > this.scaleSettings.maxFreq) continue;
+					const x = this.frequencyToX(freq, margin.left, graphWidth);
+					this.context.beginPath();
+					this.context.moveTo(x, margin.top);
+					this.context.lineTo(x, margin.top + graphHeight);
+					this.context.stroke();
+				}
 			}
 
 			// Horizontal grid lines (magnitude)
@@ -834,8 +837,10 @@ export default {
 		},
 		handleMouseMove(event) {
 			const rect = this.canvas.getBoundingClientRect();
-			const x = event.clientX - rect.left;
-			const y = event.clientY - rect.top;
+			const scaleX = this.canvas.width / rect.width;
+			const scaleY = this.canvas.height / rect.height;
+			const x = (event.clientX - rect.left) * scaleX;
+			const y = (event.clientY - rect.top) * scaleY;
 
 			const margin = {
 				top: 7,

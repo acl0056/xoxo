@@ -24,7 +24,7 @@
 				</p>
 				<p class="description">
 					A cross-platform loudspeaker crossover network modeling application
-					for designing and analyzing passive crossover networks.
+					for designing crossover networks.
 				</p>
 				<div class="credits">
 					<h3>Credits</h3>

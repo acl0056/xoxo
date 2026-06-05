@@ -3,7 +3,7 @@
   "metadata": {
     "name": "",
     "created": "2026-04-18T17:59:37.427Z",
-    "modified": "2026-06-01T17:55:37.771Z"
+    "modified": "2026-06-05T00:59:19.217Z"
   },
   "components": [
     {
@@ -25,7 +25,7 @@
       "type": "inductor",
       "label": "L1",
       "x": 41,
-      "y": 55,
+      "y": 65,
       "rotation": 0,
       "parameters": {
         "inductance": 0.0022,
@@ -53,7 +53,7 @@
       "type": "capacitor",
       "label": "C2",
       "x": 44,
-      "y": 58,
+      "y": 68,
       "rotation": 270,
       "parameters": {
         "capacitance": 0.000022,
@@ -106,7 +106,7 @@
       "type": "resistor",
       "label": "R4",
       "x": 41,
-      "y": 61,
+      "y": 71,
       "rotation": 0,
       "parameters": {
         "resistance": 0.33,
@@ -118,9 +118,9 @@
       "id": "mo4n6bx0-40yuzw8",
       "type": "resistor",
       "label": "R5",
-      "x": 47,
-      "y": 44,
-      "rotation": 0,
+      "x": 44,
+      "y": 47,
+      "rotation": 90,
       "parameters": {
         "resistance": 0.33,
         "tolerance": 5,
@@ -181,8 +181,8 @@
       "id": "mo4n6bx0-cu1ocw9",
       "type": "ground",
       "label": "",
-      "x": 50,
-      "y": 44,
+      "x": 44,
+      "y": 50,
       "rotation": 0,
       "parameters": {}
     },
@@ -191,7 +191,7 @@
       "type": "ground",
       "label": "",
       "x": 38,
-      "y": 61,
+      "y": 71,
       "rotation": 0,
       "parameters": {}
     },
@@ -200,7 +200,7 @@
       "type": "ground",
       "label": "",
       "x": 65,
-      "y": 57,
+      "y": 67,
       "rotation": 0,
       "parameters": {}
     },
@@ -6934,7 +6934,7 @@
       "type": "speaker",
       "label": "S2",
       "x": 66,
-      "y": 56,
+      "y": 66,
       "rotation": 0,
       "parameters": {
         "name": "Woofer",
@@ -13661,7 +13661,7 @@
       "type": "wire-segment",
       "label": "",
       "x": 54.5,
-      "y": 55,
+      "y": 65,
       "rotation": 0,
       "parameters": {
         "length": 21
@@ -13683,7 +13683,7 @@
       "type": "wire-segment",
       "label": "",
       "x": 32,
-      "y": 55,
+      "y": 65,
       "rotation": 0,
       "parameters": {
         "length": 12
@@ -13754,9 +13754,9 @@
       "id": "tw-notch-r13-2800",
       "type": "resistor",
       "label": "R13",
-      "x": 62,
-      "y": 50,
-      "rotation": 0,
+      "x": 59,
+      "y": 53,
+      "rotation": 90,
       "parameters": {
         "resistance": 12,
         "tolerance": 5,
@@ -13767,10 +13767,21 @@
       "id": "tw-notch-ground-2800",
       "type": "ground",
       "label": "",
-      "x": 65,
-      "y": 50,
-      "rotation": 270,
+      "x": 59,
+      "y": 56,
+      "rotation": 0,
       "parameters": {}
+    },
+    {
+      "id": "mq073jdp-tosx31b",
+      "type": "wire-segment",
+      "label": "",
+      "x": 26,
+      "y": 60,
+      "rotation": 90,
+      "parameters": {
+        "length": 10
+      }
     }
   ],
   "wires": [
@@ -13799,18 +13810,6 @@
       "segments": []
     },
     {
-      "id": "mo4n6bx4-q72me5w",
-      "startNode": {
-        "componentId": "mo4n6bwz-36pra54",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-hfo839z",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
       "id": "mo4n6bx4-xbzxmby",
       "startNode": {
         "componentId": "mo4n6bwz-91ukkc0",
@@ -13835,18 +13834,6 @@
       "segments": []
     },
     {
-      "id": "mo4n6bx4-bcxbak3",
-      "startNode": {
-        "componentId": "mo4n6bwz-91ukkc0",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
       "id": "mo4n6bx4-7bbfx9p",
       "startNode": {
         "componentId": "mo4n6bwz-91ukkc0",
@@ -13859,33 +13846,9 @@
       "segments": []
     },
     {
-      "id": "mo4n6bx4-22mpdfd",
-      "startNode": {
-        "componentId": "mo4n6bx0-rehxu91",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
       "id": "mo4n6bx4-fmt9jo8",
       "startNode": {
         "componentId": "mo4n6bx0-rehxu91",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bwjvwlm",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-xetxist",
-      "startNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
         "terminal": 0
       },
       "endNode": {
@@ -13967,34 +13930,10 @@
       "segments": []
     },
     {
-      "id": "mo4n6bx4-x7frc56",
-      "startNode": {
-        "componentId": "mo4n6bx0-ejc2k22",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
       "id": "mo4n6bx4-z7q9x9d",
       "startNode": {
         "componentId": "mo4n6bx0-ejc2k22",
         "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-bciytaw",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-9zjb0a8",
-      "startNode": {
-        "componentId": "mo4n6bx0-iul6v8b",
-        "terminal": 1
       },
       "endNode": {
         "componentId": "mo4n6bx3-bciytaw",
@@ -14011,18 +13950,6 @@
       "endNode": {
         "componentId": "mo4n6bx3-5729skh",
         "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-6673pbm",
-      "startNode": {
-        "componentId": "mo4n6bx0-3z79hbb",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx2-714i7iq",
-        "terminal": 1
       },
       "segments": []
     },
@@ -14046,78 +13973,6 @@
       },
       "endNode": {
         "componentId": "mo4n6bx3-5729skh",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mo4n6bx4-79de4ee",
-      "startNode": {
-        "componentId": "mo4n6bx3-pi3pbel",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bx3-hfo839z",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "momc6ghk-p4if4il",
-      "startNode": {
-        "componentId": "mo4n6bx0-40yuzw8",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-rehxu91",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "momc6snz-63agqv2",
-      "startNode": {
-        "componentId": "mo4n6bx0-cu1ocw9",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-40yuzw8",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mp6z63r1-5zxhsec",
-      "startNode": {
-        "componentId": "mo4n6bx0-jqwyq9j",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-1vgokep",
-        "terminal": 0
-      },
-      "segments": []
-    },
-    {
-      "id": "mp6z685v-9x7iz6n",
-      "startNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
-        "terminal": 0
-      },
-      "endNode": {
-        "componentId": "mo4n6bx0-1vgokep",
-        "terminal": 1
-      },
-      "segments": []
-    },
-    {
-      "id": "mp6z688e-fjzw5yq",
-      "startNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
-        "terminal": 1
-      },
-      "endNode": {
-        "componentId": "mo4n6bwz-36pra54",
         "terminal": 1
       },
       "segments": []
@@ -14147,31 +14002,79 @@
       "segments": []
     },
     {
-      "id": "mpvidcqs-u4p93t9",
+      "id": "mq06vkp8-nvalkkn",
       "startNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
+        "componentId": "mo4n6bx0-iul6v8b",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bwz-36pra54",
+        "componentId": "mo4n6bwz-91ukkc0",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mpvidcs3-7gol9vv",
+      "id": "mq06vkrc-sr0mszk",
       "startNode": {
-        "componentId": "mo4n6bx3-cwrgbue",
+        "componentId": "mo4n6bx0-iul6v8b",
         "terminal": 0
       },
       "endNode": {
-        "componentId": "mo4n6bwz-zrv81kx",
+        "componentId": "mo4n6bx0-rehxu91",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq06vkt7-9u0y45l",
+      "startNode": {
+        "componentId": "mo4n6bx0-iul6v8b",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-bwjvwlm",
         "terminal": 1
       },
       "segments": []
     },
     {
-      "id": "mpvidcth-3csw66g",
+      "id": "mq06vkv6-5kxo8yq",
+      "startNode": {
+        "componentId": "mo4n6bx0-iul6v8b",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx0-ejc2k22",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq06vkx3-0aqqkta",
+      "startNode": {
+        "componentId": "mo4n6bx0-iul6v8b",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-bciytaw",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mq072y9f-tvkjkx5",
+      "startNode": {
+        "componentId": "mo4n6bx0-3z79hbb",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx2-714i7iq",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mq0731s4-30365bp",
       "startNode": {
         "componentId": "mo4n6bx3-cwrgbue",
         "terminal": 1
@@ -14183,7 +14086,103 @@
       "segments": []
     },
     {
-      "id": "mpvidjnn-z20xdxw",
+      "id": "mq0734uh-haqzmws",
+      "startNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-cwrgbue",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq0737mg-yy1dttk",
+      "startNode": {
+        "componentId": "mo4n6bx0-1vgokep",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073aha-zzyygdk",
+      "startNode": {
+        "componentId": "mo4n6bx0-jqwyq9j",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx0-1vgokep",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073d8t-r04jxv7",
+      "startNode": {
+        "componentId": "mo4n6bwz-36pra54",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bwz-zrv81kx",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073dal-7oyxv2g",
+      "startNode": {
+        "componentId": "mo4n6bwz-36pra54",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-cwrgbue",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073fzy-2115y4h",
+      "startNode": {
+        "componentId": "mo4n6bx3-hfo839z",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bwz-36pra54",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073jfr-hy0yfxp",
+      "startNode": {
+        "componentId": "mq073jdp-tosx31b",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-pi3pbel",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073jhj-rz5c9dl",
+      "startNode": {
+        "componentId": "mq073jdp-tosx31b",
+        "terminal": 1
+      },
+      "endNode": {
+        "componentId": "mo4n6bx3-hfo839z",
+        "terminal": 0
+      },
+      "segments": []
+    },
+    {
+      "id": "mq073w7x-0lumacg",
       "startNode": {
         "componentId": "tw-notch-r13-2800",
         "terminal": 0
@@ -14195,14 +14194,38 @@
       "segments": []
     },
     {
-      "id": "mpvidjpm-8pvzygj",
+      "id": "mq073z0f-mexi6q2",
       "startNode": {
+        "componentId": "tw-notch-ground-2800",
+        "terminal": 0
+      },
+      "endNode": {
         "componentId": "tw-notch-r13-2800",
         "terminal": 1
       },
-      "endNode": {
-        "componentId": "tw-notch-ground-2800",
+      "segments": []
+    },
+    {
+      "id": "mq0744gm-lk8vv3k",
+      "startNode": {
+        "componentId": "mo4n6bx0-40yuzw8",
         "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx0-rehxu91",
+        "terminal": 1
+      },
+      "segments": []
+    },
+    {
+      "id": "mq0746zu-59o59vy",
+      "startNode": {
+        "componentId": "mo4n6bx0-cu1ocw9",
+        "terminal": 0
+      },
+      "endNode": {
+        "componentId": "mo4n6bx0-40yuzw8",
+        "terminal": 1
       },
       "segments": []
     }
@@ -14210,7 +14233,7 @@
   "annotations": [],
   "graphSettings": {
     "frequencyResponse": {
-      "minFreq": 100,
+      "minFreq": 40,
       "maxFreq": 20000,
       "centerValue": 90,
       "stepSize": 5
@@ -14222,10 +14245,10 @@
       "x": 0,
       "y": 25,
       "width": 900,
-      "height": 1025
+      "height": 1055
     },
     "frequencyResponse": {
-      "x": 901,
+      "x": 900,
       "y": 25,
       "width": 779,
       "height": 532

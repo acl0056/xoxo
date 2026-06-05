@@ -50,7 +50,40 @@ async function handleGetFrequencyResponse(context, params) {
 		return { error: `No frequency response data available at angle ${requestedAngle}°.` };
 	}
 
-	return { result: angleResults.frequencyResponse };
+	const response = angleResults.frequencyResponse;
+
+	// Apply frequency range filter if specified
+	if (params && (params.minFreq || params.maxFreq)) {
+		const minFreq = params.minFreq || 0;
+		const maxFreq = params.maxFreq || Infinity;
+		const { frequencies } = response;
+
+		if (!frequencies || !Array.isArray(frequencies)) {
+			return { result: response };
+		}
+
+		// Find indices within range
+		const indices = [];
+		for (let i = 0; i < frequencies.length; i++) {
+			if (frequencies[i] >= minFreq && frequencies[i] <= maxFreq) {
+				indices.push(i);
+			}
+		}
+
+		// Filter all arrays by those indices
+		const filtered = {};
+		Object.keys(response).forEach((key) => {
+			if (Array.isArray(response[key]) && response[key].length === frequencies.length) {
+				filtered[key] = indices.map((i) => response[key][i]);
+			} else {
+				filtered[key] = response[key];
+			}
+		});
+
+		return { result: filtered };
+	}
+
+	return { result: response };
 }
 
 module.exports = handleGetFrequencyResponse;

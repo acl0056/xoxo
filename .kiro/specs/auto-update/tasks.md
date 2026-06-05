@@ -1,0 +1,109 @@
+# Tasks
+
+- [ ] 1. Install electron-updater and configure electron-builder publish settings
+  - [ ] 1.1 Add `electron-updater` to `dependencies` in package.json (not devDependencies)
+    - Install `electron-updater` ^6.x
+    - _Requirements: Dependencies table_
+  - [ ] 1.2 Add `publish` config to the `build` section of package.json
+    - Set provider to "github", owner to "acl0056", repo to "xoxo"
+    - _Requirements: electron-builder Configuration Changes_
+  - [ ] 1.3 Update `.github/workflows/release.yml` to use `electron-builder --publish always`
+    - Ensure latest.yml, latest-mac.yml, latest-linux.yml are published to GitHub Releases alongside artifacts
+    - _Requirements: Design overview_
+
+- [ ] 2. Create the AutoUpdater module (`src/main/auto-updater.js`)
+  - [ ] 2.1 Create the module with `setupAutoUpdater(mainWindow, updateMenuCallback)` export
+    - Import and configure `autoUpdater` from electron-updater with GitHub provider
+    - Set `autoUpdater.autoDownload = true` and `autoUpdater.autoInstallOnAppQuit = false`
+    - _Requirements: 1.1, Component 1_
+  - [ ] 2.2 Implement startup delayed check
+    - Schedule `autoUpdater.checkForUpdates()` after a 10-second delay on app ready
+    - Cancel the timer if the app quits before it fires
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [ ] 2.3 Implement periodic check scheduling
+    - After each check completes (success or failure), schedule the next check after 4 hours
+    - Maintain at most one pending periodic timer; clear previous timer before setting new one
+    - Skip redundant checks if one is already in progress
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [ ] 2.4 Implement UpdateStatus state machine
+    - Track status as one of: idle, checking, available, downloading, downloaded, error
+    - Enforce valid transitions only (idle→checking→available→downloading→downloaded, idle→checking→idle, *→error→idle)
+    - Expose `getUpdateStatus()` function
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [ ] 2.5 Implement `checkForUpdates()` manual trigger
+    - Return promise from `autoUpdater.checkForUpdates()`
+    - Only proceed if not already checking/downloading
+    - _Requirements: 3.2_
+  - [ ] 2.6 Wire up autoUpdater event handlers and IPC forwarding
+    - On `checking-for-update`: set status to checking, send IPC
+    - On `update-available`: set status to available, send `update-available` IPC with version, releaseNotes, releaseDate
+    - On `update-not-available`: set status to idle, send `update-not-available` IPC with current version
+    - On `download-progress`: set status to downloading, send `update-download-progress` IPC with percent, bytesPerSecond, transferred, total
+    - On `update-downloaded`: set status to downloaded, send `update-downloaded` IPC with version, releaseNotes, releaseDate
+    - On `error`: set status to error, log error, send `update-error` IPC with message and code, then transition to idle
+    - Guard all IPC sends with window existence check
+    - _Requirements: 6.1–6.7, 11.1–11.3_
+  - [ ] 2.7 Implement `quitAndInstall()` guard
+    - Only call `autoUpdater.quitAndInstall()` if status is "downloaded"
+    - Reject/no-op otherwise
+    - _Requirements: 5.5_
+  - [ ] 2.8 Handle macOS code signing errors gracefully
+    - Detect signature verification failures
+    - Log warning, send error IPC with message about unsigned builds needing manual download
+    - Do not crash; return to idle state
+    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+
+- [ ] 3. Integrate AutoUpdater into the main process (`src/main/index.js`)
+  - [ ] 3.1 Call `setupAutoUpdater(mainWindow, rebuildMenu)` after the main window is created
+    - _Requirements: 1.1_
+  - [ ] 3.2 Add IPC handler for `install-update` channel
+    - Call `quitAndInstall()` from the auto-updater module
+    - _Requirements: 5.3_
+  - [ ] 3.3 Add IPC handler for `check-for-updates` channel
+    - Call `checkForUpdates()` from the auto-updater module
+    - _Requirements: 3.2_
+
+- [ ] 4. Add "Check for Updates..." menu item
+  - [ ] 4.1 Add menu item to Help menu in `src/main/menu.js`
+    - Label: "Check for Updates..."
+    - Click handler calls `handlers.checkForUpdates()`
+    - _Requirements: 3.1_
+  - [ ] 4.2 Implement dynamic menu state based on UpdateStatus
+    - Disable item when status is "checking" or "downloading"
+    - Update label: "Checking..." when checking, "Restart to Update" when downloaded, "Check for Updates..." otherwise
+    - Call `updateMenuCallback` on every status change to rebuild menu
+    - _Requirements: 3.4, 3.5_
+
+- [ ] 5. Implement renderer-side update notifications
+  - [ ] 5.1 Add update event listeners in `App.vue` mounted hook
+    - Listen for: update-available, update-not-available, update-download-progress, update-downloaded, update-error
+    - _Requirements: 6.6_
+  - [ ] 5.2 Show toast on update-available
+    - Informational toast with new version number
+    - _Requirements: 5.1_
+  - [ ] 5.3 Show toast on update-not-available (manual check only)
+    - "You're on the latest version" toast
+    - _Requirements: 3.3_
+  - [ ] 5.4 Show persistent toast on update-downloaded with action buttons
+    - Display version number with "Restart Now" and "Later" buttons
+    - "Restart Now" sends `install-update` IPC
+    - "Later" dismisses and suppresses until next launch
+    - _Requirements: 5.2, 5.3, 5.4_
+  - [ ] 5.5 Show error toast on update-error
+    - Dismissible toast with failure message
+    - _Requirements: 3.6, 5.6, 9.3_
+
+- [ ] 6. Write unit tests for AutoUpdater module
+  - [ ] 6.1 Create `tests/unit/main/auto-updater.spec.js`
+    - Mock `electron-updater`'s autoUpdater object
+    - Test startup delay scheduling and cancellation
+    - Test periodic timer management (no duplicate timers)
+    - Test all event handlers dispatch correct IPC messages
+    - Test state machine transitions
+    - Test quitAndInstall guard
+    - Test error handling (network, code signing, disk space)
+    - _Requirements: 1–11, Properties 1–8_
+  - [ ] 6.2 Test menu integration
+    - Verify menu state updates on status changes
+    - Verify menu item disabled/enabled states
+    - _Requirements: 3.4, 3.5, Property 7_

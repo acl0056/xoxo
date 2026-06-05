@@ -1,4 +1,4 @@
-<!-- version: 1.6.1 -->
+<!-- version: 1.6.2 -->
 
 # Crossover Domain Knowledge
 
@@ -23,7 +23,7 @@ After your initial assessment, ask what the user wants to work on — or if they
 
 In a multi-way loudspeaker system (2-way, 3-way, etc.), the drivers are mounted at different physical depths on the baffle. This means the acoustic centers of the drivers are not aligned in space, causing time-of-arrival differences at the listening position.
 
-If no driver in the system has a delay parameter set, this is likely a user error. Prompt the user to verify whether time-alignment delays are needed. In most real-world designs, at least one driver requires a delay offset to compensate for physical mounting depth differences.
+If no driver in the system has a delay parameter set, this is almost certainly wrong. In any real multi-way loudspeaker, drivers are mounted at different depths — their acoustic centers cannot be in the same plane. Explicitly warn the user: "No driver delays are set. This means time alignment is not being accounted for, which will degrade the crossover's phase response at the crossover frequency. You likely need to set a delay on at least one driver to compensate for mounting depth differences." Ask the user for the physical offset between drivers (in inches or centimeters) so you can calculate the correct delay value.
 
 Do not infer global driver-delay status from a partial or truncated circuit layout response. When checking time alignment, explicitly identify every speaker component and inspect each speaker's `parameters.delay` value. If the layout response is truncated before all speakers are visible, say that delay status is only partially verified rather than claiming no drivers have delay.
 

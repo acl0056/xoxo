@@ -84,17 +84,27 @@ function createMcpServer(getUserId) {
 	}, wrapToolHandler(handleGetSpeakerSummary, getUserId));
 
 	mcpServer.registerTool('get_frequency_response', {
-		description: 'Returns frequency response data. Optionally specify an off-axis angle or list available angles.',
+		description: 'Returns frequency response data. Optionally specify an off-axis angle, list available angles, or filter to a frequency range.',
 		inputSchema: {
 			angle: z.number().min(0).max(180).optional()
 				.describe('Off-axis angle in degrees. Omit or set to 0 for on-axis.'),
 			listAngles: z.boolean().optional()
 				.describe('If true, return list of available angles instead of frequency data.'),
+			minFreq: z.number().positive().optional()
+				.describe('Minimum frequency in Hz. Only return data points at or above this frequency.'),
+			maxFreq: z.number().positive().optional()
+				.describe('Maximum frequency in Hz. Only return data points at or below this frequency.'),
 		},
 	}, wrapToolHandler(handleGetFrequencyResponse, getUserId));
 
 	mcpServer.registerTool('get_impedance_response', {
-		description: 'Returns impedance response data (frequencies, impedances, phases)',
+		description: 'Returns impedance response data (frequencies, impedances, phases). Optionally filter to a frequency range.',
+		inputSchema: {
+			minFreq: z.number().positive().optional()
+				.describe('Minimum frequency in Hz. Only return data points at or above this frequency.'),
+			maxFreq: z.number().positive().optional()
+				.describe('Maximum frequency in Hz. Only return data points at or below this frequency.'),
+		},
 	}, wrapToolHandler(handleGetImpedanceResponse, getUserId));
 
 	mcpServer.registerTool('optimize_component', {

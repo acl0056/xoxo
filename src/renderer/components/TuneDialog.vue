@@ -50,16 +50,7 @@
 					</div>
 				</div>
 
-				<div class="parameter-row">
-					<label>Tolerance (%):</label>
-					<input
-						v-model.number="localParameters.tolerance"
-						type="number"
-						min="0"
-						max="100"
-						step="1"
-					>
-				</div>
+				<!-- Tolerance hidden: stored in model but not used by simulation yet -->
 
 				<div
 					v-if="hasESR"

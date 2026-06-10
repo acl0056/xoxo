@@ -17,6 +17,8 @@ const oauthMetadataRouter = require('./oauth/metadata');
 const pairingRouter = require('./pairing/routes');
 const authorizeRouter = require('./oauth/authorize');
 const tokenEndpointRouter = require('./oauth/token-endpoint');
+const analyticsRoutes = require('./analytics/routes');
+const analyticsScheduler = require('./analytics/scheduler');
 
 const application = express();
 
@@ -47,6 +49,9 @@ application.get('/debug/session/:userId', (req, res) => {
 });
 
 application.use('/mcp', tokenValidationMiddleware, mcpMiddleware);
+
+analyticsRoutes.register(application);
+analyticsScheduler.start();
 
 const httpServer = http.createServer(application);
 

@@ -1,0 +1,24 @@
+{
+"$schema": "http://json-schema.org/draft-07/schema#",
+"$id": "session-log-entry.schema.json",
+"title": "Session Log Entry",
+"description": "A single NDJSON line in a daily session log file, recording one MCP session initialization event",
+"type": "object",
+"required": ["timestamp", "ip", "userId"],
+"additionalProperties": false,
+"properties": {
+"timestamp": {
+"type": "string",
+"format": "date-time",
+"description": "ISO 8601 timestamp with Central Time offset, e.g. 2025-01-15T14:23:07-06:00"
+},
+"ip": {
+"type": "string",
+"description": "Client IP address from x-forwarded-for header or direct request IP"
+},
+"userId": {
+"type": "string",
+"description": "Authenticated user ID from req.auth.sub"
+}
+}
+}

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Session Analytics</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			background: #f5f5f5;
+			color: #333;
+			padding: 2rem;
+			line-height: 1.6;
+		}
+
+		h1 {
+			margin-bottom: 1.5rem;
+			font-size: 1.75rem;
+		}
+
+		.controls {
+			margin-bottom: 2rem;
+		}
+
+		label[for="month-selector"] {
+			font-weight: 600;
+			margin-right: 0.5rem;
+		}
+
+		#month-selector {
+			padding: 0.4rem 0.8rem;
+			font-size: 1rem;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		.summary {
+			display: flex;
+			gap: 1.5rem;
+			flex-wrap: wrap;
+			margin-bottom: 2rem;
+		}
+
+		.stat-card {
+			background: #fff;
+			border-radius: 8px;
+			padding: 1.25rem 1.5rem;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+			min-width: 160px;
+		}
+
+		.stat-card .label {
+			font-size: 0.85rem;
+			color: #666;
+			margin-bottom: 0.25rem;
+		}
+
+		.stat-card .value {
+			font-size: 1.5rem;
+			font-weight: 700;
+		}
+
+		.charts {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+
+		.chart-container {
+			background: #fff;
+			border-radius: 8px;
+			padding: 1.5rem;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
+		.chart-container h2 {
+			font-size: 1.1rem;
+			margin-bottom: 1rem;
+		}
+
+		canvas {
+			max-height: 300px;
+		}
+
+		.loading {
+			text-align: center;
+			padding: 2rem;
+			color: #666;
+		}
+
+		.error {
+			background: #fee;
+			border: 1px solid #fcc;
+			border-radius: 4px;
+			padding: 1rem;
+			color: #c33;
+			margin-bottom: 1rem;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Session Analytics</h1>
+
+		<nav class="controls" aria-label="Month selection">
+			<label for="month-selector">Month:</label>
+			<select id="month-selector" aria-label="Select month to view analytics">
+				<option value="current">Current Month</option>
+			</select>
+		</nav>
+
+		<div id="error-container" role="alert" aria-live="polite"></div>
+
+		<section class="summary" aria-label="Summary statistics">
+			<div class="stat-card">
+				<div class="label">Total Sessions</div>
+				<div class="value" id="total-sessions" aria-live="polite">—</div>
+			</div>
+			<div class="stat-card">
+				<div class="label">Unique IPs</div>
+				<div class="value" id="unique-ips" aria-live="polite">—</div>
+			</div>
+			<div class="stat-card">
+				<div class="label">Returning IPs</div>
+				<div class="value" id="returning-ips" aria-live="polite">—</div>
+			</div>
+			<div class="stat-card">
+				<div class="label">New IPs</div>
+				<div class="value" id="new-ips" aria-live="polite">—</div>
+			</div>
+		</section>
+
+		<div class="charts">
+			<section class="chart-container" aria-label="Daily sessions chart">
+				<h2>Daily Breakdown</h2>
+				<canvas id="daily-chart" role="img" aria-label="Bar chart showing sessions per day"></canvas>
+			</section>
+
+			<section class="chart-container" aria-label="Hourly distribution chart">
+				<h2>Hourly Distribution</h2>
+				<canvas id="hourly-chart" role="img" aria-label="Bar chart showing sessions by hour of day"></canvas>
+			</section>
+		</div>
+	</main>
+
+	<script>
+		let dailyChart = null;
+		let hourlyChart = null;
+
+		async function fetchJSON(url) {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch ${url}: ${response.status}`);
+			}
+			return response.json();
+		}
+
+		function showError(message) {
+			const container = document.getElementById('error-container');
+			container.innerHTML = `<div class="error">${message}</div>`;
+		}
+
+		function clearError() {
+			document.getElementById('error-container').innerHTML = '';
+		}
+
+		function updateSummary(data) {
+			document.getElementById('total-sessions').textContent = data.totalSessions ?? 0;
+			document.getElementById('unique-ips').textContent = data.uniqueIps ?? 0;
+			document.getElementById('returning-ips').textContent = data.returningIps ?? 0;
+			document.getElementById('new-ips').textContent = data.newIps ?? 0;
+		}
+
+		function renderDailyChart(dailyBreakdown) {
+			const canvas = document.getElementById('daily-chart');
+			const ctx = canvas.getContext('2d');
+
+			if (dailyChart) {
+				dailyChart.destroy();
+			}
+
+			const labels = dailyBreakdown.map(entry => entry.date);
+			const sessions = dailyBreakdown.map(entry => entry.sessions);
+
+			dailyChart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Sessions',
+						data: sessions,
+						backgroundColor: 'rgba(54, 162, 235, 0.6)',
+						borderColor: 'rgba(54, 162, 235, 1)',
+						borderWidth: 1
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: {
+						y: {
+							beginAtZero: true,
+							ticks: { precision: 0 }
+						}
+					},
+					plugins: {
+						legend: { display: false }
+					}
+				}
+			});
+		}
+
+		function renderHourlyChart(hourlyDistribution) {
+			const canvas = document.getElementById('hourly-chart');
+			const ctx = canvas.getContext('2d');
+
+			if (hourlyChart) {
+				hourlyChart.destroy();
+			}
+
+			const labels = Array.from({ length: 24 }, (_, i) => String(i));
+			const sessions = labels.map(hour => hourlyDistribution[hour] ?? 0);
+
+			hourlyChart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Sessions',
+						data: sessions,
+						backgroundColor: 'rgba(75, 192, 192, 0.6)',
+						borderColor: 'rgba(75, 192, 192, 1)',
+						borderWidth: 1
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: {
+						x: {
+							title: { display: true, text: 'Hour of Day' }
+						},
+						y: {
+							beginAtZero: true,
+							ticks: { precision: 0 }
+						}
+					},
+					plugins: {
+						legend: { display: false }
+					}
+				}
+			});
+		}
+
+		function renderData(data) {
+			updateSummary(data);
+			renderDailyChart(data.dailyBreakdown || []);
+			renderHourlyChart(data.hourlyDistribution || {});
+		}
+
+		async function loadMonth(yearMonth) {
+			clearError();
+			try {
+				let data;
+				if (yearMonth === 'current') {
+					data = await fetchJSON('/adam/api/current-month');
+				} else {
+					data = await fetchJSON(`/adam/api/month/${yearMonth}`);
+				}
+				renderData(data);
+			} catch (error) {
+				showError(`Unable to load data: ${error.message}`);
+			}
+		}
+
+		async function populateMonthSelector() {
+			const selector = document.getElementById('month-selector');
+			try {
+				const data = await fetchJSON('/adam/api/available-months');
+				const months = data.months || [];
+				months.forEach(month => {
+					const option = document.createElement('option');
+					option.value = month;
+					option.textContent = month;
+					selector.appendChild(option);
+				});
+			} catch (error) {
+				console.error('Failed to load available months:', error);
+			}
+		}
+
+		document.getElementById('month-selector').addEventListener('change', (event) => {
+			loadMonth(event.target.value);
+		});
+
+		async function init() {
+			await populateMonthSelector();
+			await loadMonth('current');
+		}
+
+		init();
+	</script>
+</body>
+</html>

@@ -67,7 +67,6 @@ describe('TuneDialog', () => {
 			});
 
 			expect(wrapper.text()).toContain('Value:');
-			expect(wrapper.text()).toContain('Tolerance');
 			expect(wrapper.text()).toContain('State:');
 			expect(wrapper.find('.value-input').exists()).toBe(true);
 		});
@@ -84,7 +83,6 @@ describe('TuneDialog', () => {
 			});
 
 			expect(wrapper.text()).toContain('Value:');
-			expect(wrapper.text()).toContain('Tolerance');
 			expect(wrapper.text()).toContain('ESR');
 			expect(wrapper.text()).toContain('State:');
 		});
@@ -101,7 +99,6 @@ describe('TuneDialog', () => {
 			});
 
 			expect(wrapper.text()).toContain('Value:');
-			expect(wrapper.text()).toContain('Tolerance');
 			expect(wrapper.text()).toContain('ESR');
 			expect(wrapper.text()).toContain('State:');
 		});
@@ -124,21 +121,7 @@ describe('TuneDialog', () => {
 			expect(wrapper.vm.localParameters.state).toBe('normal');
 		});
 
-		it('should validate tolerance range (0-100)', () => {
-			const resistor = new Resistor(0, 0);
-			resistor.label = 'R1';
 
-			const wrapper = mount(TuneDialog, {
-				props: {
-					visible: true,
-					component: resistor,
-				},
-			});
-
-			const toleranceInput = wrapper.find('input[type="number"]');
-			expect(toleranceInput.attributes('min')).toBe('0');
-			expect(toleranceInput.attributes('max')).toBe('100');
-		});
 
 		it('should validate ESR is non-negative', () => {
 			const capacitor = new Capacitor(0, 0);

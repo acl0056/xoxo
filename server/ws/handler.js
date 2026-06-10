@@ -31,7 +31,6 @@ function verifyToken(token) {
  * @param {object} payload - The circuit layout data
  */
 function handleStateCircuit(socket, userId, payload) {
-	console.log('[WS] handleStateCircuit for userId:', userId, 'payload keys:', payload ? Object.keys(payload) : 'null');
 	const result = sessionManager.updateCircuitLayout(userId, payload);
 	if (!result.success) {
 		console.log('[WS] handleStateCircuit validation failed:', result.errors);
@@ -39,8 +38,6 @@ function handleStateCircuit(socket, userId, payload) {
 			messages.ERROR_VALIDATION,
 			{ errors: result.errors, messageType: messages.STATE_CIRCUIT },
 		));
-	} else {
-		console.log('[WS] handleStateCircuit stored successfully for userId:', userId);
 	}
 }
 
@@ -52,7 +49,6 @@ function handleStateCircuit(socket, userId, payload) {
  * @param {object} payload - The simulation results data
  */
 function handleStateSimulation(socket, userId, payload) {
-	console.log('[WS] handleStateSimulation for userId:', userId, 'payload keys:', payload ? Object.keys(payload) : 'null');
 	const result = sessionManager.updateSimulationResults(userId, payload);
 	if (!result.success) {
 		console.log('[WS] handleStateSimulation validation failed:', result.errors);
@@ -60,8 +56,6 @@ function handleStateSimulation(socket, userId, payload) {
 			messages.ERROR_VALIDATION,
 			{ errors: result.errors, messageType: messages.STATE_SIMULATION },
 		));
-	} else {
-		console.log('[WS] handleStateSimulation stored successfully for userId:', userId);
 	}
 }
 
@@ -107,18 +101,15 @@ function handleStateUserFrds(socket, userId, payload) {
  * @param {object} payload - The response payload
  */
 function handleResponse(requestId, payload) {
-	console.log('[WS] handleResponse received, requestId:', requestId);
 	if (!requestId) {
 		return;
 	}
 
 	const pending = pendingRequests.get(requestId);
 	if (!pending) {
-		console.log('[WS] handleResponse: no pending request for requestId:', requestId);
 		return;
 	}
 
-	console.log('[WS] handleResponse: resolving pending request:', requestId);
 	clearTimeout(pending.timer);
 	pendingRequests.delete(requestId);
 	pending.resolve(payload);
@@ -143,8 +134,6 @@ function forwardRequest(userId, messageType, payload, requestId) {
 
 		const { wsConnection } = session;
 		const timeoutMs = config.ws.requestTimeoutMs;
-
-		console.log('[WS] forwardRequest:', messageType, 'requestId:', requestId, 'to userId:', userId);
 
 		const timer = setTimeout(() => {
 			console.log('[WS] forwardRequest TIMED OUT:', messageType, 'requestId:', requestId);
@@ -183,6 +172,9 @@ function setupWebSocketHandler(socketIoServer) {
 
 	socketIoServer.on('connection', (socket) => {
 		const { userId } = socket;
+		const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+		const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' });
+		console.log(`[WS] New connection: userId=${userId} ip=${clientIp} at ${timestamp}`);
 
 		const existingSession = sessionStore.get(userId);
 		if (existingSession) {

@@ -5,6 +5,7 @@ const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/ser
 /* eslint-enable import/extensions */
 const { z } = require('zod');
 const sessionStore = require('../session/store');
+const sessionLogger = require('../analytics/logger');
 
 const handleGetCircuitLayout = require('./tools/getCircuitLayout');
 const handleGetSpeakerSummary = require('./tools/getSpeakerSummary');
@@ -254,10 +255,13 @@ function createMcpMiddleware() {
 			if (request.method === 'POST') {
 				// New session initialization request — create a fresh MCP server per session
 				const userId = request.auth && request.auth.sub;
+				const clientIp = request.headers['x-forwarded-for'] || request.ip;
 				const mcpServer = createMcpServer(() => userId);
 				const transport = new StreamableHTTPServerTransport({
 					sessionIdGenerator: () => crypto.randomUUID(),
 					onsessioninitialized: (newSessionId) => {
+						const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' });
+						console.log(`[MCP] New session: userId=${userId} sessionId=${newSessionId} ip=${clientIp} at ${timestamp}`);
 						sessions.set(newSessionId, { transport, mcpServer, userId });
 						const session = sessionStore.update(userId, {
 							mcpSessionId: newSessionId,
@@ -269,6 +273,7 @@ function createMcpMiddleware() {
 								payload: { sessionId: newSessionId },
 							});
 						}
+						sessionLogger.log(request);
 					},
 				});
 

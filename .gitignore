@@ -43,4 +43,6 @@ temporary-test.js
 
 server/.env
 server/.deploy-state-adam.json
+server/logs/
+server/summaries/
 TODO.md

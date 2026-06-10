@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const logger = require('../logger');
 
 const logsDirectory = path.resolve(__dirname, '../logs/');
 const summariesDirectory = path.resolve(__dirname, '../summaries/');
@@ -90,7 +91,7 @@ function collectPriorMonthIps(targetMonth) {
 					}
 				}
 			} catch (readError) {
-				console.warn(`Routes: failed to read prior summary ${file}:`, readError.message);
+				logger.warn(`Routes: failed to read prior summary ${file}:`, readError.message);
 			}
 		}
 	}
@@ -201,7 +202,7 @@ function register(app) {
 			const summary = aggregateCurrentMonth();
 			res.json(summary);
 		} catch (error) {
-			console.error('Routes: error aggregating current month:', error.message);
+			logger.error('Routes: error aggregating current month:', error.message);
 			res.status(500).json({ error: 'Internal server error' });
 		}
 	});
@@ -225,7 +226,7 @@ function register(app) {
 			if (error.code === 'ENOENT') {
 				res.status(404).json({ error: `No summary found for ${yearMonth}` });
 			} else {
-				console.error(`Routes: error reading summary for ${yearMonth}:`, error.message);
+				logger.error(`Routes: error reading summary for ${yearMonth}:`, error.message);
 				res.status(500).json({ error: 'Internal server error' });
 			}
 		}
@@ -239,7 +240,7 @@ function register(app) {
 				.filter((file) => file.endsWith('.json'));
 		} catch (error) {
 			if (error.code !== 'ENOENT') {
-				console.error('Routes: error reading summaries directory:', error.message);
+				logger.error('Routes: error reading summaries directory:', error.message);
 				res.status(500).json({ error: 'Internal server error' });
 				return;
 			}

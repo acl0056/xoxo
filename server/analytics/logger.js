@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const logger = require('../logger');
 
 const logsDirectory = path.resolve(__dirname, '../logs/');
 
@@ -70,7 +71,9 @@ function extractDateFromTimestamp(timestamp) {
 function log(request) {
 	try {
 		const userId = request.auth && request.auth.sub;
+		logger.log('[SessionLogger] log() called — userId:', userId, 'logsDirectory:', logsDirectory);
 		if (userId == null) {
+			logger.log('[SessionLogger] skipping — userId is null/undefined');
 			return;
 		}
 
@@ -90,11 +93,11 @@ function log(request) {
 				fs.mkdirSync(logsDirectory, { recursive: true });
 				fs.appendFileSync(logFilePath, `${logEntry}\n`);
 			} catch (error) {
-				console.error('SessionLogger: failed to write log entry', error);
+				logger.error('SessionLogger: failed to write log entry', error);
 			}
 		});
 	} catch (error) {
-		console.error('SessionLogger: unexpected error during log preparation', error);
+		logger.error('SessionLogger: unexpected error during log preparation', error);
 	}
 }
 

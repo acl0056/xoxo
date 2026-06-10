@@ -5,7 +5,7 @@ const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/ser
 /* eslint-enable import/extensions */
 const { z } = require('zod');
 const sessionStore = require('../session/store');
-const sessionLogger = require('../analytics/logger');
+const logger = require('../logger');
 
 const handleGetCircuitLayout = require('./tools/getCircuitLayout');
 const handleGetSpeakerSummary = require('./tools/getSpeakerSummary');
@@ -260,8 +260,7 @@ function createMcpMiddleware() {
 				const transport = new StreamableHTTPServerTransport({
 					sessionIdGenerator: () => crypto.randomUUID(),
 					onsessioninitialized: (newSessionId) => {
-						const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' });
-						console.log(`[MCP] New session: userId=${userId} sessionId=${newSessionId} ip=${clientIp} at ${timestamp}`);
+						logger.log(`[MCP] New session: userId=${userId} sessionId=${newSessionId} ip=${clientIp}`);
 						sessions.set(newSessionId, { transport, mcpServer, userId });
 						const session = sessionStore.update(userId, {
 							mcpSessionId: newSessionId,
@@ -273,7 +272,6 @@ function createMcpMiddleware() {
 								payload: { sessionId: newSessionId },
 							});
 						}
-						sessionLogger.log(request);
 					},
 				});
 
@@ -304,7 +302,7 @@ function createMcpMiddleware() {
 				id: null,
 			});
 		} catch (error) {
-			console.error('[MCP] Middleware error:', error.message);
+			logger.error('[MCP] Middleware error:', error.message);
 			if (!response.headersSent) {
 				response.status(500).json({
 					jsonrpc: '2.0',

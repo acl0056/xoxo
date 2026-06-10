@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
+const logger = require('../logger');
 
 const logsDirectory = path.resolve(__dirname, '../logs/');
 const summariesDirectory = path.resolve(__dirname, '../summaries/');
@@ -46,7 +47,7 @@ function parseLogFile(filePath) {
 				entries.push(entry);
 			}
 		} catch (error) {
-			console.warn(`SummaryGenerator: skipping invalid JSON line in ${filePath}: ${trimmed}`);
+			logger.warn(`SummaryGenerator: skipping invalid JSON line in ${filePath}: ${trimmed}`);
 		}
 	}
 
@@ -97,7 +98,7 @@ function collectPriorMonthIps(targetMonth) {
 					}
 				}
 			} catch (error) {
-				console.warn(`SummaryGenerator: failed to read prior summary ${file}:`, error.message);
+				logger.warn(`SummaryGenerator: failed to read prior summary ${file}:`, error.message);
 			}
 		}
 	}

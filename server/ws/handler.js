@@ -4,6 +4,7 @@ const sessionManager = require('../session/manager');
 const { validateFrdData } = require('../validation/validator');
 const { verifyAccessToken } = require('../auth/token');
 const messages = require('./messages');
+const logger = require('../logger');
 
 /**
  * Map of pending request callbacks keyed by requestId.
@@ -33,7 +34,7 @@ function verifyToken(token) {
 function handleStateCircuit(socket, userId, payload) {
 	const result = sessionManager.updateCircuitLayout(userId, payload);
 	if (!result.success) {
-		console.log('[WS] handleStateCircuit validation failed:', result.errors);
+		logger.warn('[WS] handleStateCircuit validation failed:', result.errors);
 		socket.emit(messages.ERROR_VALIDATION, messages.createMessage(
 			messages.ERROR_VALIDATION,
 			{ errors: result.errors, messageType: messages.STATE_CIRCUIT },
@@ -51,7 +52,7 @@ function handleStateCircuit(socket, userId, payload) {
 function handleStateSimulation(socket, userId, payload) {
 	const result = sessionManager.updateSimulationResults(userId, payload);
 	if (!result.success) {
-		console.log('[WS] handleStateSimulation validation failed:', result.errors);
+		logger.warn('[WS] handleStateSimulation validation failed:', result.errors);
 		socket.emit(messages.ERROR_VALIDATION, messages.createMessage(
 			messages.ERROR_VALIDATION,
 			{ errors: result.errors, messageType: messages.STATE_SIMULATION },
@@ -136,7 +137,7 @@ function forwardRequest(userId, messageType, payload, requestId) {
 		const timeoutMs = config.ws.requestTimeoutMs;
 
 		const timer = setTimeout(() => {
-			console.log('[WS] forwardRequest TIMED OUT:', messageType, 'requestId:', requestId);
+			logger.warn('[WS] forwardRequest TIMED OUT:', messageType, 'requestId:', requestId);
 			pendingRequests.delete(requestId);
 			reject(new Error(`Request timed out after ${timeoutMs}ms`));
 		}, timeoutMs);
@@ -173,14 +174,13 @@ function setupWebSocketHandler(socketIoServer) {
 	socketIoServer.on('connection', (socket) => {
 		const { userId } = socket;
 		const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-		const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' });
-		console.log(`[WS] New connection: userId=${userId} ip=${clientIp} at ${timestamp}`);
+		logger.log(`[WS] New connection: userId=${userId} ip=${clientIp}`);
 
 		const existingSession = sessionStore.get(userId);
 		if (existingSession) {
-			sessionStore.update(userId, { wsConnection: socket });
+			sessionStore.update(userId, { wsConnection: socket, clientIp });
 		} else {
-			sessionStore.create(userId, { wsConnection: socket });
+			sessionStore.create(userId, { wsConnection: socket, clientIp });
 		}
 
 		socket.on(messages.STATE_CIRCUIT, (message) => {

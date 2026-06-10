@@ -6,6 +6,7 @@
 			"cwd": "/home/ubuntu/xoxo-mcp",
 			"autorestart": true,
 			"watch": true,
+			"ignore_watch": ["logs", "summaries", "node_modules"],
 			"max_memory_restart": "512M",
 			"env": {
 				"NODE_ENV": "production",

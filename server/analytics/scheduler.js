@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { generate } = require('./summary');
 const { cleanOldLogs } = require('./cleanup');
+const logger = require('../logger');
 
 const summariesDirectory = path.resolve(__dirname, '../summaries/');
 
@@ -47,16 +48,16 @@ function buildSummaryFilename(year, month) {
 async function generateAndClean(year, month) {
 	try {
 		await generate(year, month);
-		console.log(`Scheduler: generated summary for ${year}-${String(month).padStart(2, '0')}`);
+		logger.log(`Scheduler: generated summary for ${year}-${String(month).padStart(2, '0')}`);
 	} catch (error) {
-		console.error(`Scheduler: failed to generate summary for ${year}-${String(month).padStart(2, '0')}:`, error);
+		logger.error(`Scheduler: failed to generate summary for ${year}-${String(month).padStart(2, '0')}:`, error);
 	}
 
 	try {
 		await cleanOldLogs();
-		console.log('Scheduler: completed old log cleanup');
+		logger.log('Scheduler: completed old log cleanup');
 	} catch (error) {
-		console.error('Scheduler: failed to clean old logs:', error);
+		logger.error('Scheduler: failed to clean old logs:', error);
 	}
 }
 
@@ -81,7 +82,7 @@ function start() {
 		await generateAndClean(year, month);
 	});
 
-	console.log('Scheduler: monthly summary job scheduled (midnight CT on the 1st)');
+	logger.log('Scheduler: monthly summary job scheduled (midnight CT on the 1st)');
 
 	// Startup check: generate previous month's summary if missing
 	const { year, month } = getPreviousMonth();
@@ -89,7 +90,7 @@ function start() {
 	const summaryPath = path.resolve(summariesDirectory, summaryFilename);
 
 	if (!fs.existsSync(summaryPath)) {
-		console.log(`Scheduler: previous month summary missing (${summaryFilename}), generating...`);
+		logger.log(`Scheduler: previous month summary missing (${summaryFilename}), generating...`);
 		generateAndClean(year, month);
 	}
 }

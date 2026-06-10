@@ -3,6 +3,8 @@ const { Router } = require('express');
 const { signAccessToken, TOKEN_LIFETIME_SECONDS } = require('../auth/token');
 const { authorizationCodes } = require('./authorize');
 const sessionStore = require('../session/store');
+const sessionLogger = require('../analytics/logger');
+const logger = require('../logger');
 
 const router = Router();
 
@@ -78,6 +80,16 @@ router.post('/oauth/token', (req, res) => {
 
 	// Issue JWT access token
 	const accessToken = signAccessToken(authCodeEntry.sessionId);
+
+	// Log the session for analytics (use desktop IP from session store)
+	const sessionData = sessionStore.get(authCodeEntry.sessionId);
+	const desktopIp = (sessionData && sessionData.clientIp) || req.headers['x-forwarded-for'] || req.ip;
+	sessionLogger.log({
+		auth: { sub: authCodeEntry.sessionId },
+		headers: { 'x-forwarded-for': desktopIp },
+		ip: desktopIp,
+	});
+	logger.log(`[OAuth] Token issued for session: ${authCodeEntry.sessionId}`);
 
 	// Notify the desktop app via WebSocket that pairing succeeded
 	const session = sessionStore.get(authCodeEntry.sessionId);

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const logger = require('../logger');
 
 const logsDirectory = path.resolve(__dirname, '../logs/');
 const dailyLogPattern = /^(\d{4})-(\d{2})-(\d{2})\.log$/;
@@ -36,7 +37,7 @@ async function cleanOldLogs() {
 			const filePath = path.join(logsDirectory, filename);
 			deletionPromises.push(
 				fs.promises.unlink(filePath).then(() => {
-					console.log(`Deleted old log: ${filename}`);
+					logger.log(`Deleted old log: ${filename}`);
 				}),
 			);
 		}

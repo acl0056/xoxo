@@ -19,6 +19,7 @@ const authorizeRouter = require('./oauth/authorize');
 const tokenEndpointRouter = require('./oauth/token-endpoint');
 const analyticsRoutes = require('./analytics/routes');
 const analyticsScheduler = require('./analytics/scheduler');
+const logger = require('./logger');
 
 const application = express();
 
@@ -62,7 +63,7 @@ const socketIoServer = new SocketIoServer(httpServer, {
 setupWebSocketHandler(socketIoServer);
 
 httpServer.listen(config.port, config.host, () => {
-	console.log(`xoxo MCP server listening on http://${config.host}:${config.port}`);
+	logger.log(`xoxo MCP server listening on http://${config.host}:${config.port}`);
 });
 
 module.exports = { application, httpServer, socketIoServer };

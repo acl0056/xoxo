@@ -1,5 +1,6 @@
 const { verifyAccessToken } = require('./token');
 const sessionStore = require('../session/store');
+const logger = require('../logger');
 
 const WWW_AUTHENTICATE_HEADER = 'Bearer realm="https://xoxo.practicube.com", resource_metadata="https://xoxo.practicube.com/.well-known/oauth-protected-resource"';
 
@@ -95,7 +96,7 @@ function tokenValidationMiddleware(request, response, next) {
 
 	request.user = decoded;
 	request.auth = decoded;
-	console.log('[Auth] Token validated, setting request.auth.sub =', decoded.sub);
+	logger.log('[Auth] Token validated, request.auth.sub =', decoded.sub);
 	return next();
 }
 

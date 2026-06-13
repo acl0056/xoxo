@@ -83,7 +83,7 @@ router.post('/oauth/token', (req, res) => {
 
 	// Log the session for analytics (use desktop IP from session store)
 	const sessionData = sessionStore.get(authCodeEntry.sessionId);
-	const desktopIp = (sessionData && sessionData.clientIp) || req.headers['x-forwarded-for'] || req.ip;
+	const desktopIp = (sessionData && sessionData.clientIp) || req.headers?.['x-forwarded-for'] || req.ip;
 	sessionLogger.log({
 		auth: { sub: authCodeEntry.sessionId },
 		headers: { 'x-forwarded-for': desktopIp },

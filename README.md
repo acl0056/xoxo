@@ -1,5 +1,10 @@
 # Crossover Network Simulator
 
+[![Tests](https://github.com/adamlockhart/xoxo/actions/workflows/test.yml/badge.svg)](https://github.com/adamlockhart/xoxo/actions/workflows/test.yml)
+[![CodeQL](https://github.com/adamlockhart/xoxo/actions/workflows/codeql.yml/badge.svg)](https://github.com/adamlockhart/xoxo/actions/workflows/codeql.yml)
+[![Release](https://github.com/adamlockhart/xoxo/actions/workflows/release.yml/badge.svg)](https://github.com/adamlockhart/xoxo/actions/workflows/release.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/adamlockhart/xoxo/badge)](https://scorecard.dev/viewer/?uri=github.com/adamlockhart/xoxo)
+
 A cross-platform desktop application for designing and analyzing loudspeaker crossover networks.
 
 ## Project Structure

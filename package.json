@@ -24,7 +24,7 @@
 	"dependencies": {
 		"ajv": "^8.17.1",
 		"complex.js": "^2.4.3",
-		"mathjs": "^15.1.1",
+		"mathjs": "^15.2.0",
 		"socket.io-client": "^4.7.5",
 		"vue": "^3.3.4",
 		"vue-toastification": "^2.0.0-rc.5",

@@ -1,7 +1,7 @@
 {
 	"name": "xoxo",
 	"version": "0.1.2",
-	"description": "loudspeaker crossover modeller",
+	"description": "loudspeaker crossover simulator",
 	"main": "dist/main/index.js",
 	"scripts": {
 		"predev": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','main'),{recursive:true});fs.readdirSync(p.join('src','main')).filter(f=>f.endsWith('.js')&&f!=='index.js').forEach(f=>fs.copyFileSync(p.join('src','main',f),p.join('dist','main',f)))\"",

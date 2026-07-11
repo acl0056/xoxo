@@ -166,9 +166,9 @@ describe('Bug Condition Exploration: C1 — Fixed Impedance', () => {
 	test('C1 property: admittance varies with frequency for speakers with ZMA data', () => {
 		fc.assert(
 			fc.property(
-				// Generate ZMA impedance values well away from 8Ω to guarantee admittance differs
-				fc.double({ min: 3, max: 6.5, noNaN: true }),
-				fc.double({ min: 9.5, max: 100, noNaN: true }),
+				// Generate ZMA impedance values that are NOT 8Ω (to guarantee difference)
+				fc.double({ min: 3, max: 7.9, noNaN: true }),
+				fc.double({ min: 8.1, max: 100, noNaN: true }),
 				fc.double({ min: -45, max: 45, noNaN: true }),
 				(lowImpedance, highImpedance, phaseDeg) => {
 					const { circuit, speaker } = buildSimpleCircuit();
@@ -192,10 +192,9 @@ describe('Bug Condition Exploration: C1 — Fixed Impedance', () => {
 					);
 					const expectedAdmittance = new Complex(1, 0).div(zComplex);
 
-					// Should NOT be the hardcoded 0.125 (8Ω)
-					expect(Math.abs(admittance.re - 0.125)).toBeGreaterThan(0.001);
-
-					// Should match ZMA-derived value
+					// Should NOT be the hardcoded 0.125 (8Ω) — verify the result
+					// actually comes from ZMA data by checking it matches the expected
+					// complex admittance derived from the generated impedance/phase
 					expect(admittance.re).toBeCloseTo(expectedAdmittance.re, 3);
 					expect(admittance.im).toBeCloseTo(expectedAdmittance.im, 3);
 				},

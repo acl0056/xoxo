@@ -40,6 +40,7 @@ coverage/
 
 research/transition/
 temporary-test.js
+temporary-test.mjs
 
 server/.env
 server/.deploy-state-adam.json

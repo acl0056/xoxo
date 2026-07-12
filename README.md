@@ -11,9 +11,9 @@ A cross-platform desktop application for simulating, designing and analyzing lou
 
 ```
 src/
-├── main/                    # Electron main process
-│   └── index.js            # Application entry point
-├── renderer/               # Electron renderer process (UI)
+├── main/                  # Electron main process
+│   └── index.js           # Application entry point
+├── renderer/              # Electron renderer process (UI)
 │   ├── index.html         # HTML entry point
 │   ├── main.js            # Vue app initialization
 │   ├── App.vue            # Root Vue component

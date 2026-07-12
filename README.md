@@ -4,6 +4,7 @@
 [![CodeQL](https://github.com/acl0056/xoxo/actions/workflows/codeql.yml/badge.svg)](https://github.com/acl0056/xoxo/actions/workflows/codeql.yml)
 [![Release](https://github.com/acl0056/xoxo/actions/workflows/release.yml/badge.svg)](https://github.com/acl0056/xoxo/actions/workflows/release.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/acl0056/xoxo/badge)](https://scorecard.dev/viewer/?uri=github.com/acl0056/xoxo)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13580/badge)](https://www.bestpractices.dev/projects/13580)
 
 A cross-platform desktop application for simulating, designing and analyzing loudspeaker crossover networks.
 

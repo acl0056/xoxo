@@ -36,7 +36,7 @@ server/
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 22.12.0
 - npm or yarn
 
 ### Installation

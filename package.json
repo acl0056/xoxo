@@ -57,7 +57,7 @@
 		"vue-eslint-parser": "^7.9.0"
 	},
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=22.12.0"
 	},
 	"build": {
 		"appId": "com.xoxo.crossover-simulator",

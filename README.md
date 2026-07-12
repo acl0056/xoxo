@@ -86,6 +86,12 @@ For detailed build system documentation, see [BUILD.md](BUILD.md).
 - **HTML5 Canvas**: High-performance circuit rendering
 - **ESLint**: Code quality and style enforcement
 
+## Reporting Bugs
+
+Please report bugs and feature requests via [GitHub Issues](https://github.com/acl0056/xoxo/issues).
+
+For security vulnerabilities, see [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT

@@ -56,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Download all artifacts
@@ -63,6 +65,11 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+
+      - name: Generate provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: artifacts/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

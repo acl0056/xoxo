@@ -1,6 +1,6 @@
 {
 	"name": "xoxo",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "loudspeaker crossover simulator",
 	"main": "dist/main/index.js",
 	"scripts": {
